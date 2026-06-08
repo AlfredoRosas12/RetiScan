@@ -1,61 +1,34 @@
-# API RetiScan
+# RetiScan API — Núcleo de Operaciones
 
-Backend central desarrollado en Node.js y Express para la plataforma de deteccion de retinopatia diabetica RetiScan. Este servicio gestiona la logica de negocio, autenticacion de usuarios y persistencia de datos.
+Este repositorio contiene el motor lógico y la gestión de datos de la plataforma RetiScan. La API actúa como el puente central entre las aplicaciones de usuario y la base de datos, garantizando la seguridad y fluidez del sistema.
 
-## Arquitectura y Tecnologias
+---
 
-El proyecto utiliza las siguientes dependencias principales:
+## 🛠️ Funciones del Servicio
 
-- Core: Express para el servidor web y enrutamiento.
-- Base de datos: PostgreSQL mediante el cliente pg.
-- Seguridad: JWT (JSON Web Tokens) para autenticacion y bcryptjs para el cifrado de contrasenas.
-- Validacion: Express-validator para asegurar la integridad de las entradas.
-- Documentacion: Swagger UI para la exposicion de endpoints.
-- Correo: Nodemailer para gestion de notificaciones.
+*   **Seguridad y Acceso:** Gestiona el registro, inicio de sesión y la protección de datos mediante llaves de acceso digitales.
+*   **Gestión Clínica:** Control y organización de los expedientes médicos, pacientes y resultados de escaneo.
+*   **Comunicación:** Sistema de notificaciones por correo para informar a los usuarios sobre eventos importantes.
+*   **Documentación Interactiva:** Incluye un portal para que los desarrolladores puedan consultar y probar los canales de comunicación de la API.
 
-## Requisitos Previos
+---
 
-- Node.js (Version LTS recomendada)
-- PostgreSQL
-- Docker y Docker Compose (opcional para despliegue en contenedores)
+## 🏗️ Tecnologías Clave
 
-## Configuracion del Entorno
+*   **Motor:** Node.js y Express.
+*   **Base de Datos:** PostgreSQL.
+*   **Seguridad:** Encriptación avanzada para contraseñas y tokens de sesión.
+*   **Notificaciones:** Servicio de integración de correo electrónico.
 
-Es necesario configurar un archivo .env en la raiz del directorio basandose en las necesidades del sistema. Asegurese de incluir las siguientes variables:
+---
 
-- PORT: Puerto de ejecucion del servidor.
-- DATABASE_URL: Cadena de conexion a PostgreSQL.
-- JWT_SECRET: Clave secreta para la firma de tokens.
-- SMTP_HOST/USER/PASS: Configuracion para el servicio de correo.
+## 🚀 Ejecución y Despliegue
 
-## Instalacion y Ejecucion
+Para poner en marcha este servicio junto con el resto del ecosistema, te recomendamos consultar la guía de inicio rápido en el **[README principal del proyecto](../README.md)** utilizando Docker.
 
-### Desarrollo Local
+Si necesitas realizar ajustes específicos de desarrollo para este módulo:
+1.  Configura las variables de entorno en un archivo `.env`.
+2.  Instala las dependencias necesarias.
+3.  Inicia el servidor en modo desarrollo.
 
-1. Instale las dependencias:
-   ```bash
-   npm install
-   ```
-
-2. Inicialice la base de datos (asegurese de tener PostgreSQL en ejecucion):
-   ```bash
-   npm run init-db
-   ```
-
-3. Inicie el servidor en modo desarrollo:
-   ```bash
-   npm run dev
-   ```
-
-### Uso con Docker
-
-Si prefiere utilizar Docker para el entorno:
-
-```bash
-docker-compose up --build
-```
-
-## Documentacion de la API
-
-Una vez que el servidor este en funcionamiento, puede acceder a la documentacion interactiva de Swagger en:
-`http://localhost:<PORT>/api-docs` (reemplace <PORT> por el configurado en su .env).
+*(Para más detalles técnicos, consulta el archivo de configuración `.env.example` y el historial de cambios.)*

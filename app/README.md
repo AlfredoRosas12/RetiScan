@@ -1,49 +1,31 @@
-# PWA RetiScan
+# RetiScan App — Aplicación de Escaneo y Consulta
 
-Aplicacion movil y progresiva (PWA) desarrollada con Flutter para la plataforma RetiScan. Esta aplicacion permite a los usuarios interactuar con el sistema de deteccion de retinopatia diabetica desde dispositivos moviles y navegadores web.
+Esta es la aplicación principal de RetiScan, diseñada como una Aplicación Web Progresiva (PWA). Permite a médicos y pacientes interactuar con el sistema de detección de retinopatía desde cualquier dispositivo con navegador web o de forma nativa en móviles.
 
-## Caracteristicas y Tecnologias
+---
 
-La aplicacion esta construida sobre el SDK de Flutter e integra diversos servicios para una experiencia completa:
+## 🌟 Características Principales
 
-- Nucleo: Flutter 3.x.
-- Backend como Servicio (BaaS): Firebase (Auth para gestion de usuarios, Firestore para base de datos en tiempo real y Cloud Storage para archivos).
-- Gestion de Estado: Provider.
-- Interfaz de Usuario: Soporte para SVG, graficos estadisticos con Syncfusion y notificaciones locales.
-- Utilidades: Seleccion de imagenes, almacenamiento persistente local y generacion de reportes en PDF.
+*   **Interfaz Multiplataforma:** Experiencia fluida tanto en computadoras de escritorio como en teléfonos móviles.
+*   **Captura y Escaneo:** Herramientas optimizadas para la toma y carga de fotografías de fondo de ojo.
+*   **Resultados en Tiempo Real:** Visualización detallada de los análisis generados por la inteligencia artificial.
+*   **Gestión de Reportes:** Generación y descarga de informes clínicos en formato profesional (PDF).
 
-## Requisitos Previos
+---
 
-- SDK de Flutter instalado y configurado en el PATH.
-- Android Studio o Xcode (para compilacion nativa).
-- Herramientas de Firebase CLI (opcional, para configuracion de servicios).
+## 🏗️ Tecnología Utilizada
 
-## Configuracion e Instalacion
+*   **Framework:** Flutter para un desarrollo multiplataforma de alta fidelidad.
+*   **Servicios:** Integración con servicios en la nube para el almacenamiento de archivos y sincronización de datos.
+*   **Visualización:** Gráficos estadísticos e indicadores de salud visual.
 
-1. Obtenga las dependencias del proyecto:
-   ```bash
-   flutter pub get
-   ```
+---
 
-2. Configure los archivos de Firebase:
-   Asegurese de incluir los archivos de configuracion correspondientes (`google-services.json` para Android y `GoogleService-Info.plist` para iOS) en sus rutas respectivas.
+## 🚀 Ejecución y Despliegue
 
-## Ejecucion
+La aplicación está configurada para funcionar armoniosamente con el núcleo del sistema mediante contenedores. Para ejecutarla localmente, sigue los pasos detallados en el **[README principal del proyecto](../README.md)**.
 
-Para ejecutar el proyecto en un emulador o dispositivo conectado:
-
-```bash
-flutter run
-```
-
-Para compilar versiones de produccion:
-
-- Android: `flutter build apk`
-- iOS: `flutter build ios`
-- Web: `flutter build web`
-
-## Estructura del Proyecto
-
-- `lib/`: Contiene el codigo fuente de la aplicacion (pantallas, modelos, proveedores y servicios).
-- `assets/`: Recursos graficos de la plataforma.
-- `android/ios/web/`: Configuraciones especificas por plataforma.
+Si deseas realizar pruebas de desarrollo específicas para Flutter:
+1.  Asegúrate de tener instalado el SDK de Flutter.
+2.  Descarga las dependencias con `flutter pub get`.
+3.  Ejecuta la aplicación en tu navegador o emulador preferido.

@@ -1,43 +1,30 @@
-# Landing Page RetiScan
+# RetiScan Landing Page — Portal Informativo
 
-Sitio web informativo y de presentacion para la plataforma RetiScan. Esta pagina ha sido diseñada siguiendo un modelo de alta fidelidad para ofrecer una experiencia de usuario premium y profesional.
+Este repositorio contiene el sitio web oficial y de presentación para la plataforma RetiScan. El portal está diseñado para ofrecer una experiencia visual premium que explica los beneficios y la tecnología detrás de nuestra solución de salud visual.
 
-## Tecnologias y Diseño
+---
 
-El proyecto emplea un stack moderno enfocado en el rendimiento y la estetica:
+## ✨ Características del Sitio
 
-- Core: React + Vite + TypeScript.
-- Estilos: Tailwind CSS para un diseño responsivo y moderno.
-- Componentes UI: Radix UI para elementos interactivos accesibles y optimizados.
-- Animaciones: Motion (Framer Motion) y Lenis para scroll suave.
-- Iconografia: Lucide React.
-- Visualizacion: Recharts para la representacion de datos.
-- Carruseles: Embla Carousel.
+*   **Diseño de Alta Fidelidad:** Interfaz moderna y profesional enfocada en la facilidad de lectura y navegación.
+*   **Contenido Informativo:** Sección detallada sobre el funcionamiento de la inteligencia artificial y su impacto en la detección temprana.
+*   **Interactividad:** Animaciones suaves y elementos visuales dinámicos para una mejor experiencia de usuario.
+*   **Responsividad:** Totalmente optimizado para visualizarse correctamente en móviles, tablets y computadoras.
 
-## Referencia de Diseño
+---
 
-Este desarrollo es una implementacion fiel del mockup original disponible en Figma:
-[High-Fidelity Landing Page Mockup](https://www.figma.com/design/sKEVwIRKWaX4fhVJNu8SQA/High-Fidelity-Landing-Page-Mockup)
+## 🛠️ Tecnologías Utilizadas
 
-## Instalacion y Ejecucion
+*   **Core:** React y TypeScript para un rendimiento rápido y seguro.
+*   **Estilos:** Herramientas modernas de diseño para garantizar una estética premium.
+*   **Animaciones:** Motores de movimiento para transiciones y efectos visuales fluidos.
 
-1. Instale las dependencias del proyecto:
-   ```bash
-   npm install
-   ```
+---
 
-2. Ejecute el servidor de desarrollo local:
-   ```bash
-   npm run dev
-   ```
+## 🚀 Cómo Iniciar
 
-3. Construccion para produccion:
-   ```bash
-   npm run build
-   ```
+Al igual que el resto de los componentes de RetiScan, este portal se puede ejecutar fácilmente mediante Docker. Para más información, consulta el **[README principal del proyecto](../README.md)**.
 
-## Estructura del Sitio
-
-- `src/components/`: Componentes reutilizables basados en el sistema de diseño.
-- `src/sections/`: Secciones principales de la landing page.
-- `public/`: Recursos estaticos y multimedia.
+Para ejecución en modo de desarrollo local:
+1.  Instala las dependencias con `npm install`.
+2.  Inicia el servidor local con `npm run dev`.
