@@ -1,0 +1,25 @@
+# Exclude source control
+.git
+.gitignore
+
+# Exclude dependencies
+node_modules
+**/node_modules
+.dart_tool
+**/build
+dist
+**/dist
+
+# Exclude IDEs
+.vscode
+.idea
+*.swp
+
+# Exclude environment files
+.env
+*.pem
+
+# Docker specifics
+docker-compose.yml
+Dockerfile
+.dockerignore

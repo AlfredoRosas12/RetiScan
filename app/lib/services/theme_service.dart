@@ -66,7 +66,7 @@ class ThemeService extends ChangeNotifier {
           elevation: 0,
           iconTheme: IconThemeData(color: Color(0xFF17387A)),
         ),
-        cardTheme: CardThemeData(
+        cardTheme: CardTheme(
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -155,7 +155,7 @@ class ThemeService extends ChangeNotifier {
           elevation: 0,
           iconTheme: IconThemeData(color: Colors.white),
         ),
-        cardTheme: CardThemeData(
+        cardTheme: CardTheme(
           color: Color(0xFF16213E),
           elevation: 4,
           shape: RoundedRectangleBorder(

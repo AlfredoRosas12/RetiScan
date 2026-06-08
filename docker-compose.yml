@@ -1,12 +1,6 @@
 # ─────────────────────────────────────────────────────────────
-#  RetiScan — Docker Compose
-#  Servicios: api (Node.js) + db (PostgreSQL)
-#
-#  Uso:
-#    docker compose up -d          # Levantar todo en background
-#    docker compose logs -f api    # Ver logs de la API
-#    docker compose down           # Detener y eliminar contenedores
-#    docker compose down -v        # + eliminar volúmenes (borra BD)
+#  RetiScan — Orquestación Global de Infraestructura
+#  Servicios: api, db, landing-page, pwa, adminer
 # ─────────────────────────────────────────────────────────────
 
 services:
@@ -17,16 +11,16 @@ services:
     container_name: retiscan_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER:     ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB:       ${DB_NAME}
+      POSTGRES_USER:     ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB:       ${DB_NAME:-retiscan}
     volumes:
-      - pg_data:/var/lib/postgresql/data       # Datos persistentes
-      - ./config/init.sql:/docker-entrypoint-initdb.d/init.sql  # Auto-init
+      - pg_data:/var/lib/postgresql/data
+      - ./api/config/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-retiscan}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,18 +28,38 @@ services:
   # ── Node.js API ──────────────────────────────────────────────
   api:
     build:
-      context: .
+      context: ./api
       dockerfile: Dockerfile
     container_name: retiscan_api
     restart: unless-stopped
-    env_file: .env                     # Lee todas las variables del .env
+    env_file: ./api/.env
     environment:
-      DB_HOST: db                      # Override: apuntar al contenedor db
+      DB_HOST: db
     ports:
       - "${PORT:-3000}:3000"
     depends_on:
       db:
-        condition: service_healthy     # Espera a que Postgres esté listo
+        condition: service_healthy
+
+  # ── Landing Page (React/Vite) ────────────────────────────────
+  landing-page:
+    build:
+      context: ./page
+      dockerfile: Dockerfile
+    container_name: retiscan_landing
+    restart: unless-stopped
+    ports:
+      - "80:80"
+
+  # ── PWA (Flutter) ────────────────────────────────────────────
+  pwa:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: retiscan_pwa
+    restart: unless-stopped
+    ports:
+      - "81:80"
 
   # ── Adminer (DB GUI) ─────────────────────────────────────────
   adminer:
