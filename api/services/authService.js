@@ -136,6 +136,35 @@ const authService = {
         const { user, profileName, profileEmail } = await this.getProfileData(userId);
         return signToken({ ...user, email: profileEmail }, profileName);
     },
+
+    /**
+     * Genera un Trust Token (JWT firmado con secret separado, 30 días).
+     * Se emite tras una verificación 2FA exitosa si el usuario marcó "Recordar dispositivo".
+     * @param {string} userId
+     * @returns {string} trustToken
+     */
+    generateTrustToken(userId) {
+        return jwt.sign(
+            { id: userId, purpose: 'device_trust' },
+            env.JWT_SECRET + '_trust_device',
+            { expiresIn: '30d' }
+        );
+    },
+
+    /**
+     * Verifica un Trust Token y retorna el payload si es válido.
+     * @param {string} token
+     * @returns {{ id: string } | null}
+     */
+    verifyTrustToken(token) {
+        try {
+            const payload = jwt.verify(token, env.JWT_SECRET + '_trust_device');
+            if (payload.purpose !== 'device_trust') return null;
+            return payload;
+        } catch {
+            return null;
+        }
+    },
 };
 
 module.exports = authService;

@@ -3,6 +3,23 @@ const analysisController = require('../controllers/analysisController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const requireRole = require('../middlewares/roleMiddleware');
 const subscriptionMiddleware = require('../middlewares/subscriptionMiddleware');
+const multer = require('multer');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, uuidv4() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ 
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
 
 const router = Router();
 
@@ -45,8 +62,9 @@ const router = Router();
  */
 router.post('/',
     authMiddleware,
-    requireRole('MEDICO'),
+    requireRole('MEDICO', 'PACIENTE'),
     subscriptionMiddleware,
+    upload.single('image'),
     analysisController.createAnalysis
 );
 
@@ -112,7 +130,7 @@ router.get('/patient/:patientId',
  */
 router.get('/:id',
     authMiddleware,
-    requireRole('MEDICO'),
+    requireRole('MEDICO', 'PACIENTE'),
     analysisController.getAnalysisById
 );
 
@@ -165,6 +183,40 @@ router.delete('/:id',
     requireRole('MEDICO'),
     subscriptionMiddleware,
     analysisController.deleteAnalysis
+);
+
+/**
+ * @swagger
+ * /analyses/{id}/notes:
+ *   put:
+ *     summary: Actualizar notas médicas (solo del médico autenticado)
+ *     tags: [Analyses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Notas actualizadas
+ *       404:
+ *         description: Análisis no encontrado
+ */
+router.put('/:id/notes',
+    authMiddleware,
+    requireRole('MEDICO'),
+    analysisController.updateAnalysisNotes
 );
 
 module.exports = router;

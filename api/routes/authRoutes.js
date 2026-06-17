@@ -72,7 +72,7 @@ router.post('/login', loginLimiter, authController.login);
  *     summary: Verificar el OTP del login (Paso 2 de MFA)
  *     tags: [Auth]
  */
-router.post('/verify-login-otp', otpLimiter, authController.verifyLoginOtp);
+router.post('/verify-login-otp', authController.verifyLoginOtp);
 
 /**
  * @swagger
@@ -186,7 +186,7 @@ router.post('/send-otp', otpLimiter, authMiddleware, verificationController.send
  *       400:
  *         description: Código inválido o expirado
  */
-router.post('/verify-otp', otpLimiter, authMiddleware, verificationController.verifyOtp);
+router.post('/verify-otp', authMiddleware, verificationController.verifyOtp);
 /**
  * @swagger
  * /auth/forgot-password:

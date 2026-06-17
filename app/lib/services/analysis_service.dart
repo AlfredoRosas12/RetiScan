@@ -60,9 +60,20 @@ class AnalysisService {
     throw _apiError(res);
   }
 
-  /// GET /analyses/patient/:patientId — análisis de un paciente
+  /// GET /analyses/patient/:patientId — análisis de un paciente (solo médico)
   Future<List<Analysis>> getAnalysesByPatient(String patientId) async {
     final res = await ApiConfig.get('/analyses/patient/$patientId');
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+      final List<dynamic> list = body is Map ? (body['analyses'] ?? []) : body;
+      return list.map((e) => Analysis.fromJson(e as Map<String, dynamic>)).toList();
+    }
+    throw _apiError(res);
+  }
+
+  /// GET /analyses/my — ver mis análisis (solo paciente)
+  Future<List<Analysis>> getMyAnalyses() async {
+    final res = await ApiConfig.get('/analyses/my');
     if (res.statusCode == 200) {
       final body = jsonDecode(res.body);
       final List<dynamic> list = body is Map ? (body['analyses'] ?? []) : body;

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../models/analysis.dart';
+import '../services/analysis_service.dart';
 
 class HistoryScreen extends StatefulWidget {
   @override
@@ -8,36 +10,18 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late List<Animation<Offset>> _slideAnimations;
-  late List<Animation<double>> _fadeAnimations;
+  List<Animation<Offset>> _slideAnimations = [];
+  List<Animation<double>> _fadeAnimations = [];
 
-  // Datos de prueba simples - sin usar clases personalizadas
-  final List<Map<String, dynamic>> analysisHistory = [
-    {
-      'id': '1',
-      'date': '15/11/2024',
-      'time': '14:30',
-      'status': 'Normal',
-    },
-    {
-      'id': '2',
-      'date': '01/11/2024',
-      'time': '10:15',
-      'status': 'Normal',
-    },
-    {
-      'id': '3',
-      'date': '15/10/2024',
-      'time': '16:45',
-      'status': 'Leve',
-    },
-    {
-      'id': '4',
-      'date': '01/10/2024',
-      'time': '09:00',
-      'status': 'Normal',
-    },
-  ];
+  final AnalysisService _analysisService = AnalysisService();
+  List<Analysis> _analyses = [];
+  bool _isLoading = true;
+
+  // -- Paginación --
+  int _currentPage = 1;
+  int _itemsPerPage = 10;
+  List<Analysis> _paginatedAnalyses = [];
+  int get _totalPages => (_analyses.isEmpty) ? 1 : (_analyses.length / _itemsPerPage).ceil();
 
   @override
   void initState() {
@@ -46,9 +30,49 @@ class _HistoryScreenState extends State<HistoryScreen>
       duration: Duration(milliseconds: 400),
       vsync: this,
     );
+    _loadData();
+  }
 
+  Future<void> _loadData() async {
+    try {
+      final analyses = await _analysisService.getMyAnalyses();
+      if (mounted) {
+        setState(() {
+          _analyses = analyses;
+          _isLoading = false;
+        });
+        _paginate();
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _paginate() {
+    final startIndex = (_currentPage - 1) * _itemsPerPage;
+    final endIndex = startIndex + _itemsPerPage;
+    setState(() {
+      _paginatedAnalyses = _analyses.sublist(
+        startIndex,
+        endIndex > _analyses.length ? _analyses.length : endIndex,
+      );
+    });
+    _setupAnimations();
+    _controller.forward(from: 0);
+  }
+
+  void _changePage(int newPage) {
+    if (newPage >= 1 && newPage <= _totalPages) {
+      setState(() {
+        _currentPage = newPage;
+      });
+      _paginate();
+    }
+  }
+
+  void _setupAnimations() {
     _slideAnimations = List.generate(
-      analysisHistory.length,
+      _paginatedAnalyses.length,
       (index) => Tween<Offset>(
         begin: Offset(0.3, 0),
         end: Offset.zero,
@@ -56,8 +80,8 @@ class _HistoryScreenState extends State<HistoryScreen>
         CurvedAnimation(
           parent: _controller,
           curve: Interval(
-            index * 0.15,
-            0.5 + (index * 0.15),
+            (index * 0.05).clamp(0.0, 0.99),
+            (0.5 + index * 0.05).clamp(0.0, 1.0),
             curve: Curves.easeOutCubic,
           ),
         ),
@@ -65,20 +89,18 @@ class _HistoryScreenState extends State<HistoryScreen>
     );
 
     _fadeAnimations = List.generate(
-      analysisHistory.length,
+      _paginatedAnalyses.length,
       (index) => Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(
           parent: _controller,
           curve: Interval(
-            index * 0.15,
-            0.5 + (index * 0.15),
+            (index * 0.05).clamp(0.0, 0.99),
+            (0.5 + index * 0.05).clamp(0.0, 1.0),
             curve: Curves.easeIn,
           ),
         ),
       ),
     );
-
-    _controller.forward();
   }
 
   @override
@@ -87,33 +109,31 @@ class _HistoryScreenState extends State<HistoryScreen>
     super.dispose();
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Normal':
-        return Colors.green;
-      case 'Leve':
-        return Colors.orange;
-      case 'Moderado':
-        return Colors.deepOrange;
-      case 'Severo':
-        return Colors.red;
+  IconData _getStatusIcon(String status) {
+    switch (status.toUpperCase()) {
+      case 'COMPLETED':
+        return Icons.check_circle;
+      case 'PENDING':
+      case 'PROCESSING':
+        return Icons.hourglass_empty;
+      case 'FAILED':
+        return Icons.error;
       default:
-        return Colors.grey;
+        return Icons.info;
     }
   }
 
-  IconData _getStatusIcon(String status) {
-    switch (status) {
-      case 'Normal':
-        return Icons.check_circle;
-      case 'Leve':
-        return Icons.warning;
-      case 'Moderado':
-        return Icons.error;
-      case 'Severo':
-        return Icons.dangerous;
+  Color _getStatusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'COMPLETED':
+        return Colors.green;
+      case 'PENDING':
+      case 'PROCESSING':
+        return Colors.orange;
+      case 'FAILED':
+        return Colors.red;
       default:
-        return Icons.info;
+        return Colors.grey;
     }
   }
 
@@ -164,7 +184,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                         ),
                         SizedBox(height: 4),
                         Text(
-                          '${analysisHistory.length} registros',
+                          '${_analyses.length} registros',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -178,20 +198,31 @@ class _HistoryScreenState extends State<HistoryScreen>
               ),
             ),
             Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.all(16),
-                itemCount: analysisHistory.length,
-                itemBuilder: (context, index) {
-                  final analysis = analysisHistory[index];
-                  return SlideTransition(
-                    position: _slideAnimations[index],
-                    child: FadeTransition(
-                      opacity: _fadeAnimations[index],
-                      child: _buildHistoryCard(analysis, index),
-                    ),
-                  );
-                },
-              ),
+              child: _isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : _analyses.isEmpty
+                      ? Center(child: Text('No tienes análisis registrados aún', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5))))
+                      : Column(
+                          children: [
+                            Expanded(
+                              child: ListView.builder(
+                                padding: EdgeInsets.all(16),
+                                itemCount: _paginatedAnalyses.length,
+                                itemBuilder: (context, index) {
+                                  final analysis = _paginatedAnalyses[index];
+                                  return SlideTransition(
+                                    position: _slideAnimations[index],
+                                    child: FadeTransition(
+                                      opacity: _fadeAnimations[index],
+                                      child: _buildHistoryCard(analysis, index),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            _buildPaginationControls(),
+                          ],
+                        ),
             ),
           ],
         ),
@@ -199,9 +230,9 @@ class _HistoryScreenState extends State<HistoryScreen>
     );
   }
 
-  Widget _buildHistoryCard(Map<String, dynamic> analysis, int index) {
-    final statusColor = _getStatusColor(analysis['status']);
-    final statusIcon = _getStatusIcon(analysis['status']);
+  Widget _buildHistoryCard(Analysis analysis, int index) {
+    final statusColor = _getStatusColor(analysis.status);
+    final statusIcon = _getStatusIcon(analysis.status);
     final isLeft = index % 2 == 0;
 
     return Container(
@@ -259,7 +290,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    analysis['date'],
+                                    "${analysis.createdAt.day.toString().padLeft(2, '0')}/${analysis.createdAt.month.toString().padLeft(2, '0')}/${analysis.createdAt.year}",
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
@@ -268,7 +299,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                                   ),
                                   SizedBox(height: 2),
                                   Text(
-                                    analysis['time'],
+                                    "${analysis.createdAt.hour.toString().padLeft(2, '0')}:${analysis.createdAt.minute.toString().padLeft(2, '0')}",
                                     style: TextStyle(
                                       color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
                                       fontSize: 13,
@@ -292,7 +323,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                             ),
                           ),
                           child: Text(
-                            analysis['status'],
+                            analysis.status,
                             style: TextStyle(
                               color: statusColor,
                               fontWeight: FontWeight.bold,
@@ -331,6 +362,44 @@ class _HistoryScreenState extends State<HistoryScreen>
             color: color.withOpacity(0.3),
             blurRadius: 8,
             spreadRadius: 2,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaginationControls() {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1))),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Página $_currentPage de $_totalPages',
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+              fontSize: 14,
+            ),
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.chevron_left),
+                onPressed: _currentPage > 1 ? () => _changePage(_currentPage - 1) : null,
+                color: Theme.of(context).colorScheme.primary,
+                disabledColor: Theme.of(context).dividerColor.withOpacity(0.3),
+              ),
+              IconButton(
+                icon: Icon(Icons.chevron_right),
+                onPressed: _currentPage < _totalPages ? () => _changePage(_currentPage + 1) : null,
+                color: Theme.of(context).colorScheme.primary,
+                disabledColor: Theme.of(context).dividerColor.withOpacity(0.3),
+              ),
+            ],
           ),
         ],
       ),

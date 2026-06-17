@@ -44,6 +44,7 @@ class _AnalysisDetailModalState extends State<AnalysisDetailModal> {
         title: 'Diagnóstico Confirmado',
         message: 'Las notas médicas se han guardado exitosamente.',
         icon: const Icon(Icons.check_circle_outline, size: 28, color: Colors.greenAccent),
+        shouldIconPulse: false,
         backgroundColor: const Color(0xFF1E1E2E),
         borderColor: Colors.greenAccent.withOpacity(0.5),
         borderWidth: 1.5,
@@ -64,6 +65,7 @@ class _AnalysisDetailModalState extends State<AnalysisDetailModal> {
         title: 'Error',
         message: 'No se pudieron guardar las notas: ${e.toString().replaceAll('Exception: ', '')}',
         icon: const Icon(Icons.error_outline, size: 28, color: Colors.redAccent),
+        shouldIconPulse: false,
         backgroundColor: const Color(0xFF1E1E2E),
         borderColor: Colors.redAccent.withOpacity(0.5),
         borderWidth: 1.5,
@@ -78,6 +80,50 @@ class _AnalysisDetailModalState extends State<AnalysisDetailModal> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  void _showFullScreenImage(String imageUrl) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (context, _, __) {
+          return Scaffold(
+            backgroundColor: Colors.black,
+            body: Stack(
+              children: [
+                Center(
+                  child: InteractiveViewer(
+                    panEnabled: true,
+                    minScale: 0.5,
+                    maxScale: 4.0,
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  right: 16,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.black54,
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -120,18 +166,41 @@ class _AnalysisDetailModalState extends State<AnalysisDetailModal> {
                   children: [
                     // Retina Image Display
                     if (widget.analysis.imageUri != null)
-                      Container(
-                        height: 250,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: Colors.black12,
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Image.network(
-                          '${ApiConfig.baseUrl.replaceAll('/api', '')}/${widget.analysis.imageUri!}',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Center(child: Icon(Icons.broken_image, size: 60, color: Colors.grey)),
+                      GestureDetector(
+                        onTap: () {
+                          final url = '${ApiConfig.baseUrl.replaceAll('/api', '')}${widget.analysis.imageUri!.startsWith('/') ? widget.analysis.imageUri! : '/${widget.analysis.imageUri!}'}';
+                          _showFullScreenImage(url);
+                        },
+                        child: Container(
+                          height: 250,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.black12,
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.network(
+                                '${ApiConfig.baseUrl.replaceAll('/api', '')}${widget.analysis.imageUri!.startsWith('/') ? widget.analysis.imageUri! : '/${widget.analysis.imageUri!}'}',
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Center(child: Icon(Icons.broken_image, size: 60, color: Colors.grey)),
+                              ),
+                              Positioned(
+                                bottom: 12,
+                                right: 12,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.fullscreen, color: Colors.white, size: 20),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       )
                     else

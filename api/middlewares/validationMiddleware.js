@@ -8,10 +8,12 @@ const { body, validationResult } = require('express-validator');
 const validateMedicalRegistration = [
     body('firstName')
         .notEmpty().withMessage('El nombre es obligatorio.')
+        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/).withMessage('El nombre solo puede contener letras.')
         .isLength({ max: 100 }).withMessage('El nombre no puede tener más de 100 caracteres.'),
     
     body('paternalSurname')
         .notEmpty().withMessage('El apellido paterno es obligatorio.')
+        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/).withMessage('El apellido paterno solo puede contener letras.')
         .isLength({ max: 100 }).withMessage('El apellido paterno no puede tener más de 100 caracteres.'),
 
     body('email')

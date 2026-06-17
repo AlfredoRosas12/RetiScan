@@ -24,18 +24,21 @@ class Analysis {
   bool get isFinished => isCompleted || isFailed;
 
   factory Analysis.fromJson(Map<String, dynamic> json) {
+    DateTime parseDate(dynamic dateStr) {
+      if (dateStr == null) return DateTime.now().toLocal();
+      String s = dateStr.toString();
+      if (!s.endsWith('Z') && s.length > 10) s += 'Z';
+      return (DateTime.tryParse(s) ?? DateTime.now()).toLocal();
+    }
+
     return Analysis(
       id: json['id'] as String? ?? json['_id'] as String? ?? '',
       patientId: json['patient_id'] as String? ?? json['patientId'] as String? ?? '',
       status: json['status'] as String? ?? 'PENDING',
-      createdAt: json['created_at'] != null 
-          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
-          : json['createdAt'] != null
-              ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
-              : DateTime.now(),
+      createdAt: parseDate(json['created_at'] ?? json['createdAt']),
       aiResult: json['ai_result'] as Map<String, dynamic>? ?? json['aiResult'] as Map<String, dynamic>?,
       doctorNotes: json['doctor_notes'] as String? ?? json['doctorNotes'] as String?,
-      imageUri: json['image_url'] as String? ?? json['imageUrl'] as String?,
+      imageUri: json['image_uri'] as String? ?? json['imageUri'] as String? ?? json['image_url'] as String? ?? json['imageUrl'] as String?,
     );
   }
 

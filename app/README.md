@@ -1,31 +1,16 @@
-# RetiScan App — Aplicación de Escaneo y Consulta
+# retiscan
 
-Esta es la aplicación principal de RetiScan, diseñada como una Aplicación Web Progresiva (PWA). Permite a médicos y pacientes interactuar con el sistema de detección de retinopatía desde cualquier dispositivo con navegador web o de forma nativa en móviles.
+A new Flutter project.
 
----
+## Getting Started
 
-## 🌟 Características Principales
+This project is a starting point for a Flutter application.
 
-*   **Interfaz Multiplataforma:** Experiencia fluida tanto en computadoras de escritorio como en teléfonos móviles.
-*   **Captura y Escaneo:** Herramientas optimizadas para la toma y carga de fotografías de fondo de ojo.
-*   **Resultados en Tiempo Real:** Visualización detallada de los análisis generados por la inteligencia artificial.
-*   **Gestión de Reportes:** Generación y descarga de informes clínicos en formato profesional (PDF).
+A few resources to get you started if this is your first Flutter project:
 
----
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-## 🏗️ Tecnología Utilizada
-
-*   **Framework:** Flutter para un desarrollo multiplataforma de alta fidelidad.
-*   **Servicios:** Integración con servicios en la nube para el almacenamiento de archivos y sincronización de datos.
-*   **Visualización:** Gráficos estadísticos e indicadores de salud visual.
-
----
-
-## 🚀 Ejecución y Despliegue
-
-La aplicación está configurada para funcionar armoniosamente con el núcleo del sistema mediante contenedores. Para ejecutarla localmente, sigue los pasos detallados en el **[README principal del proyecto](../README.md)**.
-
-Si deseas realizar pruebas de desarrollo específicas para Flutter:
-1.  Asegúrate de tener instalado el SDK de Flutter.
-2.  Descarga las dependencias con `flutter pub get`.
-3.  Ejecuta la aplicación en tu navegador o emulador preferido.
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.

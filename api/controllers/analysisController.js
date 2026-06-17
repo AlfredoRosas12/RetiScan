@@ -1,20 +1,38 @@
 const analysisService = require('../services/analysisService');
+const Patient = require('../models/Patient');
 
 const analysisController = {
     /**
      * POST /api/analyses
      * Devuelve inmediatamente un 202 Accepted con el registro PENDING.
      * El procesamiento de IA comienza asincrónicamente en segundo plano.
-     * Body: { patientId, eye: 'LEFT'|'RIGHT', imageUri?, doctorNotes? }
-     * Requiere rol MEDICO.
      */
     async createAnalysis(req, res, next) {
         try {
-            const { patientId, eye, imageUri, doctorNotes } = req.body;
+            const { eye, doctorNotes } = req.body;
+            let patientId = req.body.patientId;
+            let doctorId = req.user.id;
+
+            if (req.user.role === 'PACIENTE') {
+                const patient = await Patient.findByUserId(req.user.id);
+                if (!patient) {
+                    return res.status(404).json({ error: 'Perfil de paciente no encontrado' });
+                }
+                patientId = patient.id;
+                doctorId = patient.doctor_id;
+            }
+
+            let imageUri = req.body.imageUri;
+
+            if (req.file) {
+                // Generar URL hacia la imagen estática servida en /uploads
+                imageUri = `/uploads/${req.file.filename}`;
+            }
+
             const analysis = await analysisService.createAnalysis({
                 patientId,
-                doctorId: req.user.id,
-                eye,
+                doctorId,
+                eye: eye || 'LEFT', // Default temporal
                 imageUri,
                 doctorNotes,
             });
@@ -60,12 +78,28 @@ const analysisController = {
 
     /**
      * GET /api/analyses/:id
-     * Obtiene un análisis por ID (con verificación de propiedad del médico).
-     * Requiere rol MEDICO.
+     * Obtiene un análisis por ID (con verificación de propiedad del médico o paciente).
+     * Requiere rol MEDICO o PACIENTE.
      */
     async getAnalysisById(req, res, next) {
         try {
-            const analysis = await analysisService.getById(req.params.id, req.user.id);
+            const id = req.params.id;
+            const analysis = await require('../models/Analysis').findById(id);
+            if (!analysis) {
+                return res.status(404).json({ error: 'Análisis no encontrado' });
+            }
+
+            if (req.user.role === 'PACIENTE') {
+                const patient = await Patient.findByUserId(req.user.id);
+                if (!patient || patient.id !== analysis.patient_id) {
+                    return res.status(404).json({ error: 'Análisis no encontrado' });
+                }
+            } else if (req.user.role === 'MEDICO') {
+                if (analysis.doctor_id !== req.user.id) {
+                    return res.status(404).json({ error: 'Análisis no encontrado' });
+                }
+            }
+
             return res.status(200).json({ analysis });
         } catch (err) {
             next(err);
@@ -95,6 +129,21 @@ const analysisController = {
         try {
             await analysisService.delete(req.params.id, req.user.id);
             return res.status(200).json({ message: 'Análisis eliminado' });
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    /**
+     * PUT /api/analyses/:id/notes
+     * Actualizar notas médicas de un análisis.
+     * Requiere rol MEDICO.
+     */
+    async updateAnalysisNotes(req, res, next) {
+        try {
+            const { notes } = req.body;
+            const updated = await analysisService.updateNotes(req.params.id, req.user.id, notes);
+            return res.status(200).json({ message: 'Notas actualizadas', analysis: updated });
         } catch (err) {
             next(err);
         }

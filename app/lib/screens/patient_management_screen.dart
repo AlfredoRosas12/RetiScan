@@ -584,7 +584,10 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
                         child: Text(estado, style: TextStyle(color: estadoColor, fontSize: 11, fontWeight: FontWeight.bold)),
                       ),
                       SizedBox(height: 8),
-                      Text("Hace 2 semanas", style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5))),
+                      Text(
+                        patient.lastVisit != null ? "${patient.lastVisit!.day.toString().padLeft(2, '0')}/${patient.lastVisit!.month.toString().padLeft(2, '0')}/${patient.lastVisit!.year}" : "Sin visitas", 
+                        style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5))
+                      ),
                     ],
                   ),
                   // Indicador visual para ver detalles (móvil)
@@ -694,7 +697,10 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
                             child: Text(estado, style: TextStyle(color: estadoColor, fontSize: 11, fontWeight: FontWeight.bold)),
                           )
                         ),
-                        DataCell(Text('Hace 2 semanas', style: TextStyle(color: textSecondary))),
+                        DataCell(Text(
+                          patient.lastVisit != null ? "${patient.lastVisit!.day.toString().padLeft(2, '0')}/${patient.lastVisit!.month.toString().padLeft(2, '0')}/${patient.lastVisit!.year}" : "Sin visitas",
+                          style: TextStyle(color: textSecondary)
+                        )),
                       ]
                     );
                   }).toList(),

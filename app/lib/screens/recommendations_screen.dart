@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/recommendation_service.dart';
+import '../services/analysis_service.dart';
 import '../widgets/responsive_wrapper.dart';
 
 class RecommendationsScreen extends StatefulWidget {
@@ -37,11 +38,26 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
     });
     try {
       final all = await _service.getMyRecommendations();
+      
+      // Fetch doctor notes from analyses to merge into recommendations
+      final analysisService = AnalysisService();
+      final analyses = await analysisService.getMyAnalyses();
+      final notes = analyses
+          .where((a) => a.doctorNotes != null && a.doctorNotes!.isNotEmpty)
+          .map((a) {
+            final date = '${a.createdAt.day}/${a.createdAt.month}/${a.createdAt.year}';
+            return {
+              'type': 'RECOMMENDATION',
+              'title': 'Nota Médica - Análisis del $date',
+              'description': a.doctorNotes,
+            };
+          })
+          .toList();
+
       setState(() {
-        _recommendations =
-            all.where((r) => r['type'] == 'RECOMMENDATION').toList();
-        _medications =
-            all.where((r) => r['type'] == 'MEDICATION').toList();
+        _recommendations = all.where((r) => r['type'] == 'RECOMMENDATION').toList();
+        _recommendations.addAll(notes); // Merge analysis notes
+        _medications = all.where((r) => r['type'] == 'MEDICATION').toList();
         _isLoading = false;
       });
     } catch (e) {

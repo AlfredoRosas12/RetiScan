@@ -26,6 +26,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static('public')); // Sirve /public/index.html en /
+app.use('/uploads', express.static('uploads')); // Sirve archivos estáticos (imágenes retina)
 
 // ── Swagger UI ─────────────────────────────────────────────────────────────
 const swaggerUiOptions = {
