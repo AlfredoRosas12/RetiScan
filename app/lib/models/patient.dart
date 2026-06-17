@@ -53,17 +53,19 @@ class Patient {
 
   factory Patient.fromJson(Map<String, dynamic> json) {
     try {
+      DateTime? parseDate(dynamic dateStr) {
+        if (dateStr == null) return null;
+        String s = dateStr.toString();
+        if (!s.endsWith('Z') && s.length > 10) s += 'Z';
+        return DateTime.tryParse(s)?.toLocal();
+      }
+
       DateTime? bd;
       final rawBd = json['birth_date'] ?? json['birthDate'];
       if (rawBd != null) bd = DateTime.tryParse(rawBd.toString());
 
-      DateTime? ca;
-      final rawCa = json['created_at'] ?? json['createdAt'];
-      if (rawCa != null) ca = DateTime.tryParse(rawCa.toString());
-
-      DateTime? lv;
-      final rawLv = json['last_visit'] ?? json['lastVisit'];
-      if (rawLv != null) lv = DateTime.tryParse(rawLv.toString());
+      DateTime? ca = parseDate(json['created_at'] ?? json['createdAt']);
+      DateTime? lv = parseDate(json['last_visit'] ?? json['lastVisit']);
 
       return Patient(
         id:              (json['id'] ?? '').toString(),

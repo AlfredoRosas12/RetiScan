@@ -12,6 +12,7 @@ import '../services/notification_service.dart';
 import '../services/analysis_service.dart';
 import '../services/auth_service.dart';
 import '../models/analysis.dart';
+import '../config/api_config.dart';
 
 class CaptureScreen extends StatefulWidget {
   @override
@@ -633,14 +634,25 @@ class _CaptureScreenState extends State<CaptureScreen>
                             offset: Offset(0, 10),
                           ),
                         ],
+                        image: (_analysisResult?.imageUri != null)
+                            ? DecorationImage(
+                                image: NetworkImage(
+                                  // ApiConfig.baseUrl is "http://host:3000/api", we need "http://host:3000/uploads/..."
+                                  '${ApiConfig.baseUrl.replaceAll('/api', '')}${_analysisResult!.imageUri!.startsWith('/') ? _analysisResult!.imageUri! : '/${_analysisResult!.imageUri!}'}',
+                                ),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
                       ),
-                      child: Center(
-                        child: Icon(
-                          Icons.image,
-                          size: 60,
-                          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.3),
-                        ),
-                      ),
+                      child: (_analysisResult?.imageUri == null)
+                          ? Center(
+                              child: Icon(
+                                Icons.image,
+                                size: 60,
+                                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.3),
+                              ),
+                            )
+                          : null,
                     ),
                     SizedBox(height: 20),
                     Container(

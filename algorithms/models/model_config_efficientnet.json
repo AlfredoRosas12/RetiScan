@@ -1,0 +1,35 @@
+{
+  "algoritmo": "EfficientNetB0",
+  "framework": "PyTorch",
+  "img_size": 224,
+  "num_classes": 5,
+  "class_names": [
+    "Mild",
+    "Moderate",
+    "No_DR",
+    "Proliferate_DR",
+    "Severe"
+  ],
+  "class_labels": {
+    "0": "Mild",
+    "1": "Moderate",
+    "2": "No_DR",
+    "3": "Proliferate_DR",
+    "4": "Severe"
+  },
+  "normalize_mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "normalize_std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "metricas": {
+    "kappa_cuadratico": 0.6145,
+    "auc_roc": 0.9486,
+    "log_loss": 0.5364
+  }
+}

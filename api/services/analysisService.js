@@ -12,65 +12,76 @@ const AI_Processing_Log = require('../models/AI_Processing_Log');
 
 // ── Emisor compartido (actúa como el "message broker" en el proceso) ────────
 const analysisEmitter = new EventEmitter();
-
-// ── Generador simulado de resultados de IA ─────────────────────────────────
-function generateMockAIResult() {
-    const grades = ['No DR', 'Mild', 'Moderate', 'Severe', 'Proliferative DR'];
-    const grade = grades[Math.floor(Math.random() * grades.length)];
-    return {
-        model_version: 'RetiScan-AI v1.0-mock',
-        processed_at: new Date().toISOString(),
-        grade,
-        confidence: parseFloat((0.75 + Math.random() * 0.24).toFixed(4)),
-        lesions_detected: {
-            microaneurysms: Math.random() > 0.5,
-            hemorrhages: Math.random() > 0.6,
-            hard_exudates: Math.random() > 0.7,
-            neovascularization: grade === 'Proliferative DR',
-        },
-        recommendation: grade === 'No DR'
-            ? 'Seguimiento anual recomendado.'
-            : 'Referir al oftalmólogo en menos de 4 semanas.',
-    };
-}
+const axios = require('axios');
+const FormData = require('form-data');
+const fs = require('fs');
+const path = require('path');
 
 // ── Consumidor de cola / trabajador asíncrono ──────────────────────────────
 analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
-    console.log(`[Cola] 📥 Trabajo de análisis recibido: ${analysisId}`);
+    console.log(`[Cola] Trabajo de análisis recibido: ${analysisId}`);
 
     let logEntry;
     try {
         // 1. Crear el registro de auditoría (registra start_time)
         logEntry = await AI_Processing_Log.create(analysisId);
-        console.log(`[Cola] 📝 Log creado: ${logEntry.task_id}`);
+        console.log(`[Cola] Log creado: ${logEntry.task_id}`);
 
         // 2. Transición → PROCESSING
         await Analysis.updateStatus(analysisId, 'PROCESSING', null);
-        console.log(`[Cola] ⚙️  Análisis ${analysisId} → PROCESSING`);
+        console.log(`[Cola]   Análisis ${analysisId} → PROCESSING`);
 
-        // 3. Simular retraso de inferencia de IA (2000-5000 ms)
-        const delay = 2000 + Math.floor(Math.random() * 3000);
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        // Obtener la información del análisis para obtener la URI de la imagen
+        const db = require('../config/database');
+        const result = await db.query('SELECT image_uri FROM analyses WHERE id = $1', [analysisId]);
+        const analysisData = result.rows[0];
 
-        // 4. Generar resultado de IA simulado
-        const aiResult = generateMockAIResult();
+        if (!analysisData || !analysisData.image_uri) {
+            throw new Error("No se encontró la imagen del análisis.");
+        }
+
+        // 3. Preparar la petición a FastAPI
+        const filename = analysisData.image_uri.split('/').pop();
+        const absolutePath = path.join(__dirname, '..', 'uploads', filename);
+
+        if (!fs.existsSync(absolutePath)) {
+            throw new Error(`El archivo físico no existe: ${absolutePath}`);
+        }
+
+        const formData = new FormData();
+        formData.append('image', fs.createReadStream(absolutePath));
+
+        // 4. Hacer la petición a FastAPI (puerto 8000)
+        console.log(`[Cola]  Enviando imagen a FastAPI (AI-RetiScan)...`);
+        const aiResponse = await axios.post('http://host.docker.internal:8000/predict', formData, {
+            headers: {
+                ...formData.getHeaders()
+            }
+        });
+
+        const aiResult = aiResponse.data;
 
         // 5. Transición → COMPLETED
         await Analysis.updateStatus(analysisId, 'COMPLETED', aiResult);
-        console.log(`[Cola] ✅ Análisis ${analysisId} → COMPLETED (grado: ${aiResult.grade})`);
+        console.log(`[Cola] Análisis ${analysisId} → COMPLETED (grado: ${aiResult.grade})`);
 
         // 6. Incrementar análisis del paciente
         await Patient.incrementAnalyses(patientId);
 
         // 7. Completar el registro de auditoría
         await AI_Processing_Log.complete(logEntry.task_id, 'COMPLETED');
-        console.log(`[Cola] 🗒️  Log completado`);
+        console.log(`[Cola] Log completado`);
 
     } catch (err) {
-        console.error(`[Cola] ❌ Error procesando análisis ${analysisId}:`, err.message);
+        console.error(`[Cola]  Error procesando análisis ${analysisId}:`, err.message);
+
+        // Extraer el mensaje detallado de FastAPI si existe (ej: validación de imagen)
+        const errorMsg = err.response && err.response.data && err.response.data.detail 
+                         ? err.response.data.detail 
+                         : err.message;
 
         // Marcar análisis como FAILED para que los clientes no se queden haciendo polling
-        await Analysis.updateStatus(analysisId, 'FAILED', { error: err.message }).catch(() => { });
+        await Analysis.updateStatus(analysisId, 'FAILED', { error: errorMsg }).catch(() => { });
 
         // Intentar cerrar el registro de auditoría de todas formas
         if (logEntry) {
@@ -109,7 +120,7 @@ const analysisService = {
 
         // Insertar con estado = 'PENDING'
         const analysis = await Analysis.create(patientId, doctorId, eye, imageUri, doctorNotes);
-        console.log(`[Servicio] 🚀 Análisis creado: ${analysis.id} | Status: PENDING`);
+        console.log(`[Servicio] Análisis creado: ${analysis.id} | Status: PENDING`);
 
         // Fire-and-forget: emite el trabajo al trabajador
         setImmediate(() => {
@@ -159,6 +170,17 @@ const analysisService = {
             throw err;
         }
         return deleted;
+    },
+
+    /** Actualiza las notas médicas de un análisis. */
+    async updateNotes(id, doctorId, notes) {
+        const updated = await Analysis.updateNotes(id, doctorId, notes);
+        if (!updated) {
+            const err = new Error('Análisis no encontrado o no autorizado');
+            err.statusCode = 404;
+            throw err;
+        }
+        return updated;
     },
 };
 

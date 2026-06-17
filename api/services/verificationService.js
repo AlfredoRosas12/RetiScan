@@ -60,7 +60,23 @@ const verificationService = {
     async sendPatientOtp(userId, email, type = 'OTP_EMAIL') {
         const user = await User.findById(userId);
         if (!user) throw Object.assign(new Error('Usuario no encontrado'), { statusCode: 404 });
-        // Removido: (user.is_verified) throw error. Permitimos solicitar OTP a usuarios verificados para MFA y cambios de contraseña.
+
+        // ── Validación Precoz: correo duplicado ──────────────────────
+        if (email) {
+            if (email.length > 255) {
+                throw Object.assign(
+                    new Error('El correo electrónico excede el límite de caracteres permitido.'),
+                    { statusCode: 400 }
+                );
+            }
+            const existingUser = await User.findByEmail(email);
+            if (existingUser && existingUser.id !== userId) {
+                throw Object.assign(
+                    new Error('Este correo electrónico ya está registrado por otro usuario. Por favor, utiliza uno diferente.'),
+                    { statusCode: 409 }
+                );
+            }
+        }
 
         const verification = await Verification.createOtp(userId, type);
 
@@ -91,11 +107,25 @@ const verificationService = {
     async verifyPatientOtp(userId, otp, type = 'OTP_EMAIL') {
         if (!otp) throw Object.assign(new Error('OTP requerido'), { statusCode: 400 });
 
-        const record = await Verification.findValidOtp(userId, otp, type);
-        if (!record) {
-            throw Object.assign(new Error('Código inválido o expirado'), { statusCode: 400 });
+        // Validar Lockout
+        const user = await User.findById(userId);
+        if (user && user.locked_until && new Date(user.locked_until) > new Date()) {
+            const diff = Math.ceil((new Date(user.locked_until) - new Date()) / 1000 / 60);
+            throw Object.assign(new Error(`Demasiados intentos. Tu cuenta está bloqueada por ${diff} minutos.`), { statusCode: 429 });
         }
 
+        const record = await Verification.findValidOtp(userId, otp, type);
+        if (!record) {
+            const updated = await User.incrementFailedAttempts(userId);
+            if (updated.locked_until && new Date(updated.locked_until) > new Date()) {
+                throw Object.assign(new Error('Has excedido el límite de intentos. Cuenta bloqueada por 5 minutos.'), { statusCode: 429 });
+            }
+            const remaining = 5 - updated.failed_attempts;
+            throw Object.assign(new Error(`Código inválido o expirado. Intentos restantes: ${remaining}`), { statusCode: 400 });
+        }
+
+        // Éxito: Resetear intentos y quemar OTP
+        await User.resetFailedAttempts(userId);
         await User.updateById(userId, { is_verified: true });
         await Verification.markUsed(record.id);
 

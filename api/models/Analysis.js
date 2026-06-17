@@ -109,6 +109,20 @@ const Analysis = {
         );
         return result.rows[0] || null;
     },
+
+    /**
+     * Actualiza las notas médicas de un análisis.
+     */
+    async updateNotes(id, doctorId, notes) {
+        const result = await pool.query(
+            `UPDATE analyses 
+             SET doctor_notes = $1, updated_at = NOW() 
+             WHERE id = $2 AND doctor_id = $3 
+             RETURNING *`,
+            [notes, id, doctorId]
+        );
+        return result.rows[0] || null;
+    },
 };
 
 module.exports = Analysis;

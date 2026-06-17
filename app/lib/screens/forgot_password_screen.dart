@@ -81,7 +81,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   }
 
   // ── PASO 1: Enviar correo con OTP ──
-  Future<void> _sendOtp() async {
+  Future<void> _sendOtp({bool isResend = false}) async {
     final email = _emailController.text.trim();
     if (email.isEmpty || !email.contains('@')) {
       setState(() => _errorMsg = 'Por favor ingresa un correo válido');
@@ -91,9 +91,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
 
     try {
       await _authService.forgotPassword(email);
-      // Pasar al paso 2 (OTP)
-      _pageController.nextPage(duration: Duration(milliseconds: 400), curve: Curves.easeInOut);
-      setState(() => _currentStep = 1);
+      if (!isResend) {
+        // Pasar al paso 2 (OTP)
+        _pageController.nextPage(duration: Duration(milliseconds: 400), curve: Curves.easeInOut);
+        setState(() => _currentStep = 1);
+      } else {
+        if (mounted) {
+          Flushbar(
+            title: 'Código reenviado',
+            message: 'Se ha enviado un nuevo código de verificación a tu correo.',
+            icon: Icon(Icons.info_outline, size: 28, color: Colors.blueAccent),
+            backgroundColor: Color(0xFF1E1E2E),
+            borderColor: Colors.blueAccent.withOpacity(0.5),
+            borderWidth: 1.5,
+            borderRadius: BorderRadius.circular(12),
+            margin: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            flushbarPosition: FlushbarPosition.TOP,
+            duration: Duration(seconds: 3),
+            boxShadows: [BoxShadow(color: Colors.blueAccent.withOpacity(0.2), blurRadius: 12)],
+            titleColor: Colors.white,
+            messageColor: Colors.white70,
+          ).show(context);
+        }
+      }
     } catch (e) {
       setState(() => _errorMsg = e.toString().replaceAll('Exception: ', ''));
     } finally {
@@ -466,7 +487,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
           // Link para reenviar código
           Center(
             child: TextButton(
-              onPressed: _isLoading ? null : _sendOtp,
+              onPressed: _isLoading ? null : () => _sendOtp(isResend: true),
               child: Text('¿No llegó el código? Reenviar', style: TextStyle(color: Colors.white54, fontSize: 13)),
             ),
           ),

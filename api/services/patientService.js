@@ -143,6 +143,21 @@ const patientService = {
             throw err;
         }
 
+        // ── Validación Precoz: correo duplicado ──────────────────────
+        if (fields.email) {
+            if (fields.email.length > 255) {
+                const err = new Error('El correo electrónico excede el límite de caracteres permitido.');
+                err.statusCode = 400;
+                throw err;
+            }
+            const existingUser = await User.findByEmail(fields.email);
+            if (existingUser && existingUser.id !== userId) {
+                const err = new Error('Este correo electrónico ya está registrado por otro usuario. Por favor, utiliza uno diferente.');
+                err.statusCode = 409;
+                throw err;
+            }
+        }
+
         const updated = await Patient.updateByIdAndDoctor(patient.id, patient.doctor_id, {
             birthDate: fields.birthDate,
             gender: fields.gender,

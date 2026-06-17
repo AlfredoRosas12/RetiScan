@@ -13,13 +13,22 @@ const authController = {
      */
     async login(req, res, next) {
         try {
-            const { identifier, password } = req.body;
+            const { identifier, password, trustToken } = req.body;
             if (!identifier || !password) {
                 return res.status(400).json({ error: 'Se requieren "identifier" y "password"' });
             }
-            
+
             // 1. Validar Credenciales
+            const userCheck = await User.findByEmail(identifier) || await User.findByUsername(identifier);
+            if (userCheck && userCheck.locked_until && new Date(userCheck.locked_until) > new Date()) {
+                const diff = Math.ceil((new Date(userCheck.locked_until) - new Date()) / 1000 / 60);
+                return res.status(429).json({ error: `Tu cuenta está bloqueada temporalmente. Intenta de nuevo en ${diff} minutos.` });
+            }
+
             const { user, profileName, profileEmail } = await authService.validateCredentials(identifier, password);
+             // Si llegamos aquí, la contraseña es correcta, reseteamos intentos
+            await User.resetFailedAttempts(user.id);
+            
             const targetEmail = profileEmail || user.email;
             
             if (!targetEmail) {
@@ -37,7 +46,26 @@ const authController = {
                 return res.status(200).json({ message: 'Inicio de sesión exitoso', token, user: userData });
             }
 
-            // 2. Generar y Enviar OTP (solo si tiene correo)
+            // 1.5 Verificar Trust Token ("Recordar dispositivo")
+            if (trustToken) {
+                const trustPayload = authService.verifyTrustToken(trustToken);
+                if (trustPayload && trustPayload.id === user.id) {
+                    // Trust Token válido → saltar 2FA
+                    const { refreshToken, token, user: userData } = await authService.generateTokensForUser(user, profileEmail, profileName);
+                    
+                    const maxAgeDays = parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS) || 7;
+                    res.cookie('refreshToken', refreshToken, {
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV === 'production',
+                        sameSite: 'lax',
+                        maxAge: maxAgeDays * 24 * 60 * 60 * 1000
+                    });
+
+                    return res.status(200).json({ message: 'Inicio de sesión exitoso', token, user: userData, trustedDevice: true });
+                }
+            }
+
+            // 2. Generar y Enviar OTP (solo si tiene correo y no hay trust token válido)
             const otpRecord = await Verification.createOtp(user.id, 'OTP_EMAIL');
             await emailService.sendLoginOtp(targetEmail, otpRecord.token, profileName);
 
@@ -58,18 +86,33 @@ const authController = {
      */
     async verifyLoginOtp(req, res, next) {
         try {
-            const { userId, otp } = req.body;
+            const { userId, otp, rememberDevice } = req.body;
             if (!userId || !otp) {
                 return res.status(400).json({ error: 'Se requiere userId y otp' });
             }
 
-            // Validar
-            const validOtp = await Verification.findValidOtp(userId, otp, 'OTP_EMAIL');
-            if (!validOtp) {
-                return res.status(401).json({ error: 'El código OTP es inválido o ha expirado' });
+            // Validar Lockout
+            const userCheck = await User.findById(userId);
+            if (!userCheck) return res.status(404).json({ error: 'Usuario no encontrado' });
+            
+            if (userCheck.locked_until && new Date(userCheck.locked_until) > new Date()) {
+                const diff = Math.ceil((new Date(userCheck.locked_until) - new Date()) / 1000 / 60);
+                return res.status(429).json({ error: `Demasiados intentos. Tu cuenta está bloqueada por ${diff} minutos.` });
             }
 
-            // Quemar OTP
+            // Validar OTP
+            const validOtp = await Verification.findValidOtp(userId, otp, 'OTP_EMAIL');
+            if (!validOtp) {
+                const updated = await User.incrementFailedAttempts(userId);
+                if (updated.locked_until && new Date(updated.locked_until) > new Date()) {
+                    return res.status(429).json({ error: 'Has excedido el límite de intentos. Cuenta bloqueada por 5 minutos.' });
+                }
+                const remaining = 5 - updated.failed_attempts;
+                return res.status(401).json({ error: `Código OTP inválido o expirado. Intentos restantes: ${remaining}` });
+            }
+
+            // Quemar OTP y resetear intentos
+            await User.resetFailedAttempts(userId);
             await Verification.markUsed(validOtp.id);
 
             // Emitir tokens finales
@@ -85,7 +128,13 @@ const authController = {
                 maxAge: maxAgeDays * 24 * 60 * 60 * 1000
             });
 
-            return res.status(200).json({ message: 'Inicio de sesión exitoso', token, user: userData });
+            // Generar Trust Token si el usuario marcó "Recordar dispositivo"
+            const response = { message: 'Inicio de sesión exitoso', token, user: userData };
+            if (rememberDevice) {
+                response.trustToken = authService.generateTrustToken(userId);
+            }
+
+            return res.status(200).json(response);
         } catch (err) {
             next(err);
         }

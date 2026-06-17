@@ -7,6 +7,8 @@ import 'settings_screen.dart';
 import 'patient_management_screen.dart';
 import '../services/auth_service.dart';
 import '../services/patient_service.dart';
+import '../services/analysis_service.dart';
+import '../models/analysis.dart';
 import '../widgets/dashboard_charts.dart';
 
 // Las referencias de color se obtendrán ahora directamente del Theme
@@ -424,6 +426,14 @@ class _HomeContentState extends State<HomeContent>
   List<dynamic> _recentPatients = [];
   bool _isLoadingPatients = false;
   int _totalPatientsCount = 0;
+  int _doctorTotalAnalyses = 0;
+  int _doctorAnalysesHoy = 0;
+  int _doctorPendientes = 0;
+  List<Analysis> _allDoctorAnalyses = []; // Para la gráfica
+
+  // Análisis del paciente (solo para el paciente)
+  List<Analysis> _patientAnalyses = [];
+  bool _isLoadingAnalyses = false;
 
   @override
   void initState() {
@@ -455,6 +465,8 @@ class _HomeContentState extends State<HomeContent>
     // Si es médico, cargar los últimos 3 pacientes reales
     if (_authService.isDoctor) {
       _fetchRecentPatients();
+    } else {
+      _fetchPatientAnalyses();
     }
   }
 
@@ -462,10 +474,37 @@ class _HomeContentState extends State<HomeContent>
     if (mounted) setState(() => _isLoadingPatients = true);
     try {
       final patients = await PatientService().getPatients();
+      
+      int totalCount = 0;
+      int todayCount = 0;
+      int pendingCount = 0;
+      List<Analysis> allAnalyses = [];
+      
+      // Obtenemos los análisis en paralelo
+      await Future.wait(patients.map((p) async {
+        totalCount += p.totalAnalyses;
+        try {
+          final analyses = await AnalysisService().getAnalysesByPatient(p.id);
+          allAnalyses.addAll(analyses);
+          final now = DateTime.now();
+          for (var a in analyses) {
+            if (a.isPending || a.isProcessing) pendingCount++;
+            if (a.createdAt.year == now.year && 
+                a.createdAt.month == now.month && 
+                a.createdAt.day == now.day) {
+              todayCount++;
+            }
+          }
+        } catch (_) {}
+      }));
+
       if (mounted) {
         setState(() {
-          // Tomar solo los últimos 3 (el endpoint ya los ordena por fecha de creación)
           _totalPatientsCount = patients.length;
+          _doctorTotalAnalyses = totalCount;
+          _doctorAnalysesHoy = todayCount;
+          _doctorPendientes = pendingCount;
+          _allDoctorAnalyses = allAnalyses;
           _recentPatients = patients.take(3).toList();
         });
       }
@@ -473,6 +512,22 @@ class _HomeContentState extends State<HomeContent>
       debugPrint('Error cargando pacientes recientes: $e');
     } finally {
       if (mounted) setState(() => _isLoadingPatients = false);
+    }
+  }
+
+  Future<void> _fetchPatientAnalyses() async {
+    if (mounted) setState(() => _isLoadingAnalyses = true);
+    try {
+      final analyses = await AnalysisService().getMyAnalyses();
+      if (mounted) {
+        setState(() {
+          _patientAnalyses = analyses;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error cargando análisis del paciente: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingAnalyses = false);
     }
   }
 
@@ -572,9 +627,22 @@ class _HomeContentState extends State<HomeContent>
                 ] else ...[
                   _animated(3, _buildSectionTitle('Últimos Análisis')),
                   SizedBox(height: 12),
-                  _animated(4, _buildAnalysisCard('15 Nov 2024', 'Normal')),
-                  _animated(4, _buildAnalysisCard('01 Nov 2024', 'Normal')),
-                  _animated(4, _buildAnalysisCard('15 Oct 2024', 'Leve')),
+                  if (_isLoadingAnalyses)
+                    _animated(4, Center(child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(),
+                    )))
+                  else if (_patientAnalyses.isEmpty)
+                    _animated(4, Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(child: Text('Aún no tienes análisis.', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)))),
+                    ))
+                  else
+                    ..._patientAnalyses.take(3).map((a) {
+                      final grade = a.aiResult?['grade'] ?? 'Normal';
+                      final date = '${a.createdAt.day} ${_monthName(a.createdAt.month)} ${a.createdAt.year}';
+                      return _animated(4, _buildAnalysisCard(date, grade));
+                    }).toList(),
                 ],
                 SizedBox(height: 28),
 
@@ -700,30 +768,37 @@ class _HomeContentState extends State<HomeContent>
   // ── Stats Row (contextualizado) ──
   Widget _buildStatsRow(BuildContext context, bool isDoctor) {
     if (isDoctor) {
-      final totalPatients = _authService.isDoctor ? _recentPatients.length : 0; // Se actualizará a real abajo si lo bajamos completo, o pasaremos el conteo.
-      // Ya que HomeScreen baja solo los últimos 3, necesitamos el count real. 
-      // Por ahora usaré '...' o el len real cuando modifiquemos authService para traer el total.
       final spacing = MediaQuery.of(context).size.width < 600 ? 8.0 : 12.0;
 
       return Row(
         children: [
           Expanded(child: _buildStatCard(Icons.people, 'Pacientes', _isLoadingPatients ? '...' : '$_totalPatientsCount')),
           SizedBox(width: spacing),
-          Expanded(child: _buildStatCard(Icons.analytics_outlined, 'Análisis Hoy', '0')),
+          Expanded(child: _buildStatCard(Icons.analytics_outlined, 'Análisis Hoy', _isLoadingPatients ? '...' : '$_doctorAnalysesHoy')),
           SizedBox(width: spacing),
-          Expanded(child: _buildStatCard(Icons.pending_actions, 'Pendientes', '0')),
+          Expanded(child: _buildStatCard(Icons.pending_actions, 'Pendientes', _isLoadingPatients ? '...' : '$_doctorPendientes')),
         ],
       );
     }
     
     final spacing = MediaQuery.of(context).size.width < 600 ? 8.0 : 12.0;
+    
+    // Patient Stats
+    final totalAnalyses = _isLoadingAnalyses ? '...' : '${_patientAnalyses.length}';
+    final lastStatus = _patientAnalyses.isNotEmpty 
+        ? (_patientAnalyses.first.aiResult?['grade'] ?? 'Normal')
+        : '—';
+    final nextRev = _patientAnalyses.isNotEmpty 
+        ? '${_patientAnalyses.first.createdAt.add(Duration(days: 365)).day} ${_monthName(_patientAnalyses.first.createdAt.add(Duration(days: 365)).month)}'
+        : '—';
+
     return Row(
       children: [
-        Expanded(child: _buildStatCard(Icons.visibility, 'Mis Análisis', '8')),
+        Expanded(child: _buildStatCard(Icons.visibility, 'Mis Análisis', totalAnalyses)),
         SizedBox(width: spacing),
-        Expanded(child: _buildStatCard(Icons.check_circle_outline, 'Estado', 'Normal')),
+        Expanded(child: _buildStatCard(Icons.check_circle_outline, 'Estado', lastStatus)),
         SizedBox(width: spacing),
-        Expanded(child: _buildStatCard(Icons.calendar_today, 'Próxima Rev.', '15 Dic')),
+        Expanded(child: _buildStatCard(Icons.calendar_today, 'Próxima Rev.', nextRev)),
       ],
     );
   }
@@ -787,14 +862,14 @@ class _HomeContentState extends State<HomeContent>
                   color: primaryColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text('2024', style: TextStyle(color: primaryColor, fontSize: 12, fontWeight: FontWeight.w600)),
+                child: Text(DateTime.now().year.toString(), style: TextStyle(color: primaryColor, fontSize: 12, fontWeight: FontWeight.w600)),
               ),
             ],
           ),
           SizedBox(height: 20),
           SizedBox(
             height: 180,
-            child: DashboardCharts(),
+            child: DashboardCharts(analyses: isDoctor ? _allDoctorAnalyses : _patientAnalyses),
           ),
           SizedBox(height: 16),
           Row(

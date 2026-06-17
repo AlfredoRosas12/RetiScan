@@ -21,7 +21,7 @@ const User = {
     /** Busca un usuario por email (incluye password_hash para auth). */
     async findByEmail(email) {
         const result = await pool.query(
-            'SELECT * FROM users WHERE email = $1',
+            'SELECT *, failed_attempts, locked_until FROM users WHERE email = $1',
             [email]
         );
         return result.rows[0] || null;
@@ -30,7 +30,7 @@ const User = {
     /** Busca un usuario por username (incluye password_hash para auth). */
     async findByUsername(username) {
         const result = await pool.query(
-            'SELECT * FROM users WHERE username = $1',
+            'SELECT *, failed_attempts, locked_until FROM users WHERE username = $1',
             [username]
         );
         return result.rows[0] || null;
@@ -39,7 +39,7 @@ const User = {
     /** Busca un usuario por UUID (excluye password_hash). */
     async findById(id) {
         const result = await pool.query(
-            'SELECT id, username, email, role, must_change_password, is_verified, subscription_end_date, created_at, updated_at FROM users WHERE id = $1',
+            'SELECT id, username, email, role, must_change_password, is_verified, subscription_end_date, failed_attempts, locked_until, created_at, updated_at FROM users WHERE id = $1',
             [id]
         );
         return result.rows[0] || null;
@@ -107,6 +107,27 @@ const User = {
     /** Compara una contraseña en texto plano contra el hash almacenado. */
     async comparePassword(plainPassword, hash) {
         return bcrypt.compare(plainPassword, hash);
+    },
+
+    /** Incrementa intentos fallidos. Si llega a 5, bloquea por 15 min. */
+    async incrementFailedAttempts(userId) {
+        const result = await pool.query(
+            `UPDATE users 
+             SET failed_attempts = failed_attempts + 1,
+                 locked_until = CASE WHEN failed_attempts + 1 >= 5 THEN NOW() + INTERVAL '5 minutes' ELSE locked_until END
+             WHERE id = $1
+             RETURNING failed_attempts, locked_until`,
+            [userId]
+        );
+        return result.rows[0];
+    },
+
+    /** Resetea contador tras login exitoso. */
+    async resetFailedAttempts(userId) {
+        await pool.query(
+            'UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = $1',
+            [userId]
+        );
     },
 };
 

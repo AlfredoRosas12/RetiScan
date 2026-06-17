@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS users (
   must_change_password  BOOLEAN      NOT NULL DEFAULT FALSE,
   is_verified           BOOLEAN      NOT NULL DEFAULT FALSE,
   subscription_end_date TIMESTAMPTZ,                                  -- NULL = sin suscripción / FREE
+  failed_attempts       INTEGER      NOT NULL DEFAULT 0,
+  locked_until          TIMESTAMPTZ,
   created_at            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at            TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
