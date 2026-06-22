@@ -1,4 +1,5 @@
-import { Smartphone, Cloud, Wifi, Zap, Shield, Activity } from 'lucide-react';
+import { Smartphone, Zap, Shield } from 'lucide-react';
+import loginMockup from '@/assets/LOGIN_RETISCAN.png';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { SplitText } from '@/app/components/SplitText';
 
@@ -33,141 +34,42 @@ export function ProductShowcase() {
   ];
 
   return (
-    <section id="producto" className="relative py-16 lg:py-20 bg-white overflow-hidden">
+    <section id="producto" className="relative py-16 lg:py-20 bg-background overflow-hidden transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6">
         <div ref={title.ref} style={title.style} className="text-center max-w-3xl mx-auto mb-10 lg:mb-12">
-          <div className="inline-block px-3 py-1.5 bg-cyan-50 rounded-full mb-4">
-            <span className="text-xs font-semibold text-cyan-700">EL PRODUCTO</span>
+          <div className="inline-block px-3 py-1.5 bg-cyan-50 dark:bg-cyan-900/20 rounded-full mb-4">
+            <span className="text-xs font-semibold text-cyan-700 dark:text-cyan-400">EL PRODUCTO</span>
           </div>
-          <SplitText as="h2" className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
-            La Potencia de la PWA de RetiScan
+          <SplitText as="h2" className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mb-4">
+            Acceso Instantáneo y Potente
           </SplitText>
-          <p className="text-lg text-slate-600">
+          <p className="text-lg text-slate-600 dark:text-slate-400">
             Una plataforma diagnóstica basada en la nube que transforma cualquier dispositivo
-            en una estación profesional de screening de retinopatía. Despliega al instante, escala sin esfuerzo.
+            en una estación profesional de evaluación. Sin descargas, sin esperas, directo en tu navegador.
           </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
-          {/* Left - Mobile App Mockup */}
+          {/* Left - App Mockup Image */}
           <div ref={phone.ref} style={phone.style} className="relative">
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/20 to-blue-600/20 rounded-3xl blur-3xl"></div>
 
-            {/* Phone Frame */}
-            <div className="relative max-w-[220px] sm:max-w-[250px] mx-auto">
-              <div className="bg-slate-900 rounded-[3rem] p-3 shadow-2xl border-4 md:border-8 border-slate-800 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] transition-shadow duration-500">
-                <div className="bg-white rounded-[2.5rem] overflow-hidden">
-                  {/* Status Bar */}
-                  <div className="bg-slate-900 h-8 flex items-center justify-center">
-                    <div className="w-32 h-5 bg-slate-800 rounded-full"></div>
-                  </div>
-
-                  {/* App Content */}
-                  <div className="bg-gradient-to-br from-slate-50 to-white">
-                    {/* App Header */}
-                    <div className="bg-gradient-to-r from-cyan-500 to-blue-600 p-4 text-white">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <Activity className="w-4 h-4 text-white" />
-                          </div>
-                          <div>
-                            <div className="text-[10px] opacity-80">RetiScan PWA</div>
-                            <div className="font-bold text-sm">Panel de Control</div>
-                          </div>
-                        </div>
-                        <div className="w-8 h-8 bg-white/20 rounded-xl backdrop-blur-sm"></div>
-                      </div>
-
-                      {/* Stats Cards */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2">
-                          <div className="text-xl font-bold">127</div>
-                          <div className="text-[10px] opacity-80">Escaneos Hoy</div>
-                        </div>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2">
-                          <div className="text-xl font-bold">8</div>
-                          <div className="text-[10px] opacity-80">Alto Riesgo</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Recent Scans */}
-                    <div className="p-4 space-y-2">
-                      <div className="text-xs font-semibold text-slate-900 mb-2">Análisis Recientes</div>
-
-                      {[
-                        { id: '4721', time: '2 min', risk: 'Bajo Riesgo', riskColor: 'green', barGradient: 'from-green-400 to-emerald-500', imgGradient: 'from-cyan-100 to-blue-100' },
-                        { id: '4720', time: '5 min', risk: 'Alto Riesgo', riskColor: 'orange', barGradient: 'from-orange-400 to-red-500', imgGradient: 'from-orange-100 to-red-100' },
-                      ].map((scan) => (
-                        <div key={scan.id} className="bg-white rounded-xl p-3 shadow border border-slate-100">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className={`w-8 h-8 bg-gradient-to-br ${scan.imgGradient} rounded-lg flex-shrink-0`}></div>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-xs font-semibold text-slate-900">Paciente #{scan.id}</div>
-                              <div className="text-[10px] text-slate-500">Hace {scan.time}</div>
-                            </div>
-                            <div className={`px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-${scan.riskColor}-100 text-${scan.riskColor}-700 whitespace-nowrap`}>
-                              {scan.risk}
-                            </div>
-                          </div>
-                          <div className={`h-1.5 bg-gradient-to-r ${scan.barGradient} rounded-full`}></div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Bottom Nav */}
-                    <div className="border-t border-slate-200 p-4">
-                      <div className="grid grid-cols-4 gap-2">
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg"></div>
-                          <div className="w-8 h-1 bg-cyan-500 rounded-full"></div>
-                        </div>
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="w-8 h-8 bg-slate-200 rounded-lg"></div>
-                        </div>
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="w-8 h-8 bg-slate-200 rounded-lg"></div>
-                        </div>
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="w-8 h-8 bg-slate-200 rounded-lg"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating badges */}
-              <div className="absolute -left-6 top-1/4 bg-white rounded-2xl shadow-xl p-4 border border-slate-200 hover:scale-105 hover:shadow-2xl transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <Cloud className="w-8 h-8 text-cyan-600" />
-                  <div>
-                    <div className="text-xs text-slate-500">En la Nube</div>
-                    <div className="text-sm font-bold text-slate-900">Siempre Activo</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute -right-6 top-2/3 bg-white rounded-2xl shadow-xl p-4 border border-slate-200 hover:scale-105 hover:shadow-2xl transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <Wifi className="w-8 h-8 text-blue-600" />
-                  <div>
-                    <div className="text-xs text-slate-500">Funciona Offline</div>
-                    <div className="text-sm font-bold text-slate-900">Tecnología PWA</div>
-                  </div>
-                </div>
-              </div>
+            <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-slate-900 dark:border-slate-800 transition-transform duration-500 hover:scale-[1.02]">
+              <img
+                src={loginMockup}
+                alt="Pantalla de inicio de RetiScan en dispositivo móvil"
+                className="w-full h-auto object-cover"
+              />
             </div>
           </div>
 
           {/* Right - Features */}
           <div className="space-y-8">
             <div ref={features.ref} style={features.style}>
-              <h3 className="text-3xl font-bold text-slate-900 mb-4">
+              <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
                 Poder Diagnóstico Empresarial en Tu Bolsillo
               </h3>
-              <p className="text-lg text-slate-600 leading-relaxed">
+              <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
                 RetiScan PWA ofrece screening de retinopatía diabética de grado clínico
                 mediante una Progressive Web Application accesible desde cualquier dispositivo moderno.
                 Sin descargas de tiendas de aplicaciones, sin instalaciones complejas.
@@ -184,8 +86,8 @@ export function ProductShowcase() {
                       <Icon className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-bold text-slate-900 mb-2">{feat.title}</h4>
-                      <p className="text-slate-600">{feat.desc}</p>
+                      <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{feat.title}</h4>
+                      <p className="text-slate-600 dark:text-slate-400">{feat.desc}</p>
                     </div>
                   </div>
                 );

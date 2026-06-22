@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import logo from '../../assets/logo_sin_fondo.png';
+import { ThemeToggle } from './ThemeToggle';
+import logo from '../../assets/OJO_RETISCAN.png';
 
 interface HeaderProps {
   onNavigate?: () => void;
 }
 
 const navLinks = [
-  { id: 'producto', label: 'Producto' },
-  { id: 'como-funciona', label: 'Cómo Funciona' },
+  { id: 'descubre', label: 'Descubre' },
+  { id: 'beneficios', label: 'Beneficios' },
   { id: 'suscripcion', label: 'Suscripción' },
-  { id: 'seguridad', label: 'Seguridad' },
-  { id: 'contacto', label: 'Contacto' }
+  { id: 'faq', label: 'Preguntas Frecuentes' }
 ];
 
 export function Header({ onNavigate }: HeaderProps) {
@@ -54,8 +54,8 @@ export function Header({ onNavigate }: HeaderProps) {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-        ? 'bg-white/98 backdrop-blur-md shadow-lg shadow-slate-900/5 py-2'
-        : 'bg-white/95 backdrop-blur-sm border-b border-slate-100 py-4'
+        ? 'bg-white/98 dark:bg-slate-950/98 backdrop-blur-md shadow-lg shadow-slate-900/5 py-2'
+        : 'bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm border-b border-slate-100 dark:border-slate-800 py-4'
         }`}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -64,7 +64,7 @@ export function Header({ onNavigate }: HeaderProps) {
             src={logo}
             className={`object-contain transition-all duration-300 ${scrolled ? 'h-8' : 'h-10'}`}
           />
-          <span className={`font-semibold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent transition-all duration-300 ${scrolled ? 'text-xl' : 'text-2xl'}`}>
+          <span className={`font-semibold bg-gradient-to-r from-blue-900 to-blue-700 dark:from-blue-400 dark:to-cyan-300 bg-clip-text text-transparent transition-all duration-300 ${scrolled ? 'text-xl' : 'text-2xl'}`}>
             RetiScan
           </span>
         </div>
@@ -76,21 +76,25 @@ export function Header({ onNavigate }: HeaderProps) {
               key={link.id}
               href={`#${link.id}`}
               onClick={() => onNavigate?.()}
-              className={`transition-colors relative py-1 group ${activeSection === link.id ? 'text-slate-800 font-medium' : 'text-slate-600 hover:text-slate-800'}`}
+              className={`transition-colors relative py-1 group text-sm lg:text-base ${activeSection === link.id ? 'text-slate-800 dark:text-white font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white font-medium'}`}
             >
               {link.label}
               <span className={`absolute -bottom-1 left-0 h-[3px] rounded-full bg-blue-600 transition-all duration-300 ${activeSection === link.id ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
             </a>
           ))}
+          <ThemeToggle />
         </nav>
 
-        {/* Mobile Menu Button */}
-        <button
-          className="md:hidden p-2 text-slate-700"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          {isMenuOpen ? <X /> : <Menu />}
-        </button>
+        {/* Mobile Controls */}
+        <div className="md:hidden flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            className="p-2 text-slate-700 dark:text-slate-300"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X /> : <Menu />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Navigation Overlay */}
@@ -100,14 +104,14 @@ export function Header({ onNavigate }: HeaderProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white border-t border-slate-100 overflow-hidden"
+            className="md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 overflow-hidden"
           >
             <nav className="flex flex-col p-6 gap-4">
               {navLinks.map((link) => (
                 <a
                   key={link.id}
                   href={`#${link.id}`}
-                  className={`text-lg font-medium ${activeSection === link.id ? 'text-blue-700' : 'text-slate-700 hover:text-blue-700'}`}
+                  className={`text-lg font-medium ${activeSection === link.id ? 'text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-400'}`}
                   onClick={() => {
                     setIsMenuOpen(false);
                     onNavigate?.();
@@ -116,7 +120,7 @@ export function Header({ onNavigate }: HeaderProps) {
                   {link.label}
                 </a>
               ))}
-              <div className="h-px bg-slate-100 my-4" />
+              <div className="h-px bg-slate-100 dark:bg-slate-800 my-4" />
             </nav>
           </motion.div>
         )}

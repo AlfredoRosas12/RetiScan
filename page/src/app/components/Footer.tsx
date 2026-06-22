@@ -1,5 +1,5 @@
 import { Mail, Shield, FileText } from 'lucide-react';
-import logo from '../../assets/logo_sin_fondo.png';
+import logo from '../../assets/OJO_RETISCAN.png';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 
 export function Footer() {
@@ -9,13 +9,13 @@ export function Footer() {
   const col3 = useScrollReveal('fade-up', { delay: 400 });
 
   return (
-    <footer className="relative bg-slate-900 text-slate-300">
+    <footer className="relative bg-slate-900 dark:bg-slate-950 text-slate-300 transition-colors duration-500">
       <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12 text-center md:text-left">
           {/* Brand */}
           <div ref={brand.ref} style={brand.style} className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-white p-2 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="flex items-center justify-center md:justify-start gap-3">
+              <div className="bg-white dark:bg-slate-800 p-2 rounded-xl flex items-center justify-center shadow-lg transition-colors">
                 <img
                   src={logo}
                   className="h-8 w-auto object-contain"
@@ -26,7 +26,7 @@ export function Footer() {
                 RetiScan
               </span>
             </div>
-            <p className="text-sm leading-relaxed">
+            <p className="text-sm leading-relaxed max-w-xs mx-auto md:mx-0">
               Tecnología de inteligencia artificial para la detección temprana
               de retinopatía diabética. Salvando la visión de miles de pacientes.
             </p>
@@ -63,7 +63,7 @@ export function Footer() {
           {/* Legal & Contact */}
           <div ref={col3.ref} style={col3.style}>
             <h3 className="text-white font-semibold mb-4">Legal y Contacto</h3>
-            <ul className="space-y-3 text-sm">
+            <ul className="space-y-3 text-sm flex flex-col items-center md:items-start">
               <li>
                 <a href="#privacidad" className="flex items-center gap-2 hover:text-cyan-400 hover:translate-x-1 transition-all duration-200">
                   <Shield className="w-4 h-4" />
@@ -94,11 +94,11 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="pt-8 border-t border-slate-800">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-center md:text-left">
             <p className="text-slate-500">
               © 2026 RetiScan. Todos los derechos reservados. Dispositivo médico clase II.
             </p>
-            <div className="flex gap-6">
+            <div className="flex flex-wrap justify-center gap-6">
               <a href="#facebook" className="hover:text-cyan-400 transition-colors">Facebook</a>
               <a href="#twitter" className="hover:text-cyan-400 transition-colors">Twitter</a>
               <a href="#linkedin" className="hover:text-cyan-400 transition-colors">LinkedIn</a>
@@ -107,8 +107,8 @@ export function Footer() {
           </div>
 
           {/* Medical disclaimer */}
-          <div className="mt-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-            <p className="text-xs text-slate-400 leading-relaxed">
+          <div className="mt-6 p-4 bg-slate-800/30 dark:bg-slate-900/40 rounded-xl border border-slate-700/50">
+            <p className="text-xs text-slate-400 leading-relaxed text-center md:text-left">
               <strong className="text-slate-300">Aviso Médico:</strong> RetiScan es una herramienta de apoyo diagnóstico
               y no sustituye la consulta con un profesional de la salud. Los resultados deben ser interpretados
               por un oftalmólogo certificado. Este servicio no está destinado para emergencias médicas.

@@ -44,9 +44,9 @@ export function SecuritySection() {
   const badges = useScrollReveal('fade-up', { delay: 300 });
 
   return (
-    <section id="seguridad" className="relative py-16 lg:py-20 bg-gradient-to-br from-slate-50 to-white overflow-hidden">
+    <section id="seguridad" className="relative py-16 lg:py-20 bg-gradient-to-br from-slate-50 to-white dark:from-background dark:to-slate-900 overflow-hidden transition-colors duration-500">
       {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-[0.02]">
+      <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]">
         <div className="absolute inset-0" style={{
           backgroundImage: `radial-gradient(circle at 2px 2px, rgb(30 58 138) 1px, transparent 0)`,
           backgroundSize: '48px 48px'
@@ -56,14 +56,14 @@ export function SecuritySection() {
       <div className="relative max-w-7xl mx-auto px-6">
         {/* Header */}
         <div ref={title.ref} style={title.style} className="text-center max-w-3xl mx-auto mb-10 lg:mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full mb-4">
-            <Shield className="w-4 h-4 text-blue-700" />
-            <span className="text-xs font-semibold text-blue-700">CONFIANZA PROFESIONAL</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-full mb-4">
+            <Shield className="w-4 h-4 text-blue-700 dark:text-blue-400" />
+            <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">CONFIANZA PROFESIONAL</span>
           </div>
-          <SplitText as="h2" className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+          <SplitText as="h2" className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mb-4">
             Tu Ética Médica, Respaldada por Nuestra Tecnología
           </SplitText>
-          <p className="text-lg text-slate-700">
+          <p className="text-lg text-slate-700 dark:text-slate-300">
             En RetiScan, proteger la salud y privacidad del paciente no es solo una función técnica, es nuestro compromiso fundamental con tu práctica clínica.
           </p>
         </div>
@@ -75,7 +75,7 @@ export function SecuritySection() {
             const reveal = cardReveals[index];
             return (
               <div key={index} ref={reveal.ref} style={reveal.style} className="group">
-                <GlowCard glowColor="rgba(0, 204, 255, 0.12)" className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-blue-300 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 shadow-lg cursor-default h-full">
+                <GlowCard glowColor="rgba(0, 204, 255, 0.12)" className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 shadow-lg cursor-default h-full backdrop-blur-sm">
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0">
                       <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
@@ -83,8 +83,8 @@ export function SecuritySection() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg text-slate-900 mb-2">{feature.title}</h3>
-                      <p className="text-sm text-slate-700 leading-relaxed">{feature.description}</p>
+                      <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2">{feature.title}</h3>
+                      <p className="text-sm text-slate-700 dark:text-slate-400 leading-relaxed">{feature.description}</p>
                     </div>
                   </div>
                 </GlowCard>
@@ -97,11 +97,11 @@ export function SecuritySection() {
         <div ref={promise.ref} style={promise.style} className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 md:p-8 mb-12 shadow-xl relative overflow-hidden">
           {/* Subtle decor */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
-          
+
           <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
             <div className="flex-shrink-0">
               <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-2xl">
-                <CheckCircle2 className="w-8 h-8 text-white" strokeWidth={2.5}/>
+                <CheckCircle2 className="w-8 h-8 text-white" strokeWidth={2.5} />
               </div>
             </div>
             <div className="flex-1 text-center md:text-left text-white">
@@ -128,15 +128,15 @@ export function SecuritySection() {
 
         {/* Compliance Badges */}
         <div ref={badges.ref} style={badges.style} className="text-center">
-          <h3 className="text-xl lg:text-2xl font-bold text-slate-900 mb-6 font-primary">Respaldado por Estándares Internacionales</h3>
+          <h3 className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white mb-6 font-primary">Respaldado por Estándares Internacionales</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
             {complianceBadges.map((badge, index) => (
-              <div key={index} className="bg-white rounded-2xl p-4 lg:p-6 border border-slate-200 shadow-lg hover:shadow-xl hover:-translate-y-2 hover:border-cyan-300 transition-all duration-500 group cursor-default">
+              <div key={index} className="bg-white dark:bg-slate-900/50 rounded-2xl p-4 lg:p-6 border border-slate-200 dark:border-slate-800 shadow-lg hover:shadow-xl hover:-translate-y-2 hover:border-cyan-300 dark:hover:border-cyan-500 transition-all duration-500 group cursor-default backdrop-blur-sm">
                 <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-md group-hover:scale-110 transition-transform duration-300">
                   <IconCheck badge={badge.name} />
                 </div>
-                <div className="font-bold text-sm lg:text-base text-slate-900 mb-0.5">{badge.name}</div>
-                <div className="text-[10px] text-blue-600 font-bold tracking-widest uppercase">{badge.status}</div>
+                <div className="font-bold text-sm lg:text-base text-slate-900 dark:text-white mb-0.5">{badge.name}</div>
+                <div className="text-[10px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{badge.status}</div>
               </div>
             ))}
           </div>

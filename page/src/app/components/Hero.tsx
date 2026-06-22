@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Sparkles, Eye, ArrowRight, Play } from 'lucide-react';
-import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
+import mockupApp from '@/assets/MOCKUPS_APP.png';
 import { useCountUp } from '@/hooks/useCountUp';
 import { SplitText } from '@/app/components/SplitText';
 import { MagneticButton } from '@/app/components/MagneticButton';
@@ -12,9 +12,7 @@ export function Hero() {
   const scans = useCountUp(50, { suffix: 'K+', duration: 1800 });
 
   return (
-    <section
-      className="relative min-h-screen flex items-center overflow-hidden noise-overlay"
-    >
+    <section className="relative min-h-screen flex items-center overflow-hidden noise-overlay">
       <div
         className="absolute inset-0 animated-gradient"
         style={{
@@ -42,14 +40,14 @@ export function Hero() {
           <div className="animate-blur-in delay-300">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 border border-white/20 rounded-full backdrop-blur-sm">
               <Sparkles className="w-4 h-4 text-cyan-300" />
-              <span className="text-xs sm:text-sm font-medium text-white">Detección de Retinopatía Diabética por IA</span>
+              <span className="text-xs sm:text-sm font-medium text-white">Detección de Daño Retinal por Inteligencia Artificial</span>
             </div>
           </div>
 
           {/* WORD BY WORD animated title */}
           <SplitText
             as="h1"
-            className="text-4xl lg:text-5xl font-bold leading-tight text-balance text-white max-w-4xl mx-auto lg:mx-0"
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-balance text-white max-w-4xl mx-auto lg:mx-0"
             baseDelay={500}
             stagger={80}
           >
@@ -58,12 +56,12 @@ export function Hero() {
 
           {/* Subtitle with shimmer gradient */}
           <div className="animate-slide-up delay-800">
-            <p className="text-lg lg:text-xl text-white/90 leading-relaxed">
+            <p className="text-base sm:text-lg lg:text-xl text-white/90 leading-relaxed">
               Preciso, rápido y accesible desde cualquier dispositivo.
               <span className="font-bold text-shimmer bg-gradient-to-r from-amber-100 via-white to-amber-100 bg-clip-text text-transparent drop-shadow-sm">
-                {' '}Screening de nivel empresarial{' '}
+                {' '}Evaluación Especializada{' '}
               </span>
-              con análisis de aprendizaje profundo.
+              con análisis inteligente de alta precisión.
             </p>
           </div>
 
@@ -79,7 +77,7 @@ export function Hero() {
             </MagneticButton>
 
             <MagneticButton
-              className="px-6 py-3 bg-white hover:bg-slate-50 text-blue-900 shadow-xl hover:shadow-2xl rounded-xl font-bold hover:-translate-y-2 active:translate-y-0 transition-all duration-500 flex items-center justify-center gap-2 text-base sm:w-auto w-full"
+              className="px-6 py-3 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-blue-900 shadow-xl hover:shadow-2xl rounded-xl font-bold hover:-translate-y-2 active:translate-y-0 transition-all duration-500 flex items-center justify-center gap-2 text-base sm:w-auto w-full"
               onClick={() => setIsDemoOpen(true)}
             >
               <Play className="w-5 h-5" />
@@ -113,10 +111,10 @@ export function Hero() {
           <div className="absolute inset-0 bg-white/10 rounded-3xl blur-3xl animate-float-slow"></div>
 
           <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20 hover:shadow-[0_40px_80px_-20px_rgba(0,204,255,0.3)] transition-shadow duration-700">
-            <ImageWithFallback
-              src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=1080"
-              alt="Doctora amigable revisando análisis médicos en tablet"
-              className="w-full h-auto object-cover aspect-video max-h-[400px]"
+            <img
+              src={mockupApp}
+              alt="Visualización de la aplicación en múltiples dispositivos"
+              className="w-full h-auto object-cover"
             />
 
             {/* Floating AI card */}

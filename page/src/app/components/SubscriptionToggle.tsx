@@ -24,29 +24,29 @@ export function SubscriptionToggle({ billingCycle, onChange }: SubscriptionToggl
   }, [billingCycle, prevCycle]);
 
   const isPremium = billingCycle !== 'gratis';
-  const direction = (billingCycle === 'gratis' ? 0 : 1) > (prevCycle === 'gratis' ? 0 : 1) 
-    ? 'right' 
+  const direction = (billingCycle === 'gratis' ? 0 : 1) > (prevCycle === 'gratis' ? 0 : 1)
+    ? 'right'
     : (billingCycle === 'gratis' ? 0 : 1) < (prevCycle === 'gratis' ? 0 : 1) ? 'left' : 'none';
 
   return (
-    <div className="relative w-[340px] h-[64px] bg-white rounded-full p-1 shadow-[0_4px_20px_rgba(0,0,0,0.08)] flex items-center overflow-hidden border border-gray-50">
-      
-      {/* Sliding Black Indicator */}
-      <div 
-        className="absolute h-[calc(100%-8px)] bg-slate-950 rounded-full transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-0"
+    <div className="relative w-[340px] h-[64px] bg-white dark:bg-slate-900 rounded-full p-1 shadow-[0_4px_20px_rgba(0,0,0,0.08)] flex items-center overflow-hidden border border-gray-50 dark:border-slate-800 transition-colors">
+
+      {/* Sliding Dark Indicator */}
+      <div
+        className="absolute h-[calc(100%-8px)] bg-slate-950 dark:bg-blue-600 rounded-full transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-0"
         style={{
           width: isPremium ? '182px' : '150px',
           left: isPremium ? '154px' : '4px',
-          transform: isStretching && direction !== 'none' 
-            ? `scaleX(1.15) translateX(${direction === 'right' ? '10px' : '-10px'})` 
+          transform: isStretching && direction !== 'none'
+            ? `scaleX(1.15) translateX(${direction === 'right' ? '10px' : '-10px'})`
             : 'scaleX(1) translateX(0)',
           transformOrigin: direction === 'right' ? 'left center' : 'right center'
         }}
       >
         {/* White Active Pill (Only in Premium state) */}
         {isPremium && (
-          <div 
-            className="absolute top-1 bottom-1 bg-white rounded-full shadow-sm transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]"
+          <div
+            className="absolute top-1 bottom-1 bg-white dark:bg-slate-900 rounded-full shadow-sm transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]"
             style={{
               width: '84px',
               left: billingCycle === 'mensual' ? '4px' : '94px',
@@ -57,26 +57,25 @@ export function SubscriptionToggle({ billingCycle, onChange }: SubscriptionToggl
 
       {/* Content Layout */}
       <div className="relative flex w-full h-full z-10 items-center">
-        
+
         {/* Left Zone: Gratis */}
         <button
           onClick={() => onChange('gratis')}
-          className={`w-[150px] h-full flex items-center justify-center transition-colors duration-500 ${
-            !isPremium ? 'text-white' : 'text-gray-400 hover:text-gray-500'
-          }`}
+          className={`w-[150px] h-full flex items-center justify-center transition-colors duration-500 ${!isPremium ? 'text-white' : 'text-gray-400 dark:text-slate-500 hover:text-gray-500 dark:hover:text-slate-300'
+            }`}
         >
           <span className="text-lg font-bold">Gratis</span>
         </button>
 
         {/* Right Zone: Premium Structure */}
-        <div 
+        <div
           className="flex-1 h-full flex flex-col items-center justify-center cursor-pointer"
           onClick={() => !isPremium && onChange('mensual')}
         >
           {!isPremium ? (
             <div className="flex flex-col items-center">
-              <span className="text-sm font-bold text-gray-800">Premium</span>
-              <div className="flex gap-2 text-[10px] text-gray-400 font-medium tracking-tight">
+              <span className="text-sm font-bold text-gray-800 dark:text-slate-300">Premium</span>
+              <div className="flex gap-2 text-[10px] text-gray-400 dark:text-slate-500 font-medium tracking-tight">
                 <span>Mensual</span>
                 <span>Anual</span>
               </div>
@@ -85,17 +84,15 @@ export function SubscriptionToggle({ billingCycle, onChange }: SubscriptionToggl
             <div className="flex w-full h-full relative p-1">
               <button
                 onClick={(e) => { e.stopPropagation(); onChange('mensual'); }}
-                className={`flex-1 h-full flex items-center justify-center transition-colors duration-400 font-semibold text-sm z-10 ${
-                  billingCycle === 'mensual' ? 'text-black' : 'text-white'
-                }`}
+                className={`flex-1 h-full flex items-center justify-center transition-colors duration-400 font-semibold text-sm z-10 ${billingCycle === 'mensual' ? 'text-black dark:text-white' : 'text-white'
+                  }`}
               >
                 Mensual
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); onChange('anual'); }}
-                className={`flex-1 h-full flex items-center justify-center transition-colors duration-400 font-semibold text-sm z-10 ${
-                  billingCycle === 'anual' ? 'text-black' : 'text-white'
-                }`}
+                className={`flex-1 h-full flex items-center justify-center transition-colors duration-400 font-semibold text-sm z-10 ${billingCycle === 'anual' ? 'text-black dark:text-white' : 'text-white'
+                  }`}
               >
                 Anual
               </button>

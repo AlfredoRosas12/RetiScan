@@ -15,7 +15,7 @@ const plans = [
     popular: false,
     gradient: 'from-slate-600 to-slate-700',
     features: [
-      { name: 'Escaneos de IA ilimitados', included: true },
+      { name: 'Análisis inteligentes ilimitados', included: true },
       { name: 'Almacenamiento cifrado de expedientes (PHI)', included: true },
       { name: 'Reportes diagnósticos en PDF estándar', included: true },
       { name: 'Cumplimiento HIPAA/NOM-024 garantizado', included: true },
@@ -28,7 +28,7 @@ const plans = [
       { name: 'Gestor de cuenta dedicado', included: false }
     ],
     freeFeatures: [
-      { name: '5 escaneos de IA al mes', included: true },
+      { name: '5 análisis inteligentes al mes', included: true },
       { name: 'Resultados en tiempo real (sin almacenamiento)', included: true },
       { name: 'Cumplimiento HIPAA/NOM-024 garantizado', included: true },
       { name: 'Reportes diagnósticos en PDF', included: false },
@@ -47,20 +47,20 @@ const plans = [
     popular: true,
     gradient: 'from-cyan-500 to-blue-600',
     features: [
-      { name: 'Escaneos de IA ilimitados', included: true },
+      { name: 'Análisis inteligentes ilimitados', included: true },
       { name: 'Almacenamiento cifrado ilimitado', included: true },
       { name: 'Reportes PDF personalizables con marca', included: true },
       { name: 'Cumplimiento HIPAA/NOM-024 garantizado', included: true },
       { name: 'Soporte prioritario 24/7 (teléfono y chat)', included: true },
       { name: 'Hasta 10 cuentas de especialistas', included: true },
-      { name: 'Prioridad en procesamiento de IA', included: true },
+      { name: 'Prioridad en procesamiento inteligente', included: true },
       { name: 'Integración PACS / EHR', included: true },
       { name: 'Auditoría de acceso a expedientes', included: true },
       { name: 'Panel de analítica clínica avanzada', included: true },
       { name: 'Gestor de cuenta dedicado', included: true }
     ],
     freeFeatures: [
-      { name: '5 escaneos de IA al mes', included: true },
+      { name: '5 análisis inteligentes al mes', included: true },
       { name: 'Resultados en tiempo real (sin almacenamiento)', included: true },
       { name: 'Cumplimiento HIPAA/NOM-024 garantizado', included: true },
       { name: 'Acceso a documentación médica', included: true },
@@ -153,9 +153,9 @@ export function Pricing({ onSelectPlan }: PricingProps) {
                 )}
 
                 <div
-                  className={`relative flex-1 bg-white/95 backdrop-blur-xl rounded-3xl transition-all duration-500 hover:-translate-y-1 overflow-hidden flex flex-col ${plan.popular
-                    ? 'border-2 border-cyan-400 shadow-[0_15px_40px_-10px_rgba(6,182,212,0.25)] hover:shadow-[0_20px_50px_-10px_rgba(6,182,212,0.35)] lg:scale-[1.03]'
-                    : 'border border-slate-200/80 shadow-lg hover:shadow-xl hover:border-slate-300'
+                  className={`relative flex-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl transition-all duration-500 hover:-translate-y-1 overflow-hidden flex flex-col ${plan.popular
+                    ? 'border-2 border-cyan-400 dark:border-cyan-500 shadow-[0_15px_40px_-10px_rgba(6,182,212,0.25)] dark:shadow-[0_15px_40px_-10px_rgba(6,182,212,0.4)] hover:shadow-[0_20px_50px_-10px_rgba(6,182,212,0.35)] lg:scale-[1.03]'
+                    : 'border border-slate-200/80 dark:border-slate-800 shadow-lg hover:shadow-xl hover:border-slate-300 dark:hover:border-slate-700'
                     }`}
                 >
                   {/* Spotlight Hover Effect */}
@@ -165,10 +165,10 @@ export function Pricing({ onSelectPlan }: PricingProps) {
 
                   <div className="p-6 md:p-8 flex-1 flex flex-col relative z-10 w-full">
                     {/* Billing Badge */}
-                    <div className="inline-flex self-start items-center gap-2 px-3 py-1 bg-slate-50 border border-slate-100 rounded-full mb-5">
-                      <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">{isFree ? 'Plan Gratuito' : `Facturación ${plan.billing}`}</span>
+                    <div className="inline-flex self-start items-center gap-2 px-3 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-full mb-5">
+                      <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">{isFree ? 'Plan Gratuito' : `Facturación ${plan.billing}`}</span>
                       {plan.popular && billingCycle === 'anual' && (
-                        <span className="px-1.5 py-0.5 bg-cyan-100 text-cyan-700 text-[10px] font-bold rounded-full">
+                        <span className="px-1.5 py-0.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 text-[10px] font-bold rounded-full">
                           -{savingsPercentage}%
                         </span>
                       )}
@@ -176,25 +176,25 @@ export function Pricing({ onSelectPlan }: PricingProps) {
 
                     {/* Icon and Name */}
                     <div className="flex items-center gap-4 mb-3">
-                      <div className={`w-12 h-12 bg-gradient-to-br ${plan.popular ? 'from-cyan-400 to-blue-600 shadow-md' : plan.gradient} rounded-[14px] flex items-center justify-center border border-white/50 transform group-hover:scale-105 transition-transform duration-300`}>
+                      <div className={`w-12 h-12 bg-gradient-to-br ${plan.popular ? 'from-cyan-400 to-blue-600 shadow-md' : plan.gradient} rounded-[14px] flex items-center justify-center border border-white/50 dark:border-slate-700 transform group-hover:scale-105 transition-transform duration-300`}>
                         <Icon className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className={`text-xl md:text-2xl font-extrabold tracking-tight ${plan.popular ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-cyan-600' : 'text-slate-900'}`}>{plan.name}</h3>
+                        <h3 className={`text-xl md:text-2xl font-extrabold tracking-tight ${plan.popular ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-cyan-600 dark:from-blue-400 dark:to-cyan-300' : 'text-slate-900 dark:text-white'}`}>{plan.name}</h3>
                       </div>
                     </div>
 
-                    <p className="text-sm text-slate-500 mb-6 min-h-[2.5rem] leading-snug">{plan.description}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 min-h-[2.5rem] leading-snug">{plan.description}</p>
 
                     {/* Price Section */}
                     <div className="mb-6 relative">
                       <div className="flex items-end gap-1.5 mb-1.5">
                         {price === 0 ? (
-                          <span className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">Gratis</span>
+                          <span className="text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight">Gratis</span>
                         ) : (
                           <>
-                            <span className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">${price}</span>
-                            <span className="text-lg text-slate-500 mb-1 font-medium">/mes</span>
+                            <span className="text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight">${price}</span>
+                            <span className="text-lg text-slate-500 dark:text-slate-400 mb-1 font-medium">/mes</span>
                           </>
                         )}
 
@@ -202,23 +202,23 @@ export function Pricing({ onSelectPlan }: PricingProps) {
                       {isAnnual && savings > 0 && price !== 0 && (
                         <div className="space-y-1 mt-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-400 line-through decoration-slate-300">${plan.monthlyPrice}/mes</span>
-                            <span className="text-[11px] font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded-full border border-cyan-100">
+                            <span className="text-xs text-slate-400 line-through decoration-slate-300 dark:decoration-slate-600">${plan.monthlyPrice}/mes</span>
+                            <span className="text-[11px] font-bold text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-900/20 px-2 py-0.5 rounded-full border border-cyan-100 dark:border-cyan-800">
                               Ahorras ${savings * 12}/año
                             </span>
                           </div>
-                          <p className="text-[11px] font-medium text-slate-500">
+                          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                             Facturado ${price * 12} anual • {savingsPercentage}% desc.
                           </p>
                         </div>
                       )}
                       {!isAnnual && price !== 0 && (
-                        <p className="text-[11px] font-medium text-slate-500 mt-1">
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1">
                           Facturado mensual • Sin compromiso
                         </p>
                       )}
                       {price === 0 && (
-                        <p className="text-[11px] font-medium text-slate-500 mt-1">
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1">
                           Acceso básico para evaluar plataforma
                         </p>
                       )}
@@ -229,7 +229,7 @@ export function Pricing({ onSelectPlan }: PricingProps) {
                       onClick={() => onSelectPlan?.(isFree ? 'Gratis' : plan.name)}
                       className={`w-full py-3 px-4 rounded-xl font-bold text-sm transition-all duration-300 mb-6 hover:-translate-y-0.5 relative overflow-hidden group/btn ${plan.popular
                         ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_4px_15px_rgba(6,182,212,0.4)] hover:shadow-[0_6px_20px_rgba(6,182,212,0.5)] border border-cyan-400/50'
-                        : 'bg-slate-900 hover:bg-slate-800 text-white shadow-md'
+                        : 'bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white shadow-md'
                         }`}
                     >
                       <span className="relative z-10 flex items-center justify-center gap-2">
@@ -242,23 +242,23 @@ export function Pricing({ onSelectPlan }: PricingProps) {
 
                     {/* Features List */}
                     <div className="space-y-3 mt-auto">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-3">
+                      <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-3">
                         Qué Incluye
-                        <div className="flex-1 h-px bg-slate-100"></div>
+                        <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800"></div>
                       </div>
                       <div className="space-y-2.5">
                         {features.map((feature, featureIndex) => (
                           <div key={featureIndex} className="flex items-start gap-3 group/feature">
                             {feature.included ? (
-                              <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 transition-all duration-300 ${plan.popular ? 'bg-cyan-100 text-cyan-600 group-hover/feature:bg-cyan-200' : 'bg-emerald-100 text-emerald-600'}`}>
+                              <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 transition-all duration-300 ${plan.popular ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 group-hover/feature:bg-cyan-200' : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'}`}>
                                 <Check className="w-3 h-3" strokeWidth={3} />
                               </div>
                             ) : (
-                              <div className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 bg-slate-100">
-                                <X className="w-3 h-3 text-slate-400" strokeWidth={2.5} />
+                              <div className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 bg-slate-100 dark:bg-slate-800">
+                                <X className="w-3 h-3 text-slate-400 dark:text-slate-600" strokeWidth={2.5} />
                               </div>
                             )}
-                            <span className={`text-[13px] md:text-sm leading-snug transition-colors duration-300 ${feature.included ? 'text-slate-700 font-medium' : 'text-slate-400 font-normal grayscale opacity-70'}`}>
+                            <span className={`text-[13px] md:text-sm leading-snug transition-colors duration-300 ${feature.included ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400 dark:text-slate-600 font-normal grayscale opacity-70'}`}>
                               {feature.name}
                             </span>
                           </div>

@@ -56,17 +56,17 @@ export function RegisterForm({ onBack, planName = 'Especialista' }: RegisterForm
     if (success) {
         return (
             <div className="max-w-md mx-auto py-24 px-6 text-center space-y-8">
-                <div className="bg-white/90 backdrop-blur-xl rounded-3xl border border-white/60 shadow-2xl shadow-blue-900/10 p-10">
+                <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-3xl border border-white/60 dark:border-slate-700/60 shadow-2xl shadow-blue-900/10 p-10 transition-colors">
                     <div className="flex justify-center mb-6">
-                        <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center border border-green-200">
+                        <div className="w-24 h-24 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center border border-green-200 dark:border-green-800">
                             <CheckCircle2 className="w-12 h-12 text-green-500" />
                         </div>
                     </div>
-                    <h2 className="text-3xl font-bold text-slate-900">¡Registro Exitoso!</h2>
-                    <p className="text-base text-slate-600 mt-4 leading-relaxed">
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white">¡Registro Exitoso!</h2>
+                    <p className="text-base text-slate-600 dark:text-slate-300 mt-4 leading-relaxed">
                         Bienvenido a RetiScan, Dr. {formData.paternalSurname}. <br />
-                        Hemos enviado un enlace de activación a <strong className="text-slate-800">{formData.email}</strong>.
-                        Por favor, verifícalo para comenzar a usar tu plan <strong className="text-blue-600">{planName}</strong>.
+                        Hemos enviado un enlace de activación a <strong className="text-slate-800 dark:text-slate-100">{formData.email}</strong>.
+                        Por favor, verifícalo para comenzar a usar tu plan <strong className="text-blue-600 dark:text-blue-400">{planName}</strong>.
                     </p>
                     <div className="pt-8">
                         <button
@@ -91,27 +91,27 @@ export function RegisterForm({ onBack, planName = 'Especialista' }: RegisterForm
                 Volver a planes
             </button>
 
-            <div className="bg-white/90 backdrop-blur-xl rounded-3xl border border-white/60 shadow-2xl shadow-blue-900/10 overflow-hidden">
+            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-3xl border border-white/60 dark:border-slate-700/60 shadow-2xl shadow-blue-900/10 overflow-hidden transition-colors">
                 <div className="p-8 lg:p-12">
                     <div className="mb-10 text-center">
-                        <div className="inline-block px-4 py-1.5 bg-blue-50 border border-blue-200 rounded-full mb-4">
-                            <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">Plan: {planName}</span>
+                        <div className="inline-block px-4 py-1.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-full mb-4">
+                            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Plan: {planName}</span>
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-900">Crea tu Cuenta Profesional</h2>
-                        <p className="text-slate-500 mt-2">Completa tus datos para activar tu infraestructura diagnóstica.</p>
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Crea tu Cuenta Profesional</h2>
+                        <p className="text-slate-500 dark:text-slate-400 mt-2">Completa tus datos para activar tu infraestructura diagnóstica.</p>
                     </div>
 
                     {error && (
-                        <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                        <div className="mb-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3">
                             <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                            <p className="text-sm font-medium text-red-700">{error}</p>
+                            <p className="text-sm font-medium text-red-700 dark:text-red-400">{error}</p>
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700 ml-1">Nombre(s)</label>
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Nombre(s)</label>
                                 <div className="relative">
                                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                     <input
@@ -121,13 +121,13 @@ export function RegisterForm({ onBack, planName = 'Especialista' }: RegisterForm
                                             setFormData({ ...formData, firstName: val });
                                         }}
                                         maxLength={100}
-                                        className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
                                         placeholder="Ej. Juan"
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700 ml-1">Apellido Paterno</label>
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Apellido Paterno</label>
                                 <input
                                     type="text" required name="paternalSurname" value={formData.paternalSurname}
                                     onChange={(e) => {
@@ -135,7 +135,7 @@ export function RegisterForm({ onBack, planName = 'Especialista' }: RegisterForm
                                         setFormData({ ...formData, paternalSurname: val });
                                     }}
                                     maxLength={100}
-                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                    className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
                                     placeholder="Ej. Pérez"
                                 />
                             </div>
@@ -143,7 +143,7 @@ export function RegisterForm({ onBack, planName = 'Especialista' }: RegisterForm
 
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700 ml-1">Apellido Materno (Opcional)</label>
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Apellido Materno (Opcional)</label>
                                 <input
                                     type="text" name="maternalSurname" value={formData.maternalSurname}
                                     onChange={(e) => {
@@ -151,11 +151,11 @@ export function RegisterForm({ onBack, planName = 'Especialista' }: RegisterForm
                                         setFormData({ ...formData, maternalSurname: val });
                                     }}
                                     maxLength={100}
-                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                    className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700 ml-1">Cédula Profesional</label>
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Cédula Profesional</label>
                                 <div className="relative">
                                     <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                     <input
@@ -165,7 +165,7 @@ export function RegisterForm({ onBack, planName = 'Especialista' }: RegisterForm
                                             setFormData({ ...formData, licenseNumber: val });
                                         }}
                                         maxLength={30}
-                                        className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
                                         placeholder="Número de cédula (solo números)"
                                     />
                                 </div>
@@ -174,40 +174,40 @@ export function RegisterForm({ onBack, planName = 'Especialista' }: RegisterForm
 
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700 ml-1">Especialidad (Opcional)</label>
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Especialidad (Opcional)</label>
                                 <div className="relative">
                                     <Stethoscope className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                     <input
                                         type="text" name="specialty" value={formData.specialty} onChange={handleChange}
                                         maxLength={100}
-                                        className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
                                         placeholder="Ej. Oftalmología"
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700 ml-1">Institución</label>
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Institución</label>
                                 <div className="relative">
                                     <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                     <input
                                         type="text" name="institution" value={formData.institution} onChange={handleChange}
                                         maxLength={150}
-                                        className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
                                         placeholder="Nombre de clínica u hospital"
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="space-y-2 pt-4 border-t border-slate-200">
-                            <label className="text-sm font-bold text-slate-800 ml-1">Datos de Acceso</label>
+                        <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <label className="text-sm font-bold text-slate-800 dark:text-slate-200 ml-1">Datos de Acceso</label>
                             <div className="grid md:grid-cols-2 gap-6 mt-2">
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                     <input
                                         type="email" required name="email" value={formData.email} onChange={handleChange}
                                         maxLength={255}
-                                        className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
                                         placeholder="correo@ejemplo.com"
                                     />
                                 </div>
@@ -217,7 +217,7 @@ export function RegisterForm({ onBack, planName = 'Especialista' }: RegisterForm
                                         type="password" required name="password" value={formData.password} onChange={handleChange}
                                         minLength={8}
                                         maxLength={100}
-                                        className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
                                         placeholder="Contraseña (mín 8)"
                                     />
                                 </div>
@@ -225,7 +225,7 @@ export function RegisterForm({ onBack, planName = 'Especialista' }: RegisterForm
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700 ml-1">Teléfono (WhatsApp)</label>
+                            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Teléfono (WhatsApp)</label>
                             <div className="relative">
                                 <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                 <input
@@ -241,7 +241,7 @@ export function RegisterForm({ onBack, planName = 'Especialista' }: RegisterForm
                                         setFormData({ ...formData, phone: val });
                                     }}
                                     maxLength={20}
-                                    className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                    className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
                                     placeholder="+52 123 456 7890"
                                 />
                             </div>

@@ -25,7 +25,7 @@ export function TrustSection() {
   ];
 
   return (
-    <section className="relative py-16 lg:py-20 bg-gradient-to-br from-slate-50 to-white overflow-hidden">
+    <section className="relative py-16 lg:py-20 bg-gradient-to-br from-slate-50 to-white dark:from-background dark:to-slate-900 overflow-hidden transition-colors duration-500">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
           {/* Left - Image */}
@@ -40,14 +40,14 @@ export function TrustSection() {
             </div>
 
             {/* Floating credential badge */}
-            <div className="absolute -bottom-6 -right-6 lg:-right-4 bg-white rounded-2xl shadow-2xl p-4 md:p-6 border border-slate-200 hover:scale-105 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] transition-all duration-300">
+            <div className="absolute -bottom-6 -right-6 lg:-right-4 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-700 hover:scale-105 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] transition-all duration-300">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl flex items-center justify-center">
                   <Award className="w-6 h-6 md:w-8 md:h-8 text-white" />
                 </div>
                 <div>
-                  <div className="text-xs font-medium text-slate-500">Certificación</div>
-                  <div className="text-sm font-bold text-slate-900">FDA Aprobado</div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Certificación</div>
+                  <div className="text-sm font-bold text-slate-900 dark:text-white">FDA Aprobado</div>
                 </div>
               </div>
             </div>
@@ -56,17 +56,17 @@ export function TrustSection() {
           {/* Right - Content */}
           <div className="space-y-6 order-1 lg:order-2">
             <div ref={content.ref} style={content.style}>
-              <div className="inline-block px-3 py-1.5 bg-blue-50 rounded-full mb-4">
-                <span className="text-xs font-semibold text-blue-700">CONFIANZA MÉDICA</span>
+              <div className="inline-block px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-full mb-4">
+                <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">CONFIANZA MÉDICA</span>
               </div>
-              <SplitText as="h2" className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+              <SplitText as="h2" className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mb-4">
                 Respaldado por Profesionales de la Salud
               </SplitText>
-              <p className="text-lg text-slate-600 leading-relaxed mb-4">
+              <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
                 RetiScan ha sido desarrollado en colaboración con oftalmólogos líderes
                 y entrenado con millones de imágenes retinales validadas clínicamente.
               </p>
-              <p className="text-base text-slate-600 leading-relaxed">
+              <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
                 Nuestra tecnología de inteligencia artificial ha demostrado resultados
                 comparables a especialistas en la detección temprana de retinopatía diabética,
                 ayudando a prevenir la pérdida de visión en miles de pacientes.
@@ -79,15 +79,15 @@ export function TrustSection() {
                 const Icon = stat.icon;
                 const reveal = statReveals[index];
                 return (
-                  <div key={index} ref={reveal.ref} style={reveal.style} className="bg-gradient-to-br from-white to-slate-50 rounded-2xl p-6 border border-slate-200 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                    <Icon className="w-8 h-8 text-cyan-600 mb-3 group-hover:scale-110 transition-transform duration-300" />
+                  <div key={index} ref={reveal.ref} style={reveal.style} className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                    <Icon className="w-8 h-8 text-cyan-600 dark:text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300" />
                     <div
                       ref={stat.displayRef as React.RefObject<HTMLDivElement> | null}
-                      className="text-3xl font-bold text-slate-900 mb-1 tabular-nums"
+                      className="text-3xl font-bold text-slate-900 dark:text-white mb-1 tabular-nums"
                     >
                       {stat.displayValue}
                     </div>
-                    <div className="text-sm text-slate-600">{stat.label}</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">{stat.label}</div>
                   </div>
                 );
               })}

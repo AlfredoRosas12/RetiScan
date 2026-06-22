@@ -8,15 +8,14 @@ import { ScrollToTop } from '@/app/components/ScrollToTop';
 import { useLenis } from '@/hooks/useLenis';
 import { RegisterForm } from '@/app/components/RegisterForm';
 import { VerifyEmail } from '@/app/components/VerifyEmail';
+import { DiscoverSection } from '@/app/components/DiscoverSection';
 
 // Lazy loaded components (Below the fold)
-const ProductShowcase = React.lazy(() => import('@/app/components/ProductShowcase').then(module => ({ default: module.ProductShowcase })));
-const HowItWorks = React.lazy(() => import('@/app/components/HowItWorks').then(module => ({ default: module.HowItWorks })));
 const PWABenefits = React.lazy(() => import('@/app/components/PWABenefits').then(module => ({ default: module.PWABenefits })));
 const TrustSection = React.lazy(() => import('@/app/components/TrustSection').then(module => ({ default: module.TrustSection })));
 const Pricing = React.lazy(() => import('@/app/components/Pricing').then(module => ({ default: module.Pricing })));
-const SecuritySection = React.lazy(() => import('@/app/components/SecuritySection').then(module => ({ default: module.SecuritySection })));
 const ContactForm = React.lazy(() => import('@/app/components/ContactForm').then(module => ({ default: module.ContactForm })));
+const FAQ = React.lazy(() => import('@/app/components/FAQ').then(module => ({ default: module.FAQ })));
 const Footer = React.lazy(() => import('@/app/components/Footer').then(module => ({ default: module.Footer })));
 
 // Fallback loader for chunks
@@ -65,7 +64,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       <ScrollProgress />
       <ScrollToTop />
       <LoadingScreen />
@@ -83,19 +82,18 @@ export default function App() {
             <>
               <Hero />
               <AnimatedDivider color="cyan" />
+              <DiscoverSection />
 
               <Suspense fallback={<SectionLoader />}>
-                <ProductShowcase />
-                <AnimatedDivider color="blue" />
-                <HowItWorks />
                 <PWABenefits />
                 <AnimatedDivider color="white" />
                 <TrustSection />
                 <AnimatedDivider color="blue" />
                 <Pricing onSelectPlan={handleSelectPlan} />
-                <SecuritySection />
                 <AnimatedDivider color="cyan" />
                 <ContactForm />
+                <AnimatedDivider color="blue" />
+                <FAQ />
                 <Footer />
               </Suspense>
             </>
