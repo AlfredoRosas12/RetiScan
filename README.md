@@ -18,11 +18,12 @@
 
 ## 🏗️ Estructura del Proyecto
 
-El ecosistema RetiScan se divide en tres componentes clave que trabajan en conjunto:
+El ecosistema RetiScan se divide en cuatro componentes clave que trabajan en conjunto:
 
 1.  **Portal Informativo (`/page`):** Sitio web de presentación donde se explica el propósito del proyecto y sus beneficios.
 2.  **Aplicación de Escaneo (`/app`):** La herramienta principal para médicos y pacientes, optimizada para la captura de imágenes y consulta de resultados.
 3.  **Núcleo del Sistema (`/api`):** El cerebro que coordina la base de datos, la seguridad y el procesamiento inteligente de las imágenes.
+4.  **Motor de Inteligencia Artificial (`/algorithms`):** Servicio de inferencia basado en PyTorch y FastAPI para el análisis de imágenes retinianas mediante el modelo EfficientNetB0.
 
 ---
 
@@ -31,7 +32,9 @@ El ecosistema RetiScan se divide en tres componentes clave que trabajan en conju
 *   **Frontend Aplicativo:** Flutter (Dart).
 *   **Página Web:** React, Vite, TypeScript.
 *   **Backend y Lógica:** Node.js, Express.js.
+*   **Inteligencia Artificial:** Python, FastAPI, PyTorch (EfficientNetB0).
 *   **Base de Datos:** PostgreSQL.
+*   **Administración de BD:** Adminer.
 *   **Infraestructura:** Docker y Docker Compose.
 
 ---
@@ -42,19 +45,24 @@ Para ejecutar todo el ecosistema de RetiScan de manera local, solo necesitas ten
 
 1.  **Clonar este repositorio:**
     ```bash
-    git clone https://github.com/Alfrerose12/RetiScan.git
+    git clone https://github.com/AlfredoRosas12/RetiScan.git
     cd RetiScan
     ```
 
 2.  **Levantar los servicios:**
     ```bash
-    docker-compose up -d --build
+    docker compose up -d
     ```
 
 3.  **Acceder a las aplicaciones:**
-    -   **Landing Page:** [http://localhost](http://localhost)
-    -   **PWA (Aplicación):** [http://localhost:81](http://localhost:81)
-    -   **API:** [http://localhost:3000](http://localhost:3000)
+
+    | Servicio | URL |
+    |----------|-----|
+    | Landing Page (React) | http://localhost:5173 |
+    | App Web (Flutter PWA) | http://localhost:5174 |
+    | API (Node.js) | http://localhost:3000 |
+    | IA (Python FastAPI) | http://localhost:8000/docs |
+    | Base de Datos (Adminer) | http://localhost:8080 |
 
 ---
 
