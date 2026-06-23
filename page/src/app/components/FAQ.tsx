@@ -69,7 +69,16 @@ export function FAQ() {
                         >
                             <button
                                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                                className="w-full px-6 py-5 flex items-center justify-between text-left gap-4"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        setOpenIndex(openIndex === index ? null : index);
+                                    }
+                                }}
+                                className="w-full px-6 py-5 flex items-center justify-between text-left gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-2xl"
+                                aria-expanded={openIndex === index}
+                                aria-controls={`faq-answer-${index}`}
+                                id={`faq-question-${index}`}
                             >
                                 <span className="font-bold text-slate-900 dark:text-white leading-tight">
                                     {faq.question}
@@ -91,7 +100,12 @@ export function FAQ() {
                                         exit={{ height: 0, opacity: 0 }}
                                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                                     >
-                                        <div className="px-6 pb-6 text-slate-800 dark:text-slate-200 leading-relaxed">
+                                        <div
+                                            id={`faq-answer-${index}`}
+                                            role="region"
+                                            aria-labelledby={`faq-question-${index}`}
+                                            className="px-6 pb-6 text-slate-800 dark:text-slate-200 leading-relaxed"
+                                        >
                                             <div className="h-px bg-slate-100 dark:bg-slate-700 mb-6" />
                                             {faq.answer}
                                         </div>

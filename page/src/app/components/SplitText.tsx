@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useIsMobile } from '@/app/components/ui/use-mobile';
 
 interface SplitTextProps {
     children: string;
@@ -11,9 +12,8 @@ interface SplitTextProps {
 }
 
 /**
- * Splits text into individual words, each animating
- * in with a dramatic stagger effect.
- * Each word rises from below with blur-to-clear transition.
+ * Splits text into individual words with stagger animation on mobile.
+ * On desktop, uses a simple fade-in for better performance.
  */
 export function SplitText({
     children,
@@ -22,6 +22,7 @@ export function SplitText({
     baseDelay = 0,
     stagger = 80,
 }: SplitTextProps) {
+    const isMobile = useIsMobile();
     const [isVisible, setIsVisible] = useState(false);
     const ref = useRef<HTMLElement>(null);
 
@@ -43,6 +44,24 @@ export function SplitText({
         return () => observer.disconnect();
     }, []);
 
+    // Desktop: simple fade-in (no word splitting)
+    if (!isMobile) {
+        return (
+            <Tag
+                ref={ref as React.Ref<HTMLHeadingElement & HTMLParagraphElement & HTMLSpanElement>}
+                className={className}
+                style={{
+                    opacity: isVisible ? 1 : 0,
+                    transform: isVisible ? 'translateY(0)' : 'translateY(15px)',
+                    transition: `opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${baseDelay}ms, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${baseDelay}ms`,
+                }}
+            >
+                {children}
+            </Tag>
+        );
+    }
+
+    // Mobile: word-by-word animation (original behavior)
     const words = children.split(' ');
 
     return (

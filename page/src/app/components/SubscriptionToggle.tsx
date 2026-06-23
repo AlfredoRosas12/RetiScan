@@ -63,6 +63,8 @@ export function SubscriptionToggle({ billingCycle, onChange }: SubscriptionToggl
           onClick={() => onChange('gratis')}
           className={`w-[150px] h-full flex items-center justify-center transition-colors duration-500 ${!isPremium ? 'text-white' : 'text-gray-400 dark:text-slate-500 hover:text-gray-500 dark:hover:text-slate-300'
             }`}
+          aria-pressed={billingCycle === 'gratis'}
+          aria-label="Seleccionar plan gratuito"
         >
           <span className="text-lg font-bold">Gratis</span>
         </button>
@@ -86,6 +88,8 @@ export function SubscriptionToggle({ billingCycle, onChange }: SubscriptionToggl
                 onClick={(e) => { e.stopPropagation(); onChange('mensual'); }}
                 className={`flex-1 h-full flex items-center justify-center transition-colors duration-400 font-semibold text-sm z-10 ${billingCycle === 'mensual' ? 'text-black dark:text-white' : 'text-white'
                   }`}
+                aria-pressed={billingCycle === 'mensual'}
+                aria-label="Seleccionar plan mensual"
               >
                 Mensual
               </button>
@@ -93,6 +97,8 @@ export function SubscriptionToggle({ billingCycle, onChange }: SubscriptionToggl
                 onClick={(e) => { e.stopPropagation(); onChange('anual'); }}
                 className={`flex-1 h-full flex items-center justify-center transition-colors duration-400 font-semibold text-sm z-10 ${billingCycle === 'anual' ? 'text-black dark:text-white' : 'text-white'
                   }`}
+                aria-pressed={billingCycle === 'anual'}
+                aria-label="Seleccionar plan anual"
               >
                 Anual
               </button>

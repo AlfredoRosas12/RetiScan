@@ -89,8 +89,11 @@ export function Header({ onNavigate }: HeaderProps) {
         <div className="md:hidden flex items-center gap-2">
           <ThemeToggle />
           <button
-            className="p-2 text-slate-700 dark:text-slate-300"
+            className="p-2 text-slate-700 dark:text-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-menu"
           >
             {isMenuOpen ? <X /> : <Menu />}
           </button>
@@ -101,6 +104,7 @@ export function Header({ onNavigate }: HeaderProps) {
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
+            id="mobile-menu"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}

@@ -1,4 +1,5 @@
 import React, { Suspense, useEffect, useState } from 'react';
+import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { Header } from '@/app/components/Header';
 import { Hero } from '@/app/components/Hero';
 import { LoadingScreen } from '@/app/components/LoadingScreen';
@@ -17,6 +18,9 @@ const Pricing = React.lazy(() => import('@/app/components/Pricing').then(module 
 const ContactForm = React.lazy(() => import('@/app/components/ContactForm').then(module => ({ default: module.ContactForm })));
 const FAQ = React.lazy(() => import('@/app/components/FAQ').then(module => ({ default: module.FAQ })));
 const Footer = React.lazy(() => import('@/app/components/Footer').then(module => ({ default: module.Footer })));
+const PrivacyPolicy = React.lazy(() => import('@/app/components/PrivacyPolicy').then(module => ({ default: module.PrivacyPolicy })));
+const TermsOfUse = React.lazy(() => import('@/app/components/TermsOfUse').then(module => ({ default: module.TermsOfUse })));
+const HIPAACompliance = React.lazy(() => import('@/app/components/HIPAACompliance').then(module => ({ default: module.HIPAACompliance })));
 
 // Fallback loader for chunks
 const SectionLoader = () => (
@@ -25,9 +29,20 @@ const SectionLoader = () => (
   </div>
 );
 
+function LazySection({ children }: { children: React.ReactNode }) {
+  const reveal = useScrollReveal('fade', { threshold: 0.05, rootMargin: '200px 0px' });
+  return (
+    <div ref={reveal.ref} style={reveal.style}>
+      <Suspense fallback={<SectionLoader />}>
+        {children}
+      </Suspense>
+    </div>
+  );
+}
+
 export default function App() {
   useLenis();
-  const [view, setView] = useState<'home' | 'register' | 'verify'>('home');
+  const [view, setView] = useState<'home' | 'register' | 'verify' | 'privacy' | 'terms' | 'hipaa'>('home');
   const [selectedPlan, setSelectedPlan] = useState<string>('Especialista');
   const [verifyToken, setVerifyToken] = useState<string>('');
 
@@ -63,6 +78,10 @@ export default function App() {
     }
   };
 
+  const handleNavigateToPrivacy = () => setView('privacy');
+  const handleNavigateToTerms = () => setView('terms');
+  const handleNavigateToHIPAA = () => setView('hipaa');
+
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
       <ScrollProgress />
@@ -74,6 +93,18 @@ export default function App() {
           token={verifyToken}
           onBack={() => setView('home')}
         />
+      ) : view === 'privacy' ? (
+        <Suspense fallback={<SectionLoader />}>
+          <PrivacyPolicy onBack={() => setView('home')} />
+        </Suspense>
+      ) : view === 'terms' ? (
+        <Suspense fallback={<SectionLoader />}>
+          <TermsOfUse onBack={() => setView('home')} />
+        </Suspense>
+      ) : view === 'hipaa' ? (
+        <Suspense fallback={<SectionLoader />}>
+          <HIPAACompliance onBack={() => setView('home')} />
+        </Suspense>
       ) : (
         <>
           <Header onNavigate={handleNavigate} />
@@ -84,18 +115,20 @@ export default function App() {
               <AnimatedDivider color="cyan" />
               <DiscoverSection />
 
-              <Suspense fallback={<SectionLoader />}>
-                <PWABenefits />
-                <AnimatedDivider color="white" />
-                <TrustSection />
-                <AnimatedDivider color="blue" />
-                <Pricing onSelectPlan={handleSelectPlan} />
-                <AnimatedDivider color="cyan" />
-                <ContactForm />
-                <AnimatedDivider color="blue" />
-                <FAQ />
-                <Footer />
-              </Suspense>
+              <LazySection><PWABenefits /></LazySection>
+              <AnimatedDivider color="white" />
+              <LazySection><TrustSection /></LazySection>
+              <AnimatedDivider color="blue" />
+              <LazySection><Pricing onSelectPlan={handleSelectPlan} /></LazySection>
+              <AnimatedDivider color="cyan" />
+              <LazySection><ContactForm /></LazySection>
+              <AnimatedDivider color="blue" />
+              <LazySection><FAQ /></LazySection>
+              <LazySection><Footer
+                onNavigateToPrivacy={handleNavigateToPrivacy}
+                onNavigateToTerms={handleNavigateToTerms}
+                onNavigateToHIPAA={handleNavigateToHIPAA}
+              /></LazySection>
             </>
           ) : (
             <div className="relative min-h-screen pt-20 overflow-hidden">
