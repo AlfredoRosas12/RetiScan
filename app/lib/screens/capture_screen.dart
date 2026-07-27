@@ -37,6 +37,7 @@ class _CaptureScreenState extends State<CaptureScreen>
 
   String _statusMessage = 'Procesando retina, por favor espera';
   double _currentProgress = 0.0;
+  String _selectedEye = 'LEFT';
 
   final AnalysisService _analysisService = AnalysisService();
   final AuthService _authService = AuthService();
@@ -71,6 +72,8 @@ class _CaptureScreenState extends State<CaptureScreen>
     _revealAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _revealController, curve: Curves.easeOutCubic),
     );
+
+    _pulseController.repeat(reverse: true);
   }
 
   @override
@@ -262,6 +265,7 @@ class _CaptureScreenState extends State<CaptureScreen>
 
   Future<void> _runAnalysis() async {
     try {
+      if (!mounted) return;
       setState(() => _statusMessage = 'Enviando imagen al servidor...');
 
       // Usar el servicio real para subir archivo. Pasamos patientId vacío porque el backend lo resuelve si es PACIENTE.
@@ -269,9 +273,10 @@ class _CaptureScreenState extends State<CaptureScreen>
       final analysis = await _analysisService.createAnalysis(
         '',
         imageFile: _selectedImageFile,
-        eye: 'LEFT', // Temporalmente siempre LEFT, o se podría dar a elegir
+        eye: _selectedEye,
       );
 
+      if (!mounted) return;
       setState(() {
         _currentProgress = 0.4;
         _statusMessage = 'Procesando retina...';
@@ -287,6 +292,7 @@ class _CaptureScreenState extends State<CaptureScreen>
         throw Exception('El análisis falló en el servidor IA');
       }
 
+      if (!mounted) return;
       setState(() {
         _currentProgress = 1.0;
         _statusMessage = 'Análisis completado';
@@ -294,6 +300,7 @@ class _CaptureScreenState extends State<CaptureScreen>
 
       await Future.delayed(Duration(milliseconds: 300));
 
+      if (!mounted) return;
       setState(() {
         _isUploading = false;
         _analysisComplete = true;
@@ -313,16 +320,21 @@ class _CaptureScreenState extends State<CaptureScreen>
         };
       });
 
+      _selectedImageFile = null;
+
       _orbitController.stop();
       _revealController.forward(from: 0);
 
-      NotificationService.showNotification(
-        id: 0,
-        title: 'Análisis Completado',
-        body: 'El resultado ha finalizado: ${finalAnalysis!.aiResult?['grade'] ?? 'Normal'}. Verifique los detalles.',
-      );
+      try {
+        await NotificationService.showNotification(
+          id: 0,
+          title: 'Análisis Completado',
+          body: 'El resultado ha finalizado: ${finalAnalysis!.aiResult?['grade'] ?? 'Normal'}. Verifique los detalles.',
+        );
+      } catch (_) {}
     } catch (e) {
       _orbitController.stop();
+      if (!mounted) return;
       setState(() {
         _isUploading = false;
         _statusMessage = 'Error en el análisis';
@@ -389,6 +401,7 @@ class _CaptureScreenState extends State<CaptureScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width >= 1000;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -400,13 +413,15 @@ class _CaptureScreenState extends State<CaptureScreen>
                 onPressed: () => Navigator.pop(context),
               )
             : null,
-        title: Text(
-          'Captura de Retina',
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyLarge?.color,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: isDesktop
+            ? SizedBox.shrink()
+            : Text(
+                'Captura de Retina',
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
       ),
       body: AnimatedSwitcher(
         duration: Duration(milliseconds: 500),
@@ -420,8 +435,6 @@ class _CaptureScreenState extends State<CaptureScreen>
   }
 
   Widget _buildCaptureOptions() {
-    _pulseController.repeat(reverse: true);
-
     return ResponsiveWrapper(
       maxWidth: 800,
       child: SingleChildScrollView(
@@ -475,7 +488,35 @@ class _CaptureScreenState extends State<CaptureScreen>
                 height: 1.5,
               ),
             ),
-            SizedBox(height: 60),
+            SizedBox(height: 32),
+            // Selector de ojo
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.visibility, size: 18, color: Theme.of(context).colorScheme.primary),
+                  SizedBox(width: 10),
+                  Text(
+                    'Ojo a capturar:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  _buildEyeOption('LEFT', 'Izquierdo'),
+                  SizedBox(width: 8),
+                  _buildEyeOption('RIGHT', 'Derecho'),
+                ],
+              ),
+            ),
+            SizedBox(height: 32),
             AnimatedButton(
               text: 'Tomar Foto',
               icon: Icons.camera_alt,
@@ -492,6 +533,42 @@ class _CaptureScreenState extends State<CaptureScreen>
               height: 60,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEyeOption(String value, String label) {
+    final isSelected = _selectedEye == value;
+    final primaryColor = Theme.of(context).brightness == Brightness.dark
+        ? Theme.of(context).colorScheme.secondary
+        : Theme.of(context).colorScheme.primary;
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedEye = value),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? primaryColor.withOpacity(0.2)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected
+                ? primaryColor
+                : Theme.of(context).dividerColor.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected
+                ? primaryColor
+                : Theme.of(context).textTheme.bodyMedium?.color,
+          ),
         ),
       ),
     );
@@ -637,8 +714,7 @@ class _CaptureScreenState extends State<CaptureScreen>
                         image: (_analysisResult?.imageUri != null)
                             ? DecorationImage(
                                 image: NetworkImage(
-                                  // ApiConfig.baseUrl is "http://host:3000/api", we need "http://host:3000/uploads/..."
-                                  '${ApiConfig.baseUrl.replaceAll('/api', '')}${_analysisResult!.imageUri!.startsWith('/') ? _analysisResult!.imageUri! : '/${_analysisResult!.imageUri!}'}',
+                                  ApiConfig.imageUrl(_analysisResult!.imageUri),
                                 ),
                                 fit: BoxFit.cover,
                               )
@@ -655,38 +731,7 @@ class _CaptureScreenState extends State<CaptureScreen>
                           : null,
                     ),
                     SizedBox(height: 20),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.green, Colors.green.shade400],
-                        ),
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.green.withOpacity(0.3),
-                            blurRadius: 15,
-                            offset: Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.check_circle,
-                              color: Theme.of(context).colorScheme.onPrimary, size: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            'Estado: Normal',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onPrimary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildGradeBadge(_analysisResult!.aiResult?['grade'] ?? 'Normal'),
                   ],
                 ),
               ),
@@ -849,6 +894,44 @@ class _CaptureScreenState extends State<CaptureScreen>
                 fontSize: 15,
                 color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGradeBadge(String grade) {
+    final isNormal = grade == 'Normal';
+    final badgeColor = isNormal ? Colors.green : Colors.orange;
+    final icon = isNormal ? Icons.check_circle : Icons.warning_amber_rounded;
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [badgeColor, badgeColor.shade400],
+        ),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: badgeColor.withOpacity(0.3),
+            blurRadius: 15,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 20),
+          SizedBox(width: 8),
+          Text(
+            'Estado: $grade',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
           ),
         ],

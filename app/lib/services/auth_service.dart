@@ -32,9 +32,10 @@ class AuthService {
 
   // Generamos un cliente HTTP que soporte cookies cross-origin (withCredentials)
   // crucial para que navegue el Refresh Token HttpOnly entre nuestra PWA y la API.
+  http.Client? _cachedClient;
   http.Client get _client {
-    var client = BrowserClient()..withCredentials = true;
-    return client;
+    _cachedClient ??= BrowserClient()..withCredentials = true;
+    return _cachedClient!;
   }
 
   // ─────────────────────────────────────────────────────────────────
@@ -211,7 +212,7 @@ class AuthService {
   // Enviar OTP → POST /auth/send-otp
   // type: 'OTP_EMAIL' | 'OTP_SMS'
   // ─────────────────────────────────────────────────────────────────
-  Future<Map<String, dynamic>> sendOtp(String email, {String type = 'OTP_EMAIL'}) async {
+  Future<Map<String, dynamic>> sendOtp(String email, {String type = 'OTP_EMAIL', int retryCount = 0}) async {
     final t = _accessToken;
     final headers = t == null ? ApiConfig.jsonHeaders : ApiConfig.authHeaders(t);
     try {
@@ -222,20 +223,17 @@ class AuthService {
       );
       final body = jsonDecode(res.body) as Map<String, dynamic>;
       
-      // Auto-refresh si el token expiró
-      if (res.statusCode == 401 && body['error'] == 'TOKEN_EXPIRED') {
+      // Auto-refresh si el token expiró (máximo 1 reintento)
+      if (res.statusCode == 401 && body['error'] == 'TOKEN_EXPIRED' && retryCount < 1) {
         final refreshed = await doRefresh();
         if (refreshed) {
-          return sendOtp(email, type: type); // Reintentar con el nuevo token
+          return sendOtp(email, type: type, retryCount: retryCount + 1);
         }
         return {'success': false, 'message': 'Tu sesión ha expirado por inactividad. Inicia sesión nuevamente para continuar.'};
       }
 
       if (res.statusCode == 200 || res.statusCode == 201) {
-        return {
-          'success': true,
-          'devOtp': body['_dev_otp']?.toString(),
-        };
+        return {'success': true};
       }
       return {'success': false, 'message': body['error'] ?? 'Error al enviar OTP'};
     } catch (e) {
@@ -245,10 +243,9 @@ class AuthService {
 
   // Métodos de compatibilidad para el nuevo flujo visual de registro (PWA)
   Future<String?> request2FAUnauth(String email) async {
-    // Simulamos el envío llamando a sendOtp (que intenta usar el endpoint de siempre)
     final res = await sendOtp(email);
     if (res['success'] == true) {
-      return res['devOtp']?.toString() ?? 'Enviado';
+      return 'Enviado';
     }
     return null;
   }

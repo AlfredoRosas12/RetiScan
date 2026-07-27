@@ -80,7 +80,7 @@ class DashboardCharts extends StatelessWidget {
     int normal = 0, mild = 0, moderate = 0, severe = 0, proliferative = 0;
     for (var a in analyses!) {
       final grade = (a.aiResult?['grade'] ?? 'Normal').toString().toLowerCase();
-      if (grade.contains('normal')) normal++;
+      if (grade.contains('normal') || grade == 'no dr') normal++;
       else if (grade.contains('mild') || grade.contains('leve')) mild++;
       else if (grade.contains('moderate') || grade.contains('moderado')) moderate++;
       else if (grade.contains('severe') || grade.contains('grave')) severe++;
@@ -88,11 +88,11 @@ class DashboardCharts extends StatelessWidget {
     }
 
     final data = <_ChartData>[];
-    if (normal > 0) data.add(_ChartData('Normal', normal.toDouble(), Colors.cyanAccent));
-    if (mild > 0) data.add(_ChartData('Leve', mild.toDouble(), Colors.pinkAccent));
-    if (moderate > 0) data.add(_ChartData('Moderado', moderate.toDouble(), Colors.amber));
-    if (severe > 0) data.add(_ChartData('Grave', severe.toDouble(), Colors.redAccent));
-    if (proliferative > 0) data.add(_ChartData('Proliferativa', proliferative.toDouble(), Colors.deepPurpleAccent));
+    if (normal > 0) data.add(_ChartData('Normal', normal.toDouble(), Colors.green));
+    if (mild > 0) data.add(_ChartData('Leve', mild.toDouble(), Colors.yellow));
+    if (moderate > 0) data.add(_ChartData('Moderado', moderate.toDouble(), Colors.orange));
+    if (severe > 0) data.add(_ChartData('Grave', severe.toDouble(), Colors.red));
+    if (proliferative > 0) data.add(_ChartData('Proliferativa', proliferative.toDouble(), Colors.red.shade900));
 
     return data;
   }

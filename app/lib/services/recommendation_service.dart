@@ -1,5 +1,6 @@
 import 'dart:convert';
 import '../config/api_config.dart';
+import '../models/recommendation.dart';
 
 class RecommendationService {
   static final RecommendationService _instance = RecommendationService._internal();
@@ -7,21 +8,25 @@ class RecommendationService {
   RecommendationService._internal();
 
   /// GET /recommendations/my — Obtener mis recomendaciones (PACIENTE)
-  Future<List<Map<String, dynamic>>> getMyRecommendations() async {
+  Future<List<Recommendation>> getMyRecommendations() async {
     final res = await ApiConfig.get('/recommendations/my');
     if (res.statusCode == 200) {
       final list = jsonDecode(res.body) as List<dynamic>;
-      return list.cast<Map<String, dynamic>>();
+      return list
+          .map((e) => Recommendation.fromJson(e as Map<String, dynamic>))
+          .toList();
     }
     throw _apiError(res);
   }
 
   /// GET /recommendations/patient/:patientId — Recomendaciones de un paciente (MEDICO)
-  Future<List<Map<String, dynamic>>> getPatientRecommendations(String patientId) async {
+  Future<List<Recommendation>> getPatientRecommendations(String patientId) async {
     final res = await ApiConfig.get('/recommendations/patient/$patientId');
     if (res.statusCode == 200) {
       final list = jsonDecode(res.body) as List<dynamic>;
-      return list.cast<Map<String, dynamic>>();
+      return list
+          .map((e) => Recommendation.fromJson(e as Map<String, dynamic>))
+          .toList();
     }
     throw _apiError(res);
   }

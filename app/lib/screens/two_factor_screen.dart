@@ -7,6 +7,7 @@ import 'login_screen.dart';
 import 'login_loading_screen.dart';
 import '../widgets/glassmorphic_card.dart';
 import '../services/auth_service.dart';
+import '../painters/particle_painter.dart';
 
 class TwoFactorScreen extends StatefulWidget {
   final String userEmail;
@@ -35,7 +36,7 @@ class _TwoFactorScreenState extends State<TwoFactorScreen>
 
   final AuthService _authService = AuthService();
 
-  /// Código devuelto por la API (visible en banner para desarrollo)
+  /// Código devuelto por la API (oculto por defecto por seguridad)
   String _serverCode = '';
   bool _isLoadingCode = false;
   int _secondsLeft = 30;
@@ -97,9 +98,7 @@ class _TwoFactorScreenState extends State<TwoFactorScreen>
         _isLoadingCode = false;
         _secondsLeft = 30;
         _codeExpired = false;
-      });
-      Future.delayed(Duration(milliseconds: 300), () {
-        if (mounted) setState(() => _showCode = devOtp.isNotEmpty);
+        _showCode = false;
       });
       _startCountdown();
     } else {
@@ -348,7 +347,7 @@ class _TwoFactorScreenState extends State<TwoFactorScreen>
       animation: _particleController,
       builder: (context, child) {
         return CustomPaint(
-          painter: _TFAParticlePainter(_particleController.value),
+          painter: ParticlePainter(_particleController.value),
           child: Container(),
         );
       },
@@ -501,6 +500,21 @@ class _TwoFactorScreenState extends State<TwoFactorScreen>
                           color: Colors.white.withOpacity(0.6),
                           fontSize: 11,
                           letterSpacing: 1,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () {
+                          if (_serverCode.isNotEmpty) {
+                            setState(() => _showCode = !_showCode);
+                          }
+                        },
+                        child: Icon(
+                          _showCode
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.white.withOpacity(0.4),
+                          size: 14,
                         ),
                       ),
                     ],
@@ -724,29 +738,4 @@ class _TwoFactorScreenState extends State<TwoFactorScreen>
       ),
     );
   }
-}
-
-// ────────────── Particle painter ─────────────────
-
-class _TFAParticlePainter extends CustomPainter {
-  final double animationValue;
-  _TFAParticlePainter(this.animationValue);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.08)
-      ..style = PaintingStyle.fill;
-    for (int i = 0; i < 20; i++) {
-      final x =
-          (size.width * (i * 0.1 + animationValue * 0.5)) % size.width;
-      final y = (size.height *
-          (math.sin(i + animationValue * math.pi * 2) * 0.5 + 0.5));
-      final radius = 2.0 + math.sin(i + animationValue * math.pi) * 2;
-      canvas.drawCircle(Offset(x, y), radius, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_TFAParticlePainter oldDelegate) => true;
 }

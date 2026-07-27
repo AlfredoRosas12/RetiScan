@@ -168,7 +168,7 @@ class _AnalysisDetailModalState extends State<AnalysisDetailModal> {
                     if (widget.analysis.imageUri != null)
                       GestureDetector(
                         onTap: () {
-                          final url = '${ApiConfig.baseUrl.replaceAll('/api', '')}${widget.analysis.imageUri!.startsWith('/') ? widget.analysis.imageUri! : '/${widget.analysis.imageUri!}'}';
+                          final url = ApiConfig.imageUrl(widget.analysis.imageUri);
                           _showFullScreenImage(url);
                         },
                         child: Container(
@@ -182,7 +182,7 @@ class _AnalysisDetailModalState extends State<AnalysisDetailModal> {
                             fit: StackFit.expand,
                             children: [
                               Image.network(
-                                '${ApiConfig.baseUrl.replaceAll('/api', '')}${widget.analysis.imageUri!.startsWith('/') ? widget.analysis.imageUri! : '/${widget.analysis.imageUri!}'}',
+                                ApiConfig.imageUrl(widget.analysis.imageUri),
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     const Center(child: Icon(Icons.broken_image, size: 60, color: Colors.grey)),

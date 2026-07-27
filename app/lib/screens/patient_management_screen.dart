@@ -10,7 +10,8 @@ import '../models/analysis.dart';
 import '../services/theme_service.dart';
 import '../config/input_sanitizer.dart';
 import '../widgets/responsive_wrapper.dart';
-import '../widgets/dashboard_charts.dart';
+import '../widgets/glassmorphic_card.dart';
+import '../widgets/animated_button.dart';
 import '../widgets/patient_details_modal.dart';
 
 class PatientManagementScreen extends StatefulWidget {
@@ -39,10 +40,12 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
   int _currentPage = 1;
   final int _itemsPerPage = 10;
   final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
+    _searchFocusNode.addListener(() => setState(() {}));
     _loadPatients();
   }
 
@@ -127,6 +130,7 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
     _paternalSurnameController.dispose();
     _maternalSurnameController.dispose();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -191,70 +195,80 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
         Container(
           padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
           color: Theme.of(context).scaffoldBackgroundColor,
-          child: Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _selectedTab = 0),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: _selectedTab == 0 ? primaryColor : (Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _selectedTab == 0 ? primaryColor : Theme.of(context).dividerColor.withOpacity(0.1),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: Offset(0, 4)),
+              ],
+            ),
+            padding: EdgeInsets.all(4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => setState(() => _selectedTab = 0),
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _selectedTab == 0 ? primaryColor : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.people, size: 18, color: _selectedTab == 0 ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)),
-                        SizedBox(width: 8),
-                        Text(
-                          'Directorio',
-                          style: TextStyle(
-                            color: _selectedTab == 0 ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.people, size: 18, color: _selectedTab == 0 ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)),
+                          SizedBox(width: 8),
+                          Text(
+                            'Directorio',
+                            style: TextStyle(
+                              color: _selectedTab == 0 ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _selectedTab = 1),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: _selectedTab == 1 ? primaryColor : (Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _selectedTab == 1 ? primaryColor : Theme.of(context).dividerColor.withOpacity(0.1),
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => setState(() => _selectedTab = 1),
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _selectedTab == 1 ? primaryColor : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.person_add, size: 18, color: _selectedTab == 1 ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)),
-                        SizedBox(width: 8),
-                        Text(
-                          'Nuevo Paciente',
-                          style: TextStyle(
-                            color: _selectedTab == 1 ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.person_add, size: 18, color: _selectedTab == 1 ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)),
+                          SizedBox(width: 8),
+                          Text(
+                            'Nuevo Paciente',
+                            style: TextStyle(
+                              color: _selectedTab == 1 ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         // Contenido
@@ -319,23 +333,39 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
   }
 
   Widget _buildMetricCard(String title, String value, IconData icon, Color baseColor) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      decoration: BoxDecoration(
-        color: baseColor,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: baseColor.withOpacity(0.3), blurRadius: 8, offset: Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: Colors.white, size: 28),
-          SizedBox(height: 12),
-          Text(value, style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-          SizedBox(height: 4),
-          Text(title, style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12), textAlign: TextAlign.center),
-        ],
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [baseColor, baseColor.withOpacity(0.7)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(color: baseColor.withOpacity(0.3), blurRadius: 12, offset: Offset(0, 6)),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.white, size: 26),
+            ),
+            SizedBox(height: 12),
+            Text(value, style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
+            SizedBox(height: 4),
+            Text(title, style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12), textAlign: TextAlign.center),
+          ],
+        ),
       ),
     );
   }
@@ -379,14 +409,23 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Container(
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 200),
               decoration: BoxDecoration(
                 color: Theme.of(context).scaffoldBackgroundColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.2)),
+                border: Border.all(
+                  color: _searchFocusNode.hasFocus
+                      ? primaryColor
+                      : Theme.of(context).dividerColor.withOpacity(0.2),
+                ),
+                boxShadow: _searchFocusNode.hasFocus
+                    ? [BoxShadow(color: primaryColor.withOpacity(0.15), blurRadius: 8, offset: Offset(0, 2))]
+                    : [],
               ),
               child: TextField(
                 controller: _searchController,
+                focusNode: _searchFocusNode,
                 onChanged: (val) {
                   setState(() {
                     _searchQuery = val;
@@ -472,7 +511,36 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
     }
     
     if (_filteredPatients.isEmpty) {
-      return Padding(padding: EdgeInsets.all(48), child: Center(child: Text('No hay pacientes que coincidan con la búsqueda.', style: TextStyle(color: Colors.grey))));
+      return Padding(
+        padding: EdgeInsets.all(48),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.people_outline, size: 56, color: Theme.of(context).dividerColor.withOpacity(0.3)),
+              SizedBox(height: 16),
+              Text(
+                'No hay pacientes que coincidan con la búsqueda.',
+                style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5), fontSize: 15),
+              ),
+              if (_searchQuery.isNotEmpty) ...[
+                SizedBox(height: 16),
+                TextButton.icon(
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchQuery = '';
+                      _filterAndPaginatePatients();
+                    });
+                  },
+                  icon: Icon(Icons.clear_all, size: 18),
+                  label: Text('Limpiar búsqueda'),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -522,11 +590,6 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
             separatorBuilder: (_, __) => SizedBox(height: 12),
             itemBuilder: (context, index) {
               final patient = pagedPatients[index];
-              // Simulación de valores
-          String estado = "Normal";
-          Color estadoColor = Colors.green;
-          if (index % 3 == 1) { estado = "Leve"; estadoColor = Colors.orange; }
-          if (index % 5 == 2) { estado = "Moderado"; estadoColor = Colors.deepOrange; }
 
           return InkWell(
             onTap: () => _showPatientDetailsModal(patient),
@@ -574,15 +637,7 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: estadoColor.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: estadoColor.withOpacity(0.3)),
-                        ),
-                        child: Text(estado, style: TextStyle(color: estadoColor, fontSize: 11, fontWeight: FontWeight.bold)),
-                      ),
+                      _buildHealthStatusBadge(patient.healthStatus ?? 'Normal'),
                       SizedBox(height: 8),
                       Text(
                         patient.lastVisit != null ? "${patient.lastVisit!.day.toString().padLeft(2, '0')}/${patient.lastVisit!.month.toString().padLeft(2, '0')}/${patient.lastVisit!.year}" : "Sin visitas", 
@@ -590,7 +645,6 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
                       ),
                     ],
                   ),
-                  // Indicador visual para ver detalles (móvil)
                   Icon(Icons.chevron_right, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.3), size: 24),
                 ],
               ),
@@ -603,114 +657,31 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
       );
     }
 
-    // Vista Escritorio (Tabla)
-    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-    final textSecondary = Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7) ?? Colors.grey;
-    final headerStyle = TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 13);
-    
+    // Vista Escritorio (Tabla moderna)
     return Column(
       children: [
         Container(
           decoration: BoxDecoration(
             color: cardBgColor,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: Offset(0, 2))
+              BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: Offset(0, 4)),
             ],
           ),
-          width: double.infinity,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Theme(
-                data: Theme.of(context).copyWith(dividerColor: Theme.of(context).dividerColor.withOpacity(0.1)),
-                child: DataTable(
-                  showCheckboxColumn: false,
-                  headingRowColor: WidgetStateProperty.all(Theme.of(context).dividerColor.withOpacity(0.05)),
-                  dataRowMaxHeight: 65,
-                  dataRowMinHeight: 65,
-                  horizontalMargin: 24,
-                  columns: [
-                    DataColumn(label: Text('Paciente', style: headerStyle)),
-                    DataColumn(label: Text('Email', style: headerStyle)),
-                    DataColumn(label: Text('Edad', style: headerStyle)),
-                    DataColumn(label: Text('Análisis', style: headerStyle)),
-                    DataColumn(label: Text('Estado', style: headerStyle)),
-                    DataColumn(label: Text('Última Visita', style: headerStyle)),
-                  ],
-                  rows: pagedPatients.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final patient = entry.value;
-                    final isOdd = index % 2 == 1;
-                    
-                    String estado = "Normal";
-                    Color estadoColor = Colors.green;
-                    if (index % 3 == 1) { estado = "Leve"; estadoColor = Colors.orange; }
-                    if (index % 5 == 2) { estado = "Moderado"; estadoColor = Colors.deepOrange; }
-
-                    return DataRow(
-                      color: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-                        if (states.contains(WidgetState.hovered)) return primaryColor.withOpacity(0.05);
-                        return isOdd ? Theme.of(context).dividerColor.withOpacity(0.01) : Colors.transparent;
-                      }),
-                      onSelectChanged: (_) => _showPatientDetailsModal(patient),
-                      cells: [
-                        DataCell(Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.person, size: 16, color: primaryColor.withOpacity(0.7)),
-                            SizedBox(width: 8),
-                            ConstrainedBox(
-                              constraints: BoxConstraints(maxWidth: 200),
-                              child: Text(
-                                patient.fullName,
-                                style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        )),
-                        DataCell(
-                          ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: 200),
-                            child: Text(
-                              patient.email ?? '-',
-                              style: TextStyle(color: textSecondary),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                        DataCell(Text('${patient.age} años', style: TextStyle(color: textSecondary))),
-                        DataCell(Text('${patient.totalAnalyses}', style: TextStyle(color: textSecondary))),
-                        DataCell(
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: estadoColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: estadoColor.withOpacity(0.3)),
-                            ),
-                            child: Text(estado, style: TextStyle(color: estadoColor, fontSize: 11, fontWeight: FontWeight.bold)),
-                          )
-                        ),
-                        DataCell(Text(
-                          patient.lastVisit != null ? "${patient.lastVisit!.day.toString().padLeft(2, '0')}/${patient.lastVisit!.month.toString().padLeft(2, '0')}/${patient.lastVisit!.year}" : "Sin visitas",
-                          style: TextStyle(color: textSecondary)
-                        )),
-                      ]
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
+          child: Column(
+            children: [
+              _buildDesktopTableHeader(primaryColor),
+              ...pagedPatients.asMap().entries.map((entry) {
+                final index = entry.key;
+                final patient = entry.value;
+                final isLast = index == pagedPatients.length - 1;
+                return _buildDesktopTableRow(patient, primaryColor, isLast);
+              }),
+            ],
           ),
         ),
         buildPaginationControls(),
-        // Leyenda debajo de la tabla
         Padding(
           padding: EdgeInsets.only(top: 8, bottom: 4),
           child: Row(
@@ -731,6 +702,170 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildDesktopTableHeader(Color primaryColor) {
+    final headerStyle = TextStyle(
+      color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6) ?? Colors.grey,
+      fontWeight: FontWeight.w700,
+      fontSize: 11,
+      letterSpacing: 0.8,
+    );
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            primaryColor.withOpacity(0.08),
+            primaryColor.withOpacity(0.03),
+          ],
+        ),
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+        border: Border(bottom: BorderSide(color: primaryColor.withOpacity(0.12))),
+      ),
+      child: Row(
+        children: [
+          Expanded(flex: 1, child: Text('PACIENTE', style: headerStyle)),
+          Expanded(flex: 1, child: Text('EMAIL', style: headerStyle)),
+          SizedBox(width: 16),
+          SizedBox(width: 60, child: Text('EDAD', style: headerStyle, textAlign: TextAlign.center)),
+          SizedBox(width: 16),
+          SizedBox(width: 60, child: Text('ANÁLISIS', style: headerStyle, textAlign: TextAlign.center)),
+          SizedBox(width: 24),
+          SizedBox(width: 110, child: Text('ESTADO', style: headerStyle, textAlign: TextAlign.center)),
+          SizedBox(width: 24),
+          SizedBox(width: 130, child: Text('ÚLTIMA VISITA', style: headerStyle)),
+          SizedBox(width: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopTableRow(Patient patient, Color primaryColor, bool isLast) {
+    final statusColor = _getHealthStatusColor(patient.healthStatus ?? 'Normal');
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    final textSecondary = Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7) ?? Colors.grey;
+    final initials = patient.fullName.split(' ').where((w) => w.isNotEmpty).take(2).map((w) => w[0].toUpperCase()).join();
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: InkWell(
+        onTap: () => _showPatientDetailsModal(patient),
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            border: isLast ? null : Border(bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.06))),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 1,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [statusColor, statusColor.withOpacity(0.6)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(color: statusColor.withOpacity(0.3), blurRadius: 6, offset: Offset(0, 2)),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          initials.isNotEmpty ? initials : 'P',
+                          style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        patient.fullName,
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: textPrimary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 250),
+                  child: Text(
+                    patient.email ?? '-',
+                    style: TextStyle(fontSize: 12.5, color: textSecondary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              SizedBox(width: 16),
+              SizedBox(
+                width: 60,
+                child: Text(
+                  '${patient.age}',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textPrimary),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              SizedBox(width: 16),
+              SizedBox(
+                width: 60,
+                child: Text(
+                  '${patient.totalAnalyses}',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textPrimary),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              SizedBox(width: 24),
+              SizedBox(
+                width: 110,
+                child: Center(child: _buildHealthStatusBadge(patient.healthStatus ?? 'Normal')),
+              ),
+              SizedBox(width: 24),
+              SizedBox(
+                width: 130,
+                child: Row(
+                  children: [
+                    Icon(Icons.event_rounded, size: 14, color: textSecondary),
+                    SizedBox(width: 4),
+                    Text(
+                      patient.lastVisit != null
+                          ? "${patient.lastVisit!.day.toString().padLeft(2, '0')}/${patient.lastVisit!.month.toString().padLeft(2, '0')}/${patient.lastVisit!.year}"
+                          : "Sin visitas",
+                      style: TextStyle(fontSize: 12, color: textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: textSecondary.withOpacity(0.4), size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getHealthStatusColor(String status) {
+    switch (status) {
+      case 'Normal': return Colors.green;
+      case 'Leve': return Colors.orange;
+      case 'Moderado': return Colors.deepOrange;
+      case 'Severo': return Colors.red;
+      default: return Colors.green;
+    }
   }
 
   Widget _buildCreationTab() {
@@ -827,21 +962,12 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
                           ),
                         ),
                         SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton.icon(
-                            icon: _isLoading ? Container() : Icon(Icons.add_circle_outline),
-                            label: _isLoading
-                                ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary))
-                                : Text('Crear y Generar Contraseña'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            onPressed: _isLoading ? null : _createPatient,
-                          ),
+                        AnimatedButton(
+                          text: 'Crear y Generar Contraseña',
+                          icon: Icons.add_circle_outline,
+                          backgroundColor: primaryColor,
+                          state: _isLoading ? ButtonState.loading : ButtonState.idle,
+                          onPressed: _isLoading ? null : _createPatient,
                         ),
                       ],
                     ),
@@ -1002,6 +1128,36 @@ class _PatientManagementScreenState extends State<PatientManagementScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHealthStatusBadge(String status) {
+    Color statusColor;
+    switch (status) {
+      case 'Normal':
+        statusColor = Colors.green;
+        break;
+      case 'Leve':
+        statusColor = Colors.orange;
+        break;
+      case 'Moderado':
+        statusColor = Colors.deepOrange;
+        break;
+      case 'Severo':
+        statusColor = Colors.red;
+        break;
+      default:
+        statusColor = Colors.green;
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: statusColor.withOpacity(0.3)),
+      ),
+      child: Text(status, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
     );
   }
 

@@ -103,15 +103,22 @@ class AnalysisService {
     }
   }
 
-  /// Polling cada 2.5s hasta COMPLETED o FAILED.
+  /// Polling cada 2.5s hasta COMPLETED o FAILED con timeout de 60s.
   /// Emite actualizaciones via Stream.
   Stream<Analysis> pollUntilComplete(String analysisId) async* {
+    final stopwatch = Stopwatch()..start();
+    const timeout = Duration(seconds: 60);
     while (true) {
       final analysis = await getAnalysis(analysisId);
       yield analysis;
       if (analysis.isFinished) break;
+      if (stopwatch.elapsed >= timeout) {
+        yield analysis.copyWith(status: 'FAILED');
+        break;
+      }
       await Future.delayed(const Duration(milliseconds: 2500));
     }
+    stopwatch.stop();
   }
 
   Exception _apiError(http.Response res) {

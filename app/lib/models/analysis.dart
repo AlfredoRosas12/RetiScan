@@ -6,6 +6,7 @@ class Analysis {
   final Map<String, dynamic>? aiResult;
   final String? doctorNotes;
   final String? imageUri;
+  final String? eye;
 
   Analysis({
     required this.id,
@@ -15,6 +16,7 @@ class Analysis {
     this.aiResult,
     this.doctorNotes,
     this.imageUri,
+    this.eye,
   });
 
   bool get isPending => status == 'PENDING';
@@ -39,6 +41,29 @@ class Analysis {
       aiResult: json['ai_result'] as Map<String, dynamic>? ?? json['aiResult'] as Map<String, dynamic>?,
       doctorNotes: json['doctor_notes'] as String? ?? json['doctorNotes'] as String?,
       imageUri: json['image_uri'] as String? ?? json['imageUri'] as String? ?? json['image_url'] as String? ?? json['imageUrl'] as String?,
+      eye: json['eye'] as String? ?? (json['ai_result'] as Map<String, dynamic>?)?['eye'] as String?,
+    );
+  }
+
+  Analysis copyWith({
+    String? id,
+    String? patientId,
+    String? status,
+    DateTime? createdAt,
+    Map<String, dynamic>? aiResult,
+    String? doctorNotes,
+    String? imageUri,
+    String? eye,
+  }) {
+    return Analysis(
+      id: id ?? this.id,
+      patientId: patientId ?? this.patientId,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      aiResult: aiResult ?? this.aiResult,
+      doctorNotes: doctorNotes ?? this.doctorNotes,
+      imageUri: imageUri ?? this.imageUri,
+      eye: eye ?? this.eye,
     );
   }
 
@@ -50,5 +75,6 @@ class Analysis {
         'ai_result': aiResult,
         'doctor_notes': doctorNotes,
         'image_url': imageUri,
+        'eye': eye,
       };
 }

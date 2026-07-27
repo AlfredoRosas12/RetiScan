@@ -33,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         HomeContent(),
         PatientManagementScreen(),
         ProfileScreen(),
+        SettingsScreen(),
       ];
     } else {
       if (isDesktop) {
@@ -42,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           RecommendationsScreen(),
           HistoryScreen(),
           ProfileScreen(),
+          SettingsScreen(),
         ];
       } else {
         return [
@@ -135,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   padding: EdgeInsets.symmetric(horizontal: 24),
                   child: Row(
                     children: [
-                      Image.asset('assets/ilustrator/logo_sin_fondo.png', width: 32, height: 32),
+                      Image.asset('assets/ilustrator/OJO_RETISCAN.png', width: 32, height: 32),
                       SizedBox(width: 12),
                       Text(
                         'RetiScan',
@@ -211,12 +213,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Divider(color: Theme.of(context).dividerColor.withOpacity(0.1), indent: 24, endIndent: 24),
                 // Ajustes
                 _buildSidebarFooterItem(Icons.settings_outlined, 'Ajustes', () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => Scaffold(
-                      appBar: AppBar(title: Text('Ajustes'), backgroundColor: cardColor, foregroundColor: textPrimary),
-                      body: SettingsScreen(),
-                    ),
-                  ));
+                  setState(() => _currentIndex = screens.length - 1);
                 }, textSecondary),
                 // Cerrar Sesión
                 _buildSidebarFooterItem(Icons.logout, 'Cerrar Sesión', () {
@@ -229,10 +226,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           // ── Contenido principal ──
           Expanded(
-            child: AnimatedSwitcher(
-              duration: Duration(milliseconds: 300),
-              child: screens[_currentIndex],
-            ),
+            child: _currentIndex == 0
+                ? Scrollbar(
+                    thumbVisibility: true,
+                    child: SingleChildScrollView(
+                      child: AnimatedSwitcher(
+                        duration: Duration(milliseconds: 300),
+                        child: screens[_currentIndex],
+                      ),
+                    ),
+                  )
+                : AnimatedSwitcher(
+                    duration: Duration(milliseconds: 300),
+                    child: screens[_currentIndex],
+                  ),
           ),
         ],
       ),
@@ -282,7 +289,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         elevation: 0,
         title: Row(
           children: [
-            Image.asset('assets/ilustrator/logo_sin_fondo.png', width: 28, height: 28),
+            Image.asset('assets/ilustrator/OJO_RETISCAN.png', width: 28, height: 28),
             SizedBox(width: 10),
             Text(
               'RetiScan',
@@ -574,115 +581,199 @@ class _HomeContentState extends State<HomeContent>
     final isDoctor = user?.isDoctor ?? false;
     final userName = _realName ?? user?.fullName ?? user?.email ?? 'Usuario';
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    final hPadding = isMobile ? 16.0 : 24.0;
-
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 900),
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 24),
-            child: SizedBox(
-              width: double.infinity,
-              child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isDesktop = constraints.maxWidth >= 1000;
+          if (isDesktop) {
+            return _buildDesktopContent(userName, isDoctor);
+          }
+          return _buildMobileContent(userName, isDoctor);
+        },
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════
+  //  LAYOUT MÓVIL (< 1000px) — Columna vertical
+  // ═══════════════════════════════════════════
+  Widget _buildMobileContent(String userName, bool isDoctor) {
+    final hPadding = MediaQuery.of(context).size.width < 600 ? 16.0 : 24.0;
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 900),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 24),
+          child: SizedBox(
+            width: double.infinity,
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Tarjeta de bienvenida ──
                 _animated(0, _buildWelcomeCard(context, userName, isDoctor)),
                 SizedBox(height: 24),
-
-                // ── Stats Row ──
                 _animated(1, _buildStatsRow(context, isDoctor)),
                 SizedBox(height: 28),
-
-                // ── Gráfico de análisis ──
                 _animated(2, _buildChartCard(context, isDoctor)),
                 SizedBox(height: 28),
-
-                // ── Listas contextuales ──
-                if (isDoctor) ...[
-                  _animated(3, _buildSectionTitle('Pacientes Recientes')),
-                  SizedBox(height: 12),
-                  if (_isLoadingPatients)
-                    _animated(4, Center(child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(),
-                    )))
-                  else if (_recentPatients.isEmpty)
-                    _animated(4, Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Center(child: Text('No hay pacientes registrados aún.', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)))),
-                    ))
-                  else
-                    ..._recentPatients.map((p) {
-                      final name = p.fullName ?? '—';
-                      final date = p.lastVisit != null
-                          ? '${p.lastVisit!.day} ${_monthName(p.lastVisit!.month)} ${p.lastVisit!.year}'
-                          : 'Sin visitas';
-                      return _animated(4, _buildPatientCard(name, 'Activo', date));
-                    }).toList(),
-                ] else ...[
-                  _animated(3, _buildSectionTitle('Últimos Análisis')),
-                  SizedBox(height: 12),
-                  if (_isLoadingAnalyses)
-                    _animated(4, Center(child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(),
-                    )))
-                  else if (_patientAnalyses.isEmpty)
-                    _animated(4, Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Center(child: Text('Aún no tienes análisis.', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)))),
-                    ))
-                  else
-                    ..._patientAnalyses.take(3).map((a) {
-                      final grade = a.aiResult?['grade'] ?? 'Normal';
-                      final date = '${a.createdAt.day} ${_monthName(a.createdAt.month)} ${a.createdAt.year}';
-                      return _animated(4, _buildAnalysisCard(date, grade));
-                    }).toList(),
-                ],
+                _buildListSection(isDoctor),
                 SizedBox(height: 28),
-
-                // ── Acciones rápidas ──
-                _animated(5, _buildSectionTitle('Acciones Rápidas')),
-                SizedBox(height: 12),
-                if (isDoctor) ...[
-                  _animated(5, _buildQuickAction(Icons.person_add_outlined, 'Registrar nuevo paciente', () {
-                    final cardColor = Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface;
-                    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
-                      appBar: AppBar(title: Text('Gestión de Pacientes'), backgroundColor: cardColor, foregroundColor: textPrimary),
-                      body: PatientManagementScreen(),
-                    )));
-                  })),
-                  _animated(5, _buildQuickAction(Icons.assignment_outlined, 'Revisar diagnósticos', () {
-                    final cardColor = Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface;
-                    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
-                      appBar: AppBar(title: Text('Gestión de Pacientes'), backgroundColor: cardColor, foregroundColor: textPrimary),
-                      body: PatientManagementScreen(),
-                    )));
-                  })),
-                ] else ...[
-                  _animated(5, _buildQuickAction(Icons.camera_alt_outlined, 'Realizar nueva captura', () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => CaptureScreen()));
-                  })),
-                  _animated(5, _buildQuickAction(Icons.calendar_today_outlined, 'Programar próxima revisión', () {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Esta función de calendario pronto estará lista')));
-                  })),
-                ],
+                _buildQuickActionsSection(isDoctor),
                 SizedBox(height: 24),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  // ═══════════════════════════════════════════
+  //  LAYOUT ESCRITORIO (>= 1000px) — 2 columnas
+  // ═══════════════════════════════════════════
+  Widget _buildDesktopContent(String userName, bool isDoctor) {
+  return Padding(
+    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _animated(0, _buildWelcomeCard(context, userName, isDoctor)),
+        SizedBox(height: 28),
+        _animated(1, _buildStatsRow(context, isDoctor)),
+        SizedBox(height: 32),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 55,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _animated(2, _buildChartCard(context, isDoctor)),
+                  SizedBox(height: 28),
+                  _buildQuickActionsSection(isDoctor),
+                ],
+              ),
+              ),
+            SizedBox(width: 28),
+            Expanded(
+              flex: 45,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildListSection(isDoctor),
+                ],
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 24),
+      ],
     ),
   );
 }
+
+  // ═══════════════════════════════════════════
+  //  Secciones reutilizables
+  // ═══════════════════════════════════════════
+  Widget _buildListSection(bool isDoctor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _animated(3, _buildSectionTitle(isDoctor ? 'Pacientes Recientes' : 'Últimos Análisis')),
+        SizedBox(height: 12),
+        if (isDoctor) ...[
+          if (_isLoadingPatients)
+            _animated(4, Center(child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(),
+            )))
+          else if (_recentPatients.isEmpty)
+            _animated(4, Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: Text('No hay pacientes registrados aún.', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)))),
+            ))
+          else
+            ..._recentPatients.map((p) {
+              final name = p.fullName ?? '—';
+              final date = p.lastVisit != null
+                  ? '${p.lastVisit!.day} ${_monthName(p.lastVisit!.month)} ${p.lastVisit!.year}'
+                  : 'Sin visitas';
+              return _animated(4, _buildPatientCard(name, 'Activo', date));
+            }).toList(),
+        ] else ...[
+          if (_isLoadingAnalyses)
+            _animated(4, Center(child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(),
+            )))
+          else if (_patientAnalyses.isEmpty)
+            _animated(4, Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: Text('Aún no tienes análisis.', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)))),
+            ))
+          else
+            ..._patientAnalyses.take(3).map((a) {
+              final grade = _translateGrade(a.aiResult?['grade']);
+              final date = '${a.createdAt.day} ${_monthName(a.createdAt.month)} ${a.createdAt.year}';
+              return _animated(4, _buildAnalysisCard(date, grade));
+            }).toList(),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildQuickActionsSection(bool isDoctor) {
+    final actions = <Widget>[];
+
+    if (isDoctor) {
+      actions.add(_animated(5, _buildQuickAction(Icons.person_add_outlined, 'Registrar nuevo paciente', () {
+        final cardColor = Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface;
+        final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+        Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
+          appBar: AppBar(title: Text('Gestión de Pacientes'), backgroundColor: cardColor, foregroundColor: textPrimary),
+          body: PatientManagementScreen(),
+        )));
+      })));
+      actions.add(_animated(5, _buildQuickAction(Icons.assignment_outlined, 'Revisar diagnósticos', () {
+        final cardColor = Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface;
+        final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+        Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
+          appBar: AppBar(title: Text('Gestión de Pacientes'), backgroundColor: cardColor, foregroundColor: textPrimary),
+          body: PatientManagementScreen(),
+        )));
+      })));
+    } else {
+      actions.add(_animated(5, _buildQuickAction(Icons.camera_alt_outlined, 'Realizar nueva captura', () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => CaptureScreen()));
+      })));
+      actions.add(_animated(5, _buildQuickAction(Icons.calendar_today_outlined, 'Próxima revisión recomendada', () {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Según tus análisis, se recomienda una revisión en 12 meses')));
+      })));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Acciones Rápidas'),
+        SizedBox(height: 12),
+        ...actions,
+      ],
+    );
+  }
+
+  // Traducción de las enfermedades
+  String _translateGrade(String? grade) {
+    switch (grade) {
+      case 'No_DR': return 'Normal';
+      case 'Mild': return 'Leve';
+      case 'Moderate': return 'Moderado';
+      case 'Severe': return 'Severo';
+      case 'Proliferate_DR': return 'Proliferativa';
+      default: return grade ?? 'Normal';
+    }
+  }
 
   // Convierte número de mes a nombre en español
   String _monthName(int month) {
@@ -732,7 +823,7 @@ class _HomeContentState extends State<HomeContent>
             top: -30,
             child: Opacity(
               opacity: 0.08,
-              child: Image.asset('assets/ilustrator/logo_sin_fondo.png', width: 120, height: 120),
+              child: Image.asset('assets/ilustrator/OJO_RETISCAN.png', width: 120, height: 120),
             ),
           ),
           Column(
@@ -767,9 +858,10 @@ class _HomeContentState extends State<HomeContent>
 
   // ── Stats Row (contextualizado) ──
   Widget _buildStatsRow(BuildContext context, bool isDoctor) {
-    if (isDoctor) {
-      final spacing = MediaQuery.of(context).size.width < 600 ? 8.0 : 12.0;
+    final isDesktop = MediaQuery.of(context).size.width >= 1000;
+    final spacing = isDesktop ? 16.0 : (MediaQuery.of(context).size.width < 600 ? 8.0 : 12.0);
 
+    if (isDoctor) {
       return Row(
         children: [
           Expanded(child: _buildStatCard(Icons.people, 'Pacientes', _isLoadingPatients ? '...' : '$_totalPatientsCount')),
@@ -781,12 +873,10 @@ class _HomeContentState extends State<HomeContent>
       );
     }
     
-    final spacing = MediaQuery.of(context).size.width < 600 ? 8.0 : 12.0;
-    
     // Patient Stats
     final totalAnalyses = _isLoadingAnalyses ? '...' : '${_patientAnalyses.length}';
     final lastStatus = _patientAnalyses.isNotEmpty 
-        ? (_patientAnalyses.first.aiResult?['grade'] ?? 'Normal')
+        ? _translateGrade(_patientAnalyses.first.aiResult?['grade'])
         : '—';
     final nextRev = _patientAnalyses.isNotEmpty 
         ? '${_patientAnalyses.first.createdAt.add(Duration(days: 365)).day} ${_monthName(_patientAnalyses.first.createdAt.add(Duration(days: 365)).month)}'
@@ -838,6 +928,7 @@ class _HomeContentState extends State<HomeContent>
     final primaryColor = Theme.of(context).brightness == Brightness.dark 
         ? Theme.of(context).colorScheme.secondary 
         : Theme.of(context).colorScheme.primary;
+    final isDesktop = MediaQuery.of(context).size.width >= 1000;
 
     return Container(
       padding: EdgeInsets.all(24),
@@ -868,16 +959,16 @@ class _HomeContentState extends State<HomeContent>
           ),
           SizedBox(height: 20),
           SizedBox(
-            height: 180,
+            height: isDesktop ? 220 : 180,
             child: DashboardCharts(analyses: isDoctor ? _allDoctorAnalyses : _patientAnalyses),
           ),
           SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildLegendDot(Colors.cyanAccent, isDoctor ? 'Normales' : 'Análisis'),
+              _buildLegendDot(Colors.yellow, isDoctor ? 'Normales' : 'Análisis'),
               SizedBox(width: 24),
-              _buildLegendDot(Colors.pinkAccent, isDoctor ? 'Con hallazgos' : 'Hallazgos'),
+              _buildLegendDot(Colors.green, isDoctor ? 'Con hallazgos' : 'Hallazgos'),
             ],
           ),
         ],

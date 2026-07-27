@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:another_flushbar/flushbar.dart';
-import 'dart:math' as math;
 import 'login_loading_screen.dart';
 import '../widgets/glassmorphic_card.dart';
 import '../widgets/animated_button.dart';
 import '../services/auth_service.dart';
 import 'complete_profile_screen.dart';
+import '../painters/particle_painter.dart';
 
 /// Pantalla que se muestra cuando mustChangePassword == true.
 /// El médico define su contraseña definitiva y luego entra al home.
@@ -150,7 +150,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
           AnimatedBuilder(
             animation: _particleController,
             builder: (context, child) => CustomPaint(
-              painter: _ParticlePainter(_particleController.value),
+              painter: ParticlePainter(_particleController.value),
               child: Container(),
             ),
           ),
@@ -365,26 +365,4 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
       },
     );
   }
-}
-
-class _ParticlePainter extends CustomPainter {
-  final double value;
-  _ParticlePainter(this.value);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
-      ..style = PaintingStyle.fill;
-    for (int i = 0; i < 20; i++) {
-      final x = (size.width * (i * 0.1 + value * 0.5)) % size.width;
-      final y =
-          size.height * (math.sin(i + value * math.pi * 2) * 0.5 + 0.5);
-      final radius = 2.0 + math.sin(i + value * math.pi) * 2;
-      canvas.drawCircle(Offset(x, y), radius, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_ParticlePainter old) => true;
 }

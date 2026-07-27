@@ -18,6 +18,12 @@ class ApiConfig {
     return 'http://$host:$_apiPort/api';
   }
 
+  static String imageUrl(String? uri) {
+    if (uri == null) return '';
+    final path = uri.startsWith('/') ? uri : '/$uri';
+    return '${baseUrl.replaceAll('/api', '')}$path';
+  }
+
   // Headers para requests autenticados (usado internamente o legacy)
   static Map<String, String> authHeaders(String token) => {
         'Content-Type': 'application/json',
@@ -32,7 +38,11 @@ class ApiConfig {
   // ─────────────────────────────────────────────────────────────────
   // CLIENTE HTTP GLOBAL W/ CREDENTIALS & AUTO-REFRESH (Interceptor)
   // ─────────────────────────────────────────────────────────────────
-  static http.Client get _baseClient => BrowserClient()..withCredentials = true;
+  static http.Client? _cachedClient;
+  static http.Client get _baseClient {
+    _cachedClient ??= BrowserClient()..withCredentials = true;
+    return _cachedClient!;
+  }
 
   static Future<http.Response> request(
     String method,

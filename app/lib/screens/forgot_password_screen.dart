@@ -268,7 +268,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
               ],
             ),
             child: Image.asset(
-              'assets/ilustrator/logo_sin_fondo.png',
+              'assets/ilustrator/OJO_RETISCAN.png',
               width: 80, height: 80, fit: BoxFit.contain,
               errorBuilder: (_, __, ___) => Icon(Icons.visibility, size: 60, color: Colors.white),
             ),

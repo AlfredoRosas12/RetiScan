@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/recommendation.dart';
 import '../services/recommendation_service.dart';
 import '../services/analysis_service.dart';
 import '../widgets/responsive_wrapper.dart';
@@ -13,8 +14,8 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
   final RecommendationService _service = RecommendationService();
   late TabController _tabController;
 
-  List<Map<String, dynamic>> _recommendations = [];
-  List<Map<String, dynamic>> _medications = [];
+  List<Recommendation> _recommendations = [];
+  List<Recommendation> _medications = [];
   bool _isLoading = true;
   String? _error;
 
@@ -46,18 +47,20 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
           .where((a) => a.doctorNotes != null && a.doctorNotes!.isNotEmpty)
           .map((a) {
             final date = '${a.createdAt.day}/${a.createdAt.month}/${a.createdAt.year}';
-            return {
-              'type': 'RECOMMENDATION',
-              'title': 'Nota Médica - Análisis del $date',
-              'description': a.doctorNotes,
-            };
+            return Recommendation(
+              id: 'note_${a.id}',
+              patientId: a.patientId,
+              type: 'RECOMMENDATION',
+              title: 'Nota Médica - Análisis del $date',
+              description: a.doctorNotes,
+            );
           })
           .toList();
 
       setState(() {
-        _recommendations = all.where((r) => r['type'] == 'RECOMMENDATION').toList();
+        _recommendations = all.where((r) => r.isRecommendation).toList();
         _recommendations.addAll(notes); // Merge analysis notes
-        _medications = all.where((r) => r['type'] == 'MEDICATION').toList();
+        _medications = all.where((r) => r.isMedication).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -267,7 +270,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
     );
   }
 
-  Widget _buildRecommendationCard(Map<String, dynamic> rec) {
+  Widget _buildRecommendationCard(Recommendation rec) {
     final primaryColor = Theme.of(context).brightness == Brightness.dark
         ? Theme.of(context).colorScheme.secondary
         : Theme.of(context).colorScheme.primary;
@@ -301,17 +304,17 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  rec['title'] ?? '',
+                  rec.title,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                     color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
-                if (rec['description'] != null) ...[
+                if (rec.description != null) ...[
                   SizedBox(height: 6),
                   Text(
-                    rec['description'],
+                    rec.description!,
                     style: TextStyle(
                       fontSize: 13,
                       color: Theme.of(context)
@@ -351,14 +354,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
     );
   }
 
-  Widget _buildMedicationCard(Map<String, dynamic> med) {
+  Widget _buildMedicationCard(Recommendation med) {
     final primaryColor = Theme.of(context).brightness == Brightness.dark
         ? Theme.of(context).colorScheme.secondary
         : Theme.of(context).colorScheme.primary;
-    final freqHours = med['frequency_hours'];
-    final nextDose = med['next_dose_at'] != null
-        ? DateTime.tryParse(med['next_dose_at'])
-        : null;
+    final freqHours = med.frequencyHours;
+    final nextDose = med.nextDoseAt;
 
     return Container(
       margin: EdgeInsets.only(bottom: 12),
@@ -390,7 +391,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      med['title'] ?? '',
+                      med.title,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
@@ -398,9 +399,9 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
                             Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
-                    if (med['dosage'] != null)
+                    if (med.dosage != null)
                       Text(
-                        med['dosage'],
+                        med.dosage!,
                         style: TextStyle(
                           fontSize: 12,
                           color: Theme.of(context)
@@ -432,10 +433,10 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
                 ),
             ],
           ),
-          if (med['description'] != null) ...[
+          if (med.description != null) ...[
             SizedBox(height: 8),
             Text(
-              med['description'],
+              med.description!,
               style: TextStyle(
                 fontSize: 13,
                 color: Theme.of(context)
@@ -490,19 +491,14 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
   // ── Tab 3: Recordatorios (medicamentos con acción de confirmar) ──
   Widget _buildRemindersTab() {
     final pendingMeds = _medications.where((m) {
-      final nextDose = m['next_dose_at'] != null
-          ? DateTime.tryParse(m['next_dose_at'])
-          : null;
-      return nextDose != null;
+      return m.nextDoseAt != null;
     }).toList();
 
     // Ordenar por próxima dosis más cercana
     pendingMeds.sort((a, b) {
-      final da = DateTime.tryParse(a['next_dose_at'] ?? '');
-      final db = DateTime.tryParse(b['next_dose_at'] ?? '');
-      if (da == null) return 1;
-      if (db == null) return -1;
-      return da.compareTo(db);
+      if (a.nextDoseAt == null) return 1;
+      if (b.nextDoseAt == null) return -1;
+      return a.nextDoseAt!.compareTo(b.nextDoseAt!);
     });
 
     if (pendingMeds.isEmpty) {
@@ -523,10 +519,10 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
     );
   }
 
-  Widget _buildReminderCard(Map<String, dynamic> med) {
-    final nextDose = DateTime.tryParse(med['next_dose_at'] ?? '');
+  Widget _buildReminderCard(Recommendation med) {
+    final nextDose = med.nextDoseAt;
     final isPastDue = nextDose != null && nextDose.isBefore(DateTime.now());
-    final id = med['id'] as String;
+    final id = med.id;
 
     return Container(
       margin: EdgeInsets.only(bottom: 12),
@@ -566,7 +562,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      med['title'] ?? '',
+                      med.title,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
@@ -613,11 +609,11 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
               ),
             ),
           ),
-          if (med['frequency_hours'] != null) ...[
+          if (med.frequencyHours != null) ...[
             SizedBox(height: 8),
             Center(
               child: Text(
-                'Se reprogramará en ${med['frequency_hours']} horas',
+                'Se reprogramará en ${med.frequencyHours} horas',
                 style: TextStyle(
                   fontSize: 11,
                   color: Theme.of(context)

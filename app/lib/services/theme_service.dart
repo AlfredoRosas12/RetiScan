@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -23,29 +24,27 @@ class ThemeService extends ChangeNotifier {
         useMaterial3: true,
         brightness: Brightness.light,
         colorScheme: ColorScheme.light(
-          primary: Color(0xFF17387A),        // Complete Blue (Primary Brand)
-          secondary: Color(0xFF02B4F5),      // Bright Cyan (Gradiente Hero)
-          surface: Color(0xFFFFFFFF),        // Background Light
-          background: Color(0xFFFFFFFF),     // Background Light
-          onPrimary: Color(0xFFFFFFFF),      // Primary Light
-          onSecondary: Color(0xFFFFFFFF),    // Primary Light
-          onSurface: Color(0xFF252525),      // Foreground Light
-          onBackground: Color(0xFF252525),   // Foreground Light
-          error: Color(0xFFd4183d),          // Destructive
+          primary: completeBlue,
+          secondary: brightCyan,
+          surface: Colors.white,
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
+          onSurface: Color(0xFF252525),
+          error: Color(0xFFd4183d),
         ),
-        primaryColor: Color(0xFF17387A),
+        primaryColor: completeBlue,
         scaffoldBackgroundColor: Colors.white,
         fontFamily: 'Roboto',
         textTheme: TextTheme(
           headlineLarge: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF17387A),
+            color: completeBlue,
           ),
           headlineMedium: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF17387A),
+            color: completeBlue,
           ),
           bodyLarge: TextStyle(
             fontSize: 16,
@@ -62,9 +61,9 @@ class ThemeService extends ChangeNotifier {
         ),
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.white,
-          foregroundColor: Color(0xFF17387A),
+          foregroundColor: completeBlue,
           elevation: 0,
-          iconTheme: IconThemeData(color: Color(0xFF17387A)),
+          iconTheme: IconThemeData(color: completeBlue),
         ),
         cardTheme: CardThemeData(
           elevation: 2,
@@ -74,10 +73,10 @@ class ThemeService extends ChangeNotifier {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF04B5A2),  // Teal (Action Button)
+            backgroundColor: teal,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),  // Border Radius Base
+              borderRadius: BorderRadius.circular(10),
             ),
             padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
           ),
@@ -100,7 +99,7 @@ class ThemeService extends ChangeNotifier {
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(
-              color: Color(0xFF17387A),
+              color: completeBlue,
               width: 2,
             ),
           ),
@@ -112,18 +111,16 @@ class ThemeService extends ChangeNotifier {
         useMaterial3: true,
         brightness: Brightness.dark,
         colorScheme: ColorScheme.dark(
-          primary: Color(0xFF17387A),        // Complete Blue (Primary Brand)
-          secondary: Color(0xFF02B4F5),      // Bright Cyan (Gradiente Hero)
-          surface: Color(0xFF16213E),        // Sidebar Background
-          background: Color(0xFF1A1A2E),     // Background Dark
-          onPrimary: Color(0xFFFFFFFF),      // Primary Light
-          onSecondary: Color(0xFFFFFFFF),    // Primary Light
-          onSurface: Color(0xFFfafafa),      // Foreground Dark
-          onBackground: Color(0xFFfafafa),   // Foreground Dark
-          error: Color(0xFFd4183d),          // Destructive
+          primary: completeBlue,
+          secondary: brightCyan,
+          surface: Color(0xFF16213E),
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
+          onSurface: Color(0xFFfafafa),
+          error: Color(0xFFd4183d),
         ),
-        primaryColor: Color(0xFF17387A),
-        scaffoldBackgroundColor: Color(0xFF1A1A2E), // Primary Dark
+        primaryColor: completeBlue,
+        scaffoldBackgroundColor: Color(0xFF1A1A2E),
         fontFamily: 'Roboto',
         textTheme: TextTheme(
           headlineLarge: TextStyle(
@@ -164,10 +161,10 @@ class ThemeService extends ChangeNotifier {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF04B5A2),  // Teal (Action Button)
+            backgroundColor: teal,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),  // Border Radius Base
+              borderRadius: BorderRadius.circular(10),
             ),
             padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
           ),
@@ -190,7 +187,7 @@ class ThemeService extends ChangeNotifier {
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(
-              color: Color(0xFF17387A),
+              color: completeBlue,
               width: 2,
             ),
           ),
@@ -204,7 +201,7 @@ class ThemeService extends ChangeNotifier {
       _isDarkMode = prefs.getBool(_themeKey) ?? false;
       notifyListeners();
     } catch (e) {
-      print('Error loading theme: $e');
+      debugPrint('Error loading theme: $e');
     }
   }
 
@@ -217,7 +214,7 @@ class ThemeService extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_themeKey, _isDarkMode);
     } catch (e) {
-      print('Error saving theme: $e');
+      debugPrint('Error saving theme: $e');
     }
   }
 
@@ -231,7 +228,7 @@ class ThemeService extends ChangeNotifier {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool(_themeKey, _isDarkMode);
       } catch (e) {
-        print('Error saving theme: $e');
+        debugPrint('Error saving theme: $e');
       }
     }
   }

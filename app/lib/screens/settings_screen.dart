@@ -85,9 +85,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
     final textSecondary = Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7) ?? Colors.grey;
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      body: Column(
+    return Container(
+      color: bgColor,
+      child: Column(
         children: [
           // Drawer Header - Solo mostrar en móvil (no en el drawer de Desktop donde ya hay header)
           if (!isDesktop)
