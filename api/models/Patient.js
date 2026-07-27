@@ -94,6 +94,7 @@ const Patient = {
             phone: 'phone',
             lastVisit: 'last_visit',
             totalAnalyses: 'total_analyses',
+            healthStatus: 'health_status',
         };
 
         const setClauses = [];
@@ -140,6 +141,27 @@ const Patient = {
         const result = await pool.query(
             'UPDATE patients SET is_active = false, updated_at = NOW() WHERE id = $1 AND doctor_id = $2 RETURNING id',
             [id, doctorId]
+        );
+        return result.rows[0] || null;
+    },
+
+    /**
+     * Actualiza el health_status del paciente basado en el grade del AI.
+     * @param {string} patientId
+     * @param {string} aiGrade - Grade devuelto por el modelo ('No_DR', 'Mild', 'Moderate', 'Severe', 'Proliferate_DR')
+     */
+    async updateHealthStatusFromAI(patientId, aiGrade) {
+        const gradeMap = {
+            'No_DR': 'Normal',
+            'Mild': 'Leve',
+            'Moderate': 'Moderado',
+            'Severe': 'Severo',
+            'Proliferate_DR': 'Severo',
+        };
+        const healthStatus = gradeMap[aiGrade] || 'Normal';
+        const result = await pool.query(
+            `UPDATE patients SET health_status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+            [healthStatus, patientId]
         );
         return result.rows[0] || null;
     },

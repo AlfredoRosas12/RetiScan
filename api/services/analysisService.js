@@ -53,7 +53,7 @@ analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
 
         // 4. Hacer la petición a FastAPI (puerto 8000)
         console.log(`[Cola]  Enviando imagen a FastAPI (AI-RetiScan)...`);
-        const aiResponse = await axios.post('http://host.docker.internal:8000/predict', formData, {
+        const aiResponse = await axios.post('http://algorithms:8000/predict', formData, {
             headers: {
                 ...formData.getHeaders()
             }
@@ -65,8 +65,15 @@ analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
         await Analysis.updateStatus(analysisId, 'COMPLETED', aiResult);
         console.log(`[Cola] Análisis ${analysisId} → COMPLETED (grado: ${aiResult.grade})`);
 
-        // 6. Incrementar análisis del paciente
-        await Patient.incrementAnalyses(patientId);
+        // 6. Incrementar análisis del paciente y actualizar health_status
+        await Patient.incrementAnalyses(patientId).catch(e =>
+            console.error(`[Cola] Error incrementando análisis del paciente:`, e.message)
+        );
+        if (aiResult.grade) {
+            await Patient.updateHealthStatusFromAI(patientId, aiResult.grade).catch(e =>
+                console.error(`[Cola] Error actualizando health_status:`, e.message)
+            );
+        }
 
         // 7. Completar el registro de auditoría
         await AI_Processing_Log.complete(logEntry.task_id, 'COMPLETED');

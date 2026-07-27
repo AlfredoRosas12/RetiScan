@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS patients (
   phone            VARCHAR(20),
   last_visit       TIMESTAMPTZ,
   total_analyses   INTEGER      NOT NULL DEFAULT 0,
+  health_status    VARCHAR(20)  DEFAULT 'Normal' CHECK (health_status IN ('Normal', 'Leve', 'Moderado', 'Severo')),
   is_active        BOOLEAN      NOT NULL DEFAULT TRUE,
   created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
