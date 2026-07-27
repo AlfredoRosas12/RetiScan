@@ -41,6 +41,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      algorithms:
+        condition: service_started
+    volumes:
+      - ./api/uploads:/app/uploads
 
   # ── Landing Page (React/Vite) ────────────────────────────────
   landing-page:
@@ -51,6 +55,8 @@ services:
     restart: unless-stopped
     ports:
       - "5173:80"
+    depends_on:
+      - api
 
   # ── PWA (Flutter) ────────────────────────────────────────────
   pwa:
