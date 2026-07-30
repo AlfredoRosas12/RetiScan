@@ -19,7 +19,10 @@ class ApiConfig {
   }
 
   static String imageUrl(String? uri) {
-    if (uri == null) return '';
+    if (uri == null || uri.isEmpty) return '';
+    if (uri.startsWith('http://') || uri.startsWith('https://')) {
+      return uri;
+    }
     final path = uri.startsWith('/') ? uri : '/$uri';
     return '${baseUrl.replaceAll('/api', '')}$path';
   }

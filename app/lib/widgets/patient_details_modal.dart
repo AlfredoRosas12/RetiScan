@@ -4,6 +4,7 @@ import '../models/patient.dart';
 import '../models/analysis.dart';
 import '../services/analysis_service.dart';
 import 'analysis_detail_modal.dart';
+import '../screens/capture_screen.dart';
 
 class PatientDetailsModal extends StatefulWidget {
   final Patient patient;
@@ -204,22 +205,48 @@ class _PatientDetailsModalState extends State<PatientDetailsModal> {
                           BoxShadow(color: const Color(0xFF17387A).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4)),
                         ],
                       ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          CircleAvatar(
-                            radius: 36,
-                            backgroundColor: Colors.white.withOpacity(0.15),
-                            child: const Icon(Icons.person, size: 40, color: Colors.white),
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 36,
+                                backgroundColor: Colors.white.withOpacity(0.15),
+                                child: const Icon(Icons.person, size: 40, color: Colors.white),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(widget.patient.fullName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                                    const SizedBox(height: 4),
+                                    Text(widget.patient.email ?? 'Sin correo', style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.8))),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 20),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(widget.patient.fullName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-                                const SizedBox(height: 4),
-                                Text(widget.patient.email ?? 'Sin correo', style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.8))),
-                              ],
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => CaptureScreen(patientId: widget.patient.id),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.camera_alt, size: 18),
+                              label: const Text('Escanear Retina'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: const Color(0xFF17387A),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
                             ),
                           ),
                         ],

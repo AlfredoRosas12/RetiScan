@@ -9,6 +9,8 @@
     "init-db": "psql -U postgres -d retiscan_pruebas -f config/init.sql"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.540.0",
+    "@aws-sdk/s3-request-presigner": "^3.540.0",
     "axios": "^1.6.8",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
