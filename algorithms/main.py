@@ -1,18 +1,15 @@
-# pyrefly: ignore [missing-import]
-from fastapi import FastAPI, UploadFile, File, HTTPException
-# pyrefly: ignore [missing-import]
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 import uvicorn
 from io import BytesIO
-# pyrefly: ignore [missing-import]
 from PIL import Image
-# pyrefly: ignore [missing-import]
 import torch
-# pyrefly: ignore [missing-import]
 from torchvision import transforms
 import datetime
 import os
+import numpy as np
+import cv2
 
-app = FastAPI(title="AI-RetiScan", description="Microservicio de Inferencia de Retinopatía Diabética", version="1.0")
+app = FastAPI(title="AI-RetiScan", description="Microservicio de Inferencia de Retinopatía Diabética con Evaluación Híbrida (OpenCV + PyTorch)", version="2.0")
 
 # 1. Cargar el modelo en memoria al iniciar el servidor
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "retiscan_efficientnetb0_completo.pt")
@@ -28,8 +25,6 @@ try:
             weights_only=False,
             map_location=torch.device("cpu")
         )
-        # Si el modelo fue guardado con DataParallel (entrenado en GPU),
-        # necesitamos extraer el modelo base para que funcione en CPU
         if hasattr(model, 'module'):
             model = model.module
         model = model.to(torch.device("cpu"))
@@ -59,7 +54,6 @@ CLASS_NAMES = {
 }
 
 def format_class_name(raw_name: str) -> str:
-    """Adapta el nombre de la clase para que sea idéntico al que esperaba Node.js"""
     if raw_name == "No_DR":
         return "No DR"
     elif raw_name == "Proliferate_DR":
@@ -71,52 +65,205 @@ def generate_recommendation(grade: str) -> str:
         return "Seguimiento anual recomendado."
     return "Referir al oftalmólogo en menos de 4 semanas."
 
+# Funciones de procesamiento con OpenCV
+
+def validate_fundus_structure(pil_img: Image.Image) -> dict:
+    """
+    Verifica que la imagen corresponda a una retinografía médica auténtica
+    analizando el perfil cromático y la textura visual.
+    """
+    img_np = np.array(pil_img)
+    if img_np.ndim < 3 or img_np.shape[2] < 3:
+        return {"is_fundus": False, "reason": "La imagen no contiene canales de color RGB válidos."}
+
+    h, w, _ = img_np.shape
+
+    # 1. Análisis cromático (Retina - Tonos cálidos/rojos/naranjas/amarillos)
+    hsv = cv2.cvtColor(img_np, cv2.COLOR_RGB2HSV)
+    lower_red1 = np.array([0, 20, 20])
+    upper_red1 = np.array([35, 255, 255])
+    lower_red2 = np.array([150, 20, 20])
+    upper_red2 = np.array([180, 255, 255])
+
+    mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
+    mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
+    fundus_mask = cv2.bitwise_or(mask1, mask2)
+    red_ratio = float(np.sum(fundus_mask > 0) / (h * w))
+
+    # 2. Análisis de estructura (Densidad de bordes/vasos en canal verde)
+    green = img_np[:, :, 1]
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    contrast_green = clahe.apply(green)
+    edges = cv2.Canny(contrast_green, 30, 90)
+    vessel_density = float(np.sum(edges > 0) / (h * w))
+
+    # Criterios permisivos para evitar falsos negativos en retinografías reales:
+    is_chromatic_ok = red_ratio >= 0.15
+    is_vessel_ok = vessel_density >= 0.003
+
+    is_fundus = is_chromatic_ok and is_vessel_ok
+
+    reason = None
+    if not is_chromatic_ok:
+        reason = "La imagen no corresponde a una retinografía médica (perfil cromático no retiniano)."
+    elif not is_vessel_ok:
+        reason = "La nitidez o estructura de la imagen no es suficiente para evaluación médica."
+
+    return {
+        "is_fundus": is_fundus,
+        "red_ratio": round(red_ratio, 3),
+        "vessel_density": round(vessel_density, 3),
+        "reason": reason
+    }
+
+def evaluate_image_quality(pil_img: Image.Image) -> dict:
+    """
+    Evalúa la calidad física y validez de la retinografía mediante procesamiento digital de imágenes:
+    - Verificación cromática/estructural de fondo de ojo
+    - Nitidez / Enfoque (Varianza del Laplaciano)
+    - Exposición e Iluminación (Promedio del Canal Verde)
+    """
+    # 0. Estructura cromática de fondo de ojo
+    structure_eval = validate_fundus_structure(pil_img)
+    if not structure_eval["is_fundus"]:
+        return {
+            "is_usable": False,
+            "sharpness_score": 0.0,
+            "brightness_score": 0.0,
+            "rejection_reason": structure_eval["reason"]
+        }
+
+    img_np = np.array(pil_img)
+    if img_np.ndim == 2:
+        gray = img_np
+        green = img_np
+    else:
+        gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+        green = img_np[:, :, 1]  # El canal verde ofrece el mejor contraste en retina
+
+    # 1. Nitidez con Varianza del Laplaciano
+    sharpness_score = float(round(cv2.Laplacian(gray, cv2.CV_64F).var(), 2))
+    
+    # 2. Brillo promedio en el canal verde
+    brightness_score = float(round(np.mean(green), 2))
+
+    # Criterios de calidad
+    is_sharp = sharpness_score >= 30.0  # Umbral de borrosidad
+    is_well_lit = 15.0 <= brightness_score <= 245.0  # Umbral de exposición
+
+    is_usable = is_sharp and is_well_lit
+    rejection_reason = None
+
+    if not is_sharp:
+        rejection_reason = f"La imagen está desenfocada o borrosa (Puntaje de nitidez: {sharpness_score}). Por favor capture una imagen más clara."
+    elif not is_well_lit:
+        if brightness_score < 15.0:
+            rejection_reason = f"La imagen es demasiado oscura para ser evaluada (Brillo: {brightness_score}). Verifique la iluminación."
+        else:
+            rejection_reason = f"La imagen está sobreexpuesta por deslumbramiento (Brillo: {brightness_score}). Ajuste el flash."
+
+    return {
+        "is_usable": is_usable,
+        "sharpness_score": sharpness_score,
+        "brightness_score": brightness_score,
+        "rejection_reason": rejection_reason
+    }
+
+def detect_eye_laterality(pil_img: Image.Image, selected_eye: str = None) -> dict:
+    """
+    Determina si la retina corresponde al Ojo Derecho (OD) o Izquierdo (OS) 
+    ubicando la coordenada X del Disco Óptico (zona de mayor intensidad).
+    """
+    img_np = np.array(pil_img)
+    if img_np.ndim == 3:
+        green = img_np[:, :, 1]
+    else:
+        green = img_np
+
+    height, width = green.shape
+    blurred = cv2.GaussianBlur(green, (15, 15), 0)
+    
+    # Encontrar la ubicación del valor máximo (cabeza del nervio óptico/disco)
+    _, _, _, max_loc = cv2.minMaxLoc(blurred)
+    optic_disc_x = max_loc[0]
+
+    # Regla anatómica: 
+    # Disco a la izquierda de la imagen (x < width/2) => Ojo Derecho (OD)
+    # Disco a la derecha de la imagen (x > width/2) => Ojo Izquierdo (OS)
+    if optic_disc_x < width / 2:
+        detected_eye = "RIGHT"
+    else:
+        detected_eye = "LEFT"
+
+    matches = (selected_eye == detected_eye) if selected_eye else True
+
+    return {
+        "detected_eye": detected_eye,
+        "optic_disc_x_percent": float(round((optic_disc_x / width) * 100, 1)),
+        "matches_selected_eye": matches,
+        "warning": None if matches else f"Atención: La anatomía sugiere que la imagen corresponde al Ojo {'Derecho' if detected_eye == 'RIGHT' else 'Izquierdo'}, pero se seleccionó Ojo {'Derecho' if selected_eye == 'RIGHT' else 'Izquierdo'}."
+    }
+
 @app.get("/")
 def read_root():
-    return {"status": "AI-RetiScan Service is Running"}
+    return {"status": "AI-RetiScan Service is Running (OpenCV + PyTorch)"}
 
 @app.post("/predict")
-async def predict(image: UploadFile = File(...)):
+async def predict(image: UploadFile = File(...), eye: str = Form(None)):
     if model is None:
         raise HTTPException(status_code=503, detail="El modelo no está cargado en el servidor.")
     
     try:
-        # Leer imagen
         contents = await image.read()
         pil_image = Image.open(BytesIO(contents)).convert("RGB")
-        
-        # Preprocesar (agrega una dimensión extra para el batch_size=1)
+
+        # Validación de calidad y estructura con OpenCV
+        quality_eval = evaluate_image_quality(pil_image)
+        if not quality_eval["is_usable"]:
+            raise HTTPException(
+                status_code=400,
+                detail=quality_eval["rejection_reason"]
+            )
+
+        # Detección de ojo derecho / izquierdo
+        anatomy_eval = detect_eye_laterality(pil_image, selected_eye=eye)
+
+        # Inferencia con EfficientNetB0
         input_tensor = preprocess(pil_image).unsqueeze(0)
         
-        # Inferencia sin calcular gradientes (más rápido y consume menos RAM)
         with torch.no_grad():
             output = model(input_tensor)
-            # Aplicar Softmax para obtener probabilidades
             probabilities = torch.nn.functional.softmax(output[0], dim=0)
             
-            # Obtener la clase con mayor probabilidad
             predicted_idx = torch.argmax(probabilities).item()
             confidence = probabilities[predicted_idx].item()
             
-            # Validación de "Out of Distribution"
-            if confidence < 0.45:
+            if confidence < 0.40:
                 raise HTTPException(
                     status_code=400, 
-                    detail="La imagen no parece ser un fondo de ojo válido (confianza muy baja). Intente con una imagen médica clara."
+                    detail="La imagen no parece ser un fondo de ojo válido (confianza del modelo muy baja). Intente con una imagen médica clara."
                 )
             
             raw_grade = CLASS_NAMES.get(predicted_idx, "Unknown")
             formatted_grade = format_class_name(raw_grade)
             
         return {
-            "model_version": "EfficientNetB0-PyTorch v1.0",
+            "model_version": "EfficientNetB0-PyTorch v2.0 (OpenCV Quality Pipeline)",
             "processed_at": datetime.datetime.now().isoformat(),
             "grade": formatted_grade,
             "confidence": float(round(confidence, 4)),
             "recommendation": generate_recommendation(formatted_grade),
+            "image_quality": {
+                "sharpness_score": quality_eval["sharpness_score"],
+                "brightness_score": quality_eval["brightness_score"],
+                "status": "PASS"
+            },
+            "anatomy_validation": {
+                "detected_eye": anatomy_eval["detected_eye"],
+                "matches_selected_eye": anatomy_eval["matches_selected_eye"],
+                "warning": anatomy_eval["warning"]
+            },
             "lesions_detected": {
-                # Mantenemos las lesiones generadas de forma mock o por defecto 
-                # ya que el modelo EfficientNetB0 básico clasifica la imagen global
                 "microaneurysms": raw_grade not in ["No_DR"],
                 "hemorrhages": raw_grade in ["Moderate", "Severe", "Proliferate_DR"],
                 "hard_exudates": raw_grade in ["Moderate", "Severe", "Proliferate_DR"],
@@ -131,3 +278,4 @@ async def predict(image: UploadFile = File(...)):
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+

@@ -11,10 +11,16 @@ import '../services/pdf_service.dart';
 import '../services/notification_service.dart';
 import '../services/analysis_service.dart';
 import '../services/auth_service.dart';
+import '../services/patient_service.dart';
 import '../models/analysis.dart';
+import '../models/patient.dart';
 import '../config/api_config.dart';
 
 class CaptureScreen extends StatefulWidget {
+  final String? patientId;
+
+  CaptureScreen({this.patientId});
+
   @override
   _CaptureScreenState createState() => _CaptureScreenState();
 }
@@ -38,14 +44,22 @@ class _CaptureScreenState extends State<CaptureScreen>
   String _statusMessage = 'Procesando retina, por favor espera';
   double _currentProgress = 0.0;
   String _selectedEye = 'LEFT';
+  String? _selectedPatientId;
+  List<Patient> _patients = [];
+  bool _isLoadingPatients = false;
 
   final AnalysisService _analysisService = AnalysisService();
   final AuthService _authService = AuthService();
+  final PatientService _patientService = PatientService();
   StreamSubscription? _pollSubscription;
 
   @override
   void initState() {
     super.initState();
+    _selectedPatientId = widget.patientId;
+    if (_authService.isDoctor) {
+      _loadPatients();
+    }
     _pulseController = AnimationController(
       duration: Duration(milliseconds: 800),
       vsync: this,
@@ -74,6 +88,26 @@ class _CaptureScreenState extends State<CaptureScreen>
     );
 
     _pulseController.repeat(reverse: true);
+  }
+
+  Future<void> _loadPatients() async {
+    setState(() => _isLoadingPatients = true);
+    try {
+      final list = await _patientService.getPatients();
+      if (mounted) {
+        setState(() {
+          _patients = list;
+          if (_selectedPatientId == null && _patients.isNotEmpty) {
+            _selectedPatientId = _patients.first.id;
+          }
+          _isLoadingPatients = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingPatients = false);
+      }
+    }
   }
 
   @override
@@ -266,12 +300,25 @@ class _CaptureScreenState extends State<CaptureScreen>
   Future<void> _runAnalysis() async {
     try {
       if (!mounted) return;
+
+      final targetPatientId = widget.patientId ?? _selectedPatientId ?? '';
+      if (_authService.isDoctor && targetPatientId.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Por favor selecciona un paciente antes de continuar'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        setState(() {
+          _isUploading = false;
+        });
+        return;
+      }
+
       setState(() => _statusMessage = 'Enviando imagen al servidor...');
 
-      // Usar el servicio real para subir archivo. Pasamos patientId vacío porque el backend lo resuelve si es PACIENTE.
-      // (Si en un futuro el médico usa esta pantalla, necesitaremos pasar el patientId actual).
       final analysis = await _analysisService.createAnalysis(
-        '',
+        targetPatientId,
         imageFile: _selectedImageFile,
         eye: _selectedEye,
       );
@@ -289,7 +336,11 @@ class _CaptureScreenState extends State<CaptureScreen>
       }
 
       if (finalAnalysis == null || finalAnalysis.status == 'FAILED') {
-        throw Exception('El análisis falló en el servidor IA');
+        final serverError = finalAnalysis?.aiResult?['error'];
+        final failureMsg = (serverError != null && serverError.toString().isNotEmpty)
+            ? serverError.toString()
+            : 'El análisis no pudo completarse. Por favor verifique la imagen y reintente.';
+        throw Exception(failureMsg);
       }
 
       if (!mounted) return;
@@ -340,12 +391,8 @@ class _CaptureScreenState extends State<CaptureScreen>
         _statusMessage = 'Error en el análisis';
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString().replaceAll("Exception: ", "")}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        final cleanMsg = e.toString().replaceAll("Exception: ", "");
+        _showCustomErrorDialog('Imagen No Válida para Análisis', cleanMsg);
       }
     }
   }
@@ -480,7 +527,9 @@ class _CaptureScreenState extends State<CaptureScreen>
             ),
             SizedBox(height: 40),
             Text(
-              'Selecciona una opción para capturar\nla imagen de tu retina',
+              _authService.isDoctor
+                  ? 'Selecciona el paciente y la opción para capturar\nla imagen de retina'
+                  : 'Selecciona una opción para capturar\nla imagen de tu retina',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -488,7 +537,62 @@ class _CaptureScreenState extends State<CaptureScreen>
                 height: 1.5,
               ),
             ),
-            SizedBox(height: 32),
+            SizedBox(height: 24),
+            // Selector de paciente (para médicos)
+            if (_authService.isDoctor && widget.patientId == null) ...[
+              Container(
+                constraints: BoxConstraints(maxWidth: 400),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+                ),
+                child: _isLoadingPatients
+                    ? Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                            SizedBox(width: 10),
+                            Text('Cargando pacientes...', style: TextStyle(fontSize: 14)),
+                          ],
+                        ),
+                      )
+                    : DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedPatientId,
+                          hint: Row(
+                            children: [
+                              Icon(Icons.person_outline, size: 18, color: Theme.of(context).colorScheme.primary),
+                              SizedBox(width: 10),
+                              Text('Seleccionar Paciente', style: TextStyle(fontSize: 14)),
+                            ],
+                          ),
+                          isExpanded: true,
+                          items: _patients.map((p) {
+                            return DropdownMenuItem<String>(
+                              value: p.id,
+                              child: Text(
+                                p.fullName,
+                                style: TextStyle(
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            setState(() {
+                              _selectedPatientId = val;
+                            });
+                          },
+                        ),
+                      ),
+              ),
+              SizedBox(height: 16),
+            ],
             // Selector de ojo
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -535,6 +639,80 @@ class _CaptureScreenState extends State<CaptureScreen>
           ],
         ),
       ),
+    );
+  }
+
+  void _showCustomErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          backgroundColor: isDark ? Color(0xFF1E2640) : Colors.white,
+          elevation: 10,
+          child: Padding(
+            padding: EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.redAccent,
+                    size: 48,
+                  ),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.4,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+                SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Text(
+                      'Entendido',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -716,7 +894,8 @@ class _CaptureScreenState extends State<CaptureScreen>
                                 image: NetworkImage(
                                   ApiConfig.imageUrl(_analysisResult!.imageUri),
                                 ),
-                                fit: BoxFit.cover,
+                                fit: BoxFit.contain,
+                                filterQuality: FilterQuality.high,
                               )
                             : null,
                       ),
@@ -732,6 +911,77 @@ class _CaptureScreenState extends State<CaptureScreen>
                     ),
                     SizedBox(height: 20),
                     _buildGradeBadge(_analysisResult!.aiResult?['grade'] ?? 'Normal'),
+                    SizedBox(height: 12),
+                    // Chip de lateralidad detectada
+                    Builder(builder: (context) {
+                      final anatomy = _analysisResult?.aiResult?['anatomy_validation'] as Map<String, dynamic>?;
+                      if (anatomy == null) return SizedBox.shrink();
+                      
+                      final detectedEye = anatomy['detected_eye']?.toString() ?? '';
+                      final matches = anatomy['matches_selected_eye'] as bool? ?? true;
+                      final warning = anatomy['warning']?.toString();
+                      final eyeLabel = detectedEye == 'RIGHT' ? 'Derecho (OD)' : 'Izquierdo (OS)';
+                      final isDark = Theme.of(context).brightness == Brightness.dark;
+                      
+                      return Column(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.blueAccent.withOpacity(0.15)
+                                  : Colors.blue.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.blueAccent.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.visibility, size: 16, color: Colors.blueAccent),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Ojo Detectado: $eyeLabel',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.blueAccent,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (!matches && warning != null) ...[
+                            SizedBox(height: 8),
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.amber.withOpacity(0.4)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.warning_amber_rounded, size: 16, color: Colors.amber[700]),
+                                  SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      warning,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.amber[800],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    }),
                   ],
                 ),
               ),

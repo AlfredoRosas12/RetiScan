@@ -29,17 +29,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // ── Pantallas según rol y plataforma ──
   List<Widget> _getScreens({required bool isDesktop}) {
     if (_authService.isDoctor) {
-      return [
-        HomeContent(),
-        PatientManagementScreen(),
-        ProfileScreen(),
-        SettingsScreen(),
-      ];
-    } else {
       if (isDesktop) {
         return [
           HomeContent(),
           CaptureScreen(),
+          PatientManagementScreen(),
+          ProfileScreen(),
+          SettingsScreen(),
+        ];
+      } else {
+        return [
+          HomeContent(),
+          CaptureScreen(),
+          PatientManagementScreen(),
+          ProfileScreen(),
+        ];
+      }
+    } else {
+      if (isDesktop) {
+        return [
+          HomeContent(),
           RecommendationsScreen(),
           HistoryScreen(),
           ProfileScreen(),
@@ -59,16 +68,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // ── Items de navegación ──
   List<_NavItem> _getNavItems({required bool isDesktop}) {
     if (_authService.isDoctor) {
-      return [
-        _NavItem(Icons.dashboard_outlined, Icons.dashboard, 'Inicio'),
-        _NavItem(Icons.people_outline, Icons.people, 'Pacientes'),
-        _NavItem(Icons.person_outline, Icons.person, 'Perfil'),
-      ];
-    } else {
       if (isDesktop) {
         return [
           _NavItem(Icons.dashboard_outlined, Icons.dashboard, 'Inicio'),
           _NavItem(Icons.camera_alt_outlined, Icons.camera_alt, 'Captura'),
+          _NavItem(Icons.people_outline, Icons.people, 'Pacientes'),
+          _NavItem(Icons.person_outline, Icons.person, 'Perfil'),
+        ];
+      } else {
+        return [
+          _NavItem(Icons.dashboard_outlined, Icons.dashboard, 'Inicio'),
+          _NavItem(Icons.camera_alt_outlined, Icons.camera_alt, 'Captura'),
+          _NavItem(Icons.people_outline, Icons.people, 'Pacientes'),
+          _NavItem(Icons.person_outline, Icons.person, 'Perfil'),
+        ];
+      }
+    } else {
+      if (isDesktop) {
+        return [
+          _NavItem(Icons.dashboard_outlined, Icons.dashboard, 'Inicio'),
           _NavItem(Icons.recommend_outlined, Icons.recommend, 'Recomendaciones'),
           _NavItem(Icons.history_outlined, Icons.history, 'Histórico'),
           _NavItem(Icons.person_outline, Icons.person, 'Perfil'),
@@ -331,18 +349,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         duration: Duration(milliseconds: 300),
         child: screens[_currentIndex],
       ),
-      // FAB central (Imagen 1)
-      floatingActionButton: _authService.isDoctor ? null : FloatingActionButton(
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => CaptureScreen()));
-        },
-        backgroundColor: primaryColor,
-        elevation: 8,
-        shape: CircleBorder(),
-        child: Icon(Icons.camera_alt, color: Theme.of(context).colorScheme.onPrimary, size: 28),
-      ),
+      // FAB central solo para Médico
+      floatingActionButton: _authService.isDoctor
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => CaptureScreen()));
+              },
+              backgroundColor: primaryColor,
+              elevation: 8,
+              shape: CircleBorder(),
+              child: Icon(Icons.camera_alt, color: Theme.of(context).colorScheme.onPrimary, size: 28),
+            )
+          : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      // Bottom Nav simple y directo
+      // Bottom Nav
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(top: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.08))),
@@ -350,55 +370,55 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: BottomAppBar(
           color: cardColor,
           elevation: 0,
-          shape: _authService.isDoctor ? null : CircularNotchedRectangle(),
-        notchMargin: 8,
-        child: SizedBox(
-          height: 60,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              ...navItems.asMap().entries.map((entry) {
-                final i = entry.key;
-                final item = entry.value;
-                final isSelected = _currentIndex == i;
-                // Insertar espacio en el medio para el FAB solo si no es doctor
-                final middleIndex = navItems.length ~/ 2;
-                final widgets = <Widget>[];
-                if (!_authService.isDoctor && i == middleIndex) {
-                  widgets.add(SizedBox(width: 48)); // Espacio para el FAB
-                }
-                widgets.add(
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => setState(() => _currentIndex = i),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            isSelected ? item.activeIcon : item.icon,
-                            color: isSelected ? primaryColor : textSecondary,
-                            size: 24,
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            item.label,
-                            style: TextStyle(
+          shape: _authService.isDoctor ? CircularNotchedRectangle() : null,
+          notchMargin: 8,
+          child: SizedBox(
+            height: 60,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                ...navItems.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final item = entry.value;
+                  final isSelected = _currentIndex == i;
+                  // Insertar espacio en el medio para el FAB solo si es doctor
+                  final middleIndex = navItems.length ~/ 2;
+                  final widgets = <Widget>[];
+                  if (_authService.isDoctor && i == middleIndex) {
+                    widgets.add(SizedBox(width: 48)); // Espacio para el FAB
+                  }
+                  widgets.add(
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => setState(() => _currentIndex = i),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              isSelected ? item.activeIcon : item.icon,
                               color: isSelected ? primaryColor : textSecondary,
-                              fontSize: 10,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              size: 24,
                             ),
-                          ),
-                        ],
+                            SizedBox(height: 4),
+                            Text(
+                              item.label,
+                              style: TextStyle(
+                                color: isSelected ? primaryColor : textSecondary,
+                                fontSize: 10,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-                return widgets;
-              }).expand((w) => w),
-            ],
+                  );
+                  return widgets;
+                }).expand((w) => w),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }

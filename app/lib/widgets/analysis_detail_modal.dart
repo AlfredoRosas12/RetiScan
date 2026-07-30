@@ -82,28 +82,54 @@ class _AnalysisDetailModalState extends State<AnalysisDetailModal> {
     }
   }
 
+  void _zoomAtCenter(TransformationController controller, Size size, double factor) {
+    final Matrix4 currentMatrix = controller.value.clone();
+    final double currentScale = currentMatrix.getMaxScaleOnAxis();
+    final double targetScale = (currentScale * factor).clamp(0.8, 6.0);
+    final double scaleFactor = targetScale / currentScale;
+
+    final Offset focalPoint = Offset(size.width / 2, size.height / 2);
+    final Matrix4 translation = Matrix4.translationValues(focalPoint.dx, focalPoint.dy, 0);
+    final Matrix4 scale = Matrix4.identity()..scale(scaleFactor, scaleFactor, 1.0);
+    final Matrix4 negTranslation = Matrix4.translationValues(-focalPoint.dx, -focalPoint.dy, 0);
+
+    controller.value = translation * scale * negTranslation * currentMatrix;
+  }
+
   void _showFullScreenImage(String imageUrl) {
+    final transformationController = TransformationController();
+
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
         pageBuilder: (context, _, __) {
+          final size = MediaQuery.of(context).size;
           return Scaffold(
             backgroundColor: Colors.black,
             body: Stack(
               children: [
+                // Interactive medical image viewer (fits screen by default)
                 Center(
                   child: InteractiveViewer(
+                    transformationController: transformationController,
                     panEnabled: true,
-                    minScale: 0.5,
-                    maxScale: 4.0,
-                    child: Image.network(
-                      imageUrl,
-                      fit: BoxFit.contain,
-                      width: double.infinity,
-                      height: double.infinity,
+                    minScale: 0.8,
+                    maxScale: 6.0,
+                    child: Container(
+                      width: size.width * 0.92,
+                      height: size.height * 0.92,
+                      alignment: Alignment.center,
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Center(child: Icon(Icons.broken_image, size: 80, color: Colors.white54)),
+                      ),
                     ),
                   ),
                 ),
+                // Top Right: Close button
                 Positioned(
                   top: MediaQuery.of(context).padding.top + 16,
                   right: 16,
@@ -115,6 +141,46 @@ class _AnalysisDetailModalState extends State<AnalysisDetailModal> {
                     child: IconButton(
                       icon: const Icon(Icons.close, color: Colors.white, size: 28),
                       onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ),
+                // Bottom Center: Professional Medical Toolbar (Reset / Zoom In / Zoom Out)
+                Positioned(
+                  bottom: 32,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: Colors.white24, width: 1),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.zoom_out, color: Colors.white),
+                            tooltip: 'Alejar',
+                            onPressed: () => _zoomAtCenter(transformationController, size, 0.8),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.restart_alt, color: Colors.white),
+                            tooltip: 'Restablecer vista',
+                            onPressed: () {
+                              transformationController.value = Matrix4.identity();
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.zoom_in, color: Colors.white),
+                            tooltip: 'Acercar',
+                            onPressed: () => _zoomAtCenter(transformationController, size, 1.25),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -183,7 +249,8 @@ class _AnalysisDetailModalState extends State<AnalysisDetailModal> {
                             children: [
                               Image.network(
                                 ApiConfig.imageUrl(widget.analysis.imageUri),
-                                fit: BoxFit.cover,
+                                fit: BoxFit.contain,
+                                filterQuality: FilterQuality.high,
                                 errorBuilder: (context, error, stackTrace) =>
                                     const Center(child: Icon(Icons.broken_image, size: 60, color: Colors.grey)),
                               ),
