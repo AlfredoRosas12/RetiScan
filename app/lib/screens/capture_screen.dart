@@ -120,7 +120,7 @@ class _CaptureScreenState extends State<CaptureScreen>
     super.dispose();
   }
 
-  // ── Mostrar guía visual antes de tomar foto ──
+  // Mostrar guía visual antes de tomar foto
   void _showCameraGuide() {
     final primaryColor = Theme.of(context).brightness == Brightness.dark
         ? Theme.of(context).colorScheme.secondary
@@ -752,7 +752,7 @@ class _CaptureScreenState extends State<CaptureScreen>
     );
   }
 
-  // ── Pantalla de análisis en progreso con circulo progresivo + nodos orbitantes ──
+  // Pantalla de análisis en progreso con circulo progresivo + nodos orbitantes
   Widget _buildUploadingScreen() {
     final primaryColor = Theme.of(context).brightness == Brightness.dark
         ? Theme.of(context).colorScheme.secondary
@@ -1190,7 +1190,7 @@ class _CaptureScreenState extends State<CaptureScreen>
   }
 }
 
-// ── Custom Painter para nodos orbitantes ──
+// Custom Painter para nodos orbitantes
 class _OrbitNodesPainter extends CustomPainter {
   final double progress;
   final Color color;

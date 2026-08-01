@@ -1,30 +1,22 @@
-/**
- * otpService.js
- *
- * Almacén de OTP en memoria para verificación 2FA.
- * Los códigos son de 6 dígitos, válidos por 30 segundos, de un solo uso.
- *
- * En producción, reemplace el paso `send` por envío de email/SMS
- * y elimine el campo `code` de la respuesta de la API.
- */
+// otpService.js
+//
+// OTP en memoria para el segundo factor (2FA).
+// Son códigos de 6 dígitos, válidos 30 segundos y de un solo uso.
+//
+// Nota: en producción el paso `send` debería ser email/SMS real y
+// el `code` no debería viajar en la respuesta de la API.
 
 /** @type {Map<string, { code: string, expiresAt: number }>} */
 const otpStore = new Map();
 
 const OTP_TTL_MS = 30_000; // 30 segundos
 
-/**
- * Genera un OTP de 6 dígitos para un usuario dado y lo almacena.
- * Sobrescribe cualquier OTP pendiente existente para el mismo usuario.
- *
- * @param {string} userId
- * @returns {{ code: string, expiresIn: number }} expiresIn en segundos
- */
+// Genera un OTP nuevo y lo guarda. Cualquier OTP pendiente del
+// mismo usuario queda invalidado.
 function generate(userId) {
-    // Eliminar cualquier OTP existente para este usuario
     otpStore.delete(userId);
 
-    // Limpiar entradas expiradas periódicamente
+    // Nos deshacemos de los que ya caducaron para no acumular basura
     _cleanup();
 
     const code = String(Math.floor(100000 + Math.random() * 900000)); // 6 dígitos
@@ -35,14 +27,7 @@ function generate(userId) {
     return { code, expiresIn: OTP_TTL_MS / 1000 };
 }
 
-/**
- * Verifica un OTP de 6 dígitos para un usuario dado.
- * El OTP se consume (elimina) tras la primera verificación exitosa.
- *
- * @param {string} userId
- * @param {string} code
- * @returns {{ valid: boolean, reason?: string }}
- */
+// Verifica un código. Si es correcto se consume de inmediato.
 function verify(userId, code) {
     const entry = otpStore.get(userId);
 
@@ -59,12 +44,12 @@ function verify(userId, code) {
         return { valid: false, reason: 'Invalid OTP code.' };
     }
 
-    // Consumir el OTP — de un solo uso
+    // De un solo uso
     otpStore.delete(userId);
     return { valid: true };
 }
 
-/** Elimina todas las entradas caducadas del almacén. */
+// Barre el almacén y borra las entradas ya vencidas.
 function _cleanup() {
     const now = Date.now();
     for (const [userId, entry] of otpStore.entries()) {

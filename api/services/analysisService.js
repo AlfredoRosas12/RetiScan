@@ -9,7 +9,10 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 
-// Worker para procesar análisis en segundo plano
+// ─────────────────────────────────────────────────────────────────────
+// Worker en memoria: procesa los análisis en segundo plano para no
+// bloquear la respuesta HTTP del endpoint.
+// ─────────────────────────────────────────────────────────────────────
 analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
     console.log(`[Cola] Trabajo de análisis recibido: ${analysisId}`);
 
@@ -19,6 +22,7 @@ analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
 
         await Analysis.updateStatus(analysisId, 'PROCESSING', null);
 
+        // Traemos la URI de la imagen guardada en MinIO
         const db = require('../config/database');
         const result = await db.query('SELECT image_uri, eye FROM analyses WHERE id = $1', [analysisId]);
         const analysisData = result.rows[0];
@@ -27,6 +31,7 @@ analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
             throw new Error("No se encontró la imagen del análisis.");
         }
 
+        // Descargamos la imagen y la mandamos al microservicio de IA
         const storageService = require('./storageService');
         const imageStream = await storageService.getImageStream(analysisData.image_uri);
 
@@ -61,8 +66,9 @@ analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
     } catch (err) {
         console.error(`[Cola] Error procesando análisis ${analysisId}:`, err.message);
 
-        const errorMsg = err.response && err.response.data && err.response.data.detail 
-                         ? err.response.data.detail 
+        // Si la IA respondió con un detalle legible, lo guardamos como error
+        const errorMsg = err.response && err.response.data && err.response.data.detail
+                         ? err.response.data.detail
                          : err.message;
 
         await Analysis.updateStatus(analysisId, 'FAILED', { error: errorMsg }).catch(() => { });
@@ -74,12 +80,8 @@ analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
 });
 
 const analysisService = {
-    /**
-     * Crea un nuevo análisis con aislamiento de médico y lo envía al worker.
-     * Devuelve inmediatamente el registro PENDING — el cliente hace polling.
-     *
-     * @param {{ patientId, doctorId, eye, imageUri?, doctorNotes? }} params
-     */
+    // Crea el análisis (PENDING) y lo manda al worker.
+    // El cliente consulta el estado con polling a GET /analyses/:id.
     async createAnalysis({ patientId, doctorId, eye, imageUri, doctorNotes }) {
         if (!patientId) {
             const err = new Error('patientId es requerido');
@@ -92,7 +94,7 @@ const analysisService = {
             throw err;
         }
 
-        // Verificar que el paciente pertenece al médico
+        // El paciente debe pertenecer al médico que registra el análisis
         const patient = await Patient.findByIdAndDoctor(patientId, doctorId);
         if (!patient) {
             const err = new Error('Paciente no encontrado o no pertenece a este médico');
@@ -100,11 +102,10 @@ const analysisService = {
             throw err;
         }
 
-        // Insertar con estado = 'PENDING'
         const analysis = await Analysis.create(patientId, doctorId, eye, imageUri, doctorNotes);
         console.log(`[Servicio] Análisis creado: ${analysis.id} | Status: PENDING`);
 
-        // Fire-and-forget: emite el trabajo al trabajador
+        // Fire-and-forget: encolamos el trabajo sin esperar al worker
         setImmediate(() => {
             analysisEmitter.emit('analysis:queued', {
                 analysisId: analysis.id,
@@ -115,7 +116,7 @@ const analysisService = {
         return analysis;
     },
 
-    /** Recupera un solo análisis por UUID, con verificación de dueño (médico o paciente). */
+    // Un solo análisis por UUID, con verificación de dueño (médico o paciente).
     async getById(id, doctorId) {
         const analysis = await Analysis.findByIdAndDoctor(id, doctorId);
         if (!analysis) {
@@ -126,24 +127,24 @@ const analysisService = {
         return analysis;
     },
 
-    /** Recupera todos los análisis de un paciente (filtrado por doctor). */
+    // Análisis de un paciente, filtrados por el médico.
     async getByPatientAndDoctor(patientId, doctorId) {
         return Analysis.findByPatientAndDoctor(patientId, doctorId);
     },
 
-    /** Recupera todos los análisis que puede ver un paciente (por su user_id). */
+    // Análisis que puede ver un paciente (resolviendo su user_id).
     async getByPatientUserId(userId) {
         const patient = await Patient.findByUserId(userId);
         if (!patient) return [];
         return Analysis.findByPatientId(patient.id);
     },
 
-    /** Obtiene todos los logs de procesamiento para un análisis. */
+    // Logs de procesamiento de un análisis.
     async getLogsForAnalysis(analysisId) {
         return AI_Processing_Log.findByAnalysisId(analysisId);
     },
 
-    /** Elimina un análisis (con verificación de propiedad). */
+    // Elimina un análisis (con verificación de propiedad).
     async delete(id, doctorId) {
         const deleted = await Analysis.deleteByIdAndDoctor(id, doctorId);
         if (!deleted) {
@@ -154,7 +155,7 @@ const analysisService = {
         return deleted;
     },
 
-    /** Actualiza las notas médicas de un análisis. */
+    // Actualiza las notas médicas de un análisis.
     async updateNotes(id, doctorId, notes) {
         const updated = await Analysis.updateNotes(id, doctorId, notes);
         if (!updated) {

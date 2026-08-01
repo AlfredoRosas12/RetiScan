@@ -515,7 +515,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 }
 
-// ── Innovative Eye Painter ──────────────────────────────────────────────────
+// Innovative Eye Painter
 class _InnovativeEyePainter extends CustomPainter {
   final Animation<double> bracketsAnimation;
   final Animation<double> irisAnimation;
@@ -708,7 +708,7 @@ class _InnovativeEyePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// ── Scan Rings Painter ──────────────────────────────────────────────────────
+// Scan Rings Painter
 class _ScanRingsPainter extends CustomPainter {
   final double progress;
 
@@ -767,7 +767,7 @@ class _ScanRingsPainter extends CustomPainter {
       oldDelegate.progress != progress;
 }
 
-// ── Converging Particles Painter ────────────────────────────────────────────
+// Converging Particles Painter
 class _ConvergingParticlesPainter extends CustomPainter {
   final double progress;
 

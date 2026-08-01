@@ -1,14 +1,9 @@
-/**
- * models/Doctor.js
- * CRUD para la tabla `doctors` (perfil profesional del médico).
- */
+// models/Doctor.js
+// CRUD de la tabla `doctors`: el perfil profesional del médico.
 const pool = require('../config/database');
 
 const Doctor = {
-    /**
-     * Crea el perfil profesional del médico vinculado a su cuenta users.
-     * @param {{ userId, firstName, paternalSurname, maternalSurname, licenseNumber, specialty?, institution?, phone? }} data
-     */
+    // Crea el perfil del médico, vinculado a su cuenta en `users`.
     async create({ userId, firstName, paternalSurname, maternalSurname, licenseNumber, specialty, institution, phone }) {
         const result = await pool.query(
             `INSERT INTO doctors (user_id, first_name, paternal_surname, maternal_surname, license_number, specialty, institution, phone)
@@ -19,7 +14,7 @@ const Doctor = {
         return result.rows[0];
     },
 
-    /** Obtiene el perfil del médico por su user_id. */
+    // Perfil del médico por su user_id.
     async findByUserId(userId) {
         const result = await pool.query(
             'SELECT * FROM doctors WHERE user_id = $1',
@@ -28,11 +23,7 @@ const Doctor = {
         return result.rows[0] || null;
     },
 
-    /**
-     * Actualiza el perfil del médico.
-     * @param {string} userId
-     * @param {{ firstName?, paternalSurname?, maternalSurname?, licenseNumber?, specialty?, institution?, phone? }} fields
-     */
+    // Actualiza solo los campos que se envíen.
     async updateByUserId(userId, fields) {
         const map = {
             firstName: 'first_name',

@@ -1,12 +1,9 @@
 const patientService = require('../services/patientService');
 
 const patientController = {
-    /**
-     * POST /api/patients
-     * Crea un paciente y genera automáticamente su cuenta de usuario (PACIENTE).
-     * Body: { fullName, lastName?, middleName?, birthDate, phone? }
-     * Requiere rol MEDICO.
-     */
+    // POST /api/patients
+    // Crea el paciente y su cuenta de usuario (PACIENTE) con contraseña temporal.
+    // Requiere rol MEDICO.
     async createPatient(req, res, next) {
         try {
             const doctorId = req.user.id;
@@ -31,11 +28,8 @@ const patientController = {
         }
     },
 
-    /**
-     * GET /api/patients
-     * Lista todos los pacientes del médico autenticado (aislamiento multi-tenant).
-     * Requiere rol MEDICO.
-     */
+    // GET /api/patients
+    // Lista los pacientes del médico autenticado (aislamiento multi-tenant).
     async getAllPatients(req, res, next) {
         try {
             const page = parseInt(req.query.page, 10) || 1;
@@ -55,11 +49,8 @@ const patientController = {
         }
     },
 
-    /**
-     * GET /api/patients/me
-     * Vista del propio paciente: devuelve su registro de paciente.
-     * Requiere rol PACIENTE.
-     */
+    // GET /api/patients/me
+    // Vista del propio paciente: devuelve su registro de paciente.
     async getMyPatientRecord(req, res, next) {
         try {
             const patient = await patientService.getMyRecord(req.user.id);
@@ -69,18 +60,13 @@ const patientController = {
         }
     },
 
-    /**
-     * PATCH /api/patients/me
-     * El paciente actualiza su propio perfil en el formulario del primer login:
-     * birthDate, gender, email, phone.
-     * Requiere rol PACIENTE.
-     */
+    // PATCH /api/patients/me
+    // El paciente completa su perfil en el primer login (birthDate, gender, email, phone).
     async updateMyProfile(req, res, next) {
         try {
-            console.log('--- REQ.BODY UPDATE PROFILE ---:', req.body);
             const { birthDate, gender, email, phone } = req.body;
 
-            // Validar género si viene
+            // El género llega como texto; validamos contra la lista permitida
             const validGenders = ['MASCULINO', 'FEMENINO', 'OTRO'];
             if (gender && !validGenders.includes(gender)) {
                 return res.status(400).json({
@@ -104,11 +90,8 @@ const patientController = {
         }
     },
 
-    /**
-     * GET /api/patients/:id
-     * Obtiene un paciente por ID (solo ve sus propios pacientes).
-     * Requiere rol MEDICO.
-     */
+    // GET /api/patients/:id
+    // Obtiene un paciente por ID (solo ve sus propios pacientes).
     async getPatientById(req, res, next) {
         try {
             const patient = await patientService.getById(req.params.id, req.user.id);
@@ -118,11 +101,8 @@ const patientController = {
         }
     },
 
-    /**
-     * PUT /api/patients/:id
-     * Actualiza datos del paciente (solo si pertenece al médico).
-     * Requiere rol MEDICO.
-     */
+    // PUT /api/patients/:id
+    // Actualiza datos del paciente (solo si pertenece al médico).
     async updatePatient(req, res, next) {
         try {
             const patient = await patientService.update(req.params.id, req.user.id, req.body);
@@ -132,11 +112,8 @@ const patientController = {
         }
     },
 
-    /**
-     * DELETE /api/patients/:id
-     * Elimina un paciente (solo si pertenece al médico).
-     * Requiere rol MEDICO.
-     */
+    // DELETE /api/patients/:id
+    // Elimina un paciente (solo si pertenece al médico).
     async deletePatient(req, res, next) {
         try {
             await patientService.delete(req.params.id, req.user.id);

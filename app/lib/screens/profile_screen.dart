@@ -61,7 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.dispose();
   }
 
-  // ── Cambiar contraseña ───────────────────────────────────────────────────
+  // Cambiar contraseña
 
   Future<void> _showChangePasswordDialog() async {
     final newCtrl = TextEditingController();
@@ -279,7 +279,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
+  // Build
 
   @override
   Widget build(BuildContext context) {
@@ -296,7 +296,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Layout Móvil ────────────────────────────────────────────────────────
+  // Layout Móvil
 
   Widget _buildMobileContent(user) {
     return SingleChildScrollView(
@@ -319,7 +319,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Layout Escritorio (2 columnas) ──────────────────────────────────────
+  // Layout Escritorio (2 columnas)
 
   Widget _buildDesktopContent(user) {
     return Center(
@@ -361,7 +361,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Header con avatar de iniciales ───────────────────────────────────────
+  // Header con avatar de iniciales
 
   Widget _buildHeader(user) {
     final name = _patientData?.fullName ?? user?.fullName ?? user?.name ?? user?.email ?? '';
@@ -456,7 +456,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     return text.isNotEmpty ? text[0].toUpperCase() : '?';
   }
 
-  // ── Sección de información ───────────────────────────────────────────────
+  // Sección de información
 
   Widget _buildInfoSection(user) {
     return _sectionCard(
@@ -495,7 +495,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Sección de contraseña ────────────────────────────────────────────────
+  // Sección de contraseña
 
   Widget _buildPasswordSection() {
     return _sectionCard(
@@ -560,7 +560,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Tarjeta de rol ───────────────────────────────────────────────────────
+  // Tarjeta de rol
 
   Widget _buildRoleCard(String role) {
     final isDoctor = role == 'MEDICO';
@@ -618,7 +618,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // Helpers
 
   Widget _sectionCard({
     required String title,
@@ -742,7 +742,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Desktop Table Methods ─────────────────────────────────────────────
+  // Desktop Table Methods
 
   Widget _buildDesktopInfoTable(user) {
     return Container(

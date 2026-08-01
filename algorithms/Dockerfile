@@ -2,17 +2,18 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Copiamos primero el archivo de dependencias
+# Primero las dependencias, así Docker puede cachear la capa
+# y no re-instalar todo cada vez que cambiamos el código.
 COPY requirements.txt .
 
-# Instalamos las dependencias. 
-# Usamos el repositorio de CPU para PyTorch para que la imagen de Docker pese ~1GB en vez de ~5GB
+# PyTorch en CPU: de esta forma la imagen pesa ~1GB en vez de ~5GB.
+# Para esta app no necesitamos GPU porque la inferencia es por petición.
 RUN pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
-# Copiamos el resto del código
+# Ahora sí copiamos el resto del proyecto
 COPY . .
 
 EXPOSE 8000
 
-# Comando para arrancar el servidor de FastAPI
+# Levantamos el microservicio de FastAPI
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

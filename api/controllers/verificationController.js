@@ -1,11 +1,9 @@
 const verificationService = require('../services/verificationService');
 
 const verificationController = {
-    /**
-     * GET /api/auth/verify-email?token=...
-     * El médico hace clic en el link del correo. Activa su cuenta y 30 días de trial.
-     * No requiere JWT (es el primer acceso tras el registro).
-     */
+    // GET /api/auth/verify-email?token=...
+    // El médico hace clic en el link del correo. Activa la cuenta y 30 días de trial.
+    // No requiere JWT porque es el primer acceso tras el registro.
     async verifyEmail(req, res, next) {
         try {
             const { token } = req.query;
@@ -16,12 +14,9 @@ const verificationController = {
         }
     },
 
-    /**
-     * POST /api/auth/send-otp
-     * El paciente solicita que le manden un código OTP a su correo.
-     * Body: { email, type: 'OTP_EMAIL' }
-     * Requiere JWT (el paciente ya inició sesión con username + tempPassword).
-     */
+    // POST /api/auth/send-otp
+    // El paciente pide que le manden un OTP a su correo.
+    // Body: { email, type: 'OTP_EMAIL' } — requiere JWT (ya inició sesión).
     async sendOtp(req, res, next) {
         try {
             const { email, type } = req.body;
@@ -39,12 +34,9 @@ const verificationController = {
         }
     },
 
-    /**
-     * POST /api/auth/verify-otp
-     * El paciente ingresa el código que recibió por correo.
-     * Body: { otp, type: 'OTP_EMAIL' }
-     * Requiere JWT.
-     */
+    // POST /api/auth/verify-otp
+    // El paciente ingresa el código que recibió por correo.
+    // Body: { otp, type: 'OTP_EMAIL' } — requiere JWT.
     async verifyOtp(req, res, next) {
         try {
             const { otp, type } = req.body;

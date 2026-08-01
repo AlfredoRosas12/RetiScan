@@ -38,9 +38,7 @@ class ApiConfig {
     'Content-Type': 'application/json',
   };
 
-  // ─────────────────────────────────────────────────────────────────
   // CLIENTE HTTP GLOBAL W/ CREDENTIALS & AUTO-REFRESH (Interceptor)
-  // ─────────────────────────────────────────────────────────────────
   static http.Client? _cachedClient;
   static http.Client get _baseClient {
     _cachedClient ??= BrowserClient()..withCredentials = true;

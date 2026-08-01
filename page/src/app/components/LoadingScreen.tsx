@@ -50,7 +50,7 @@ export function LoadingScreen() {
                 background: 'linear-gradient(135deg, #000d26 0%, #001a4d 30%, #0033a0 60%, #001a4d 85%, #000d26 100%)',
             }}
         >
-            {/* ===== BACKGROUND EFFECTS ===== */}
+            {/* BACKGROUND EFFECTS */}
             <div className="absolute inset-0 overflow-hidden">
                 {/* Animated radial gradient center glow */}
                 <div
@@ -94,7 +94,7 @@ export function LoadingScreen() {
                 )}
             </div>
 
-            {/* ===== MAIN CONTENT ===== */}
+            {/* MAIN CONTENT */}
             <div className="relative flex flex-col items-center">
                 {/* Logo with effects */}
                 <div

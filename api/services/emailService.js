@@ -1,11 +1,10 @@
-/**
- * services/emailService.js
- * Servicio centralizado de envío de correos usando Nodemailer + Gmail SMTP.
- */
+// services/emailService.js
+// Todo lo relacionado con el envío de correos sale de aquí:
+// verificación, OTP, recuperación de contraseña, login seguro...
 const nodemailer = require('nodemailer');
 const env = require('../config/env');
 
-// Transporte reutilizable (se conecta una sola vez)
+// Un solo transporte reutilizable; la conexión con Gmail se abre una vez.
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -15,10 +14,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const emailService = {
-    /**
-     * Envía un correo genérico.
-     * @param {{ to, subject, html }} options
-     */
+    // Envío genérico: cualquier correo pasa por aquí.
     async send({ to, subject, html }) {
         return transporter.sendMail({
             from: env.SMTP_FROM,
@@ -28,12 +24,7 @@ const emailService = {
         });
     },
 
-    /**
-     * Envía el link de verificación de cuenta al médico.
-     * @param {string} to       - Email del médico
-     * @param {string} token    - Token hexadecimal único
-     * @param {string} name     - Nombre del médico
-     */
+    // Link de verificación que llega al médico justo después de registrarse.
     async sendVerificationLink(to, token, name) {
         const link = `${env.LANDING_URL}/?verify=${token}`;
         const html = `
@@ -53,12 +44,7 @@ const emailService = {
         return this.send({ to, subject: 'Verifica tu cuenta de RetiScan', html });
     },
 
-    /**
-     * Envía un código OTP de 6 dígitos al paciente.
-     * @param {string} to       - Email del paciente
-     * @param {string} otp      - Código de 6 dígitos
-     * @param {string} name     - Nombre del paciente
-     */
+    // OTP de 6 dígitos para que el paciente verifique su cuenta.
     async sendOtp(to, otp, name) {
         const html = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 8px;">
@@ -75,9 +61,7 @@ const emailService = {
         return this.send({ to, subject: `${otp} es tu código de RetiScan`, html });
     },
 
-    /**
-     * Envía un código OTP para recuperar contraseña.
-     */
+    // OTP para recuperación de contraseña.
     async sendPasswordResetOtp(to, otp, name) {
         const html = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 8px;">
@@ -94,9 +78,7 @@ const emailService = {
         return this.send({ to, subject: `Código de recuperación: ${otp}`, html });
     },
 
-    /**
-     * Envía un código OTP para inicio de sesión en dos pasos (Login MFA).
-     */
+    // OTP del segundo paso de inicio de sesión (MFA).
     async sendLoginOtp(to, otp, name) {
         const html = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 8px;">

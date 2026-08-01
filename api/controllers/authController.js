@@ -7,10 +7,8 @@ const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
 
 const authController = {
-    /**
-     * POST /api/auth/login
-     * Login unificado: acepta email (médicos) o username (pacientes).
-     */
+    // POST /api/auth/login
+    // Login unificado: acepta email (médicos) o username (pacientes).
     async login(req, res, next) {
         try {
             const { identifier, password, trustToken } = req.body;
@@ -18,7 +16,7 @@ const authController = {
                 return res.status(400).json({ error: 'Se requieren "identifier" y "password"' });
             }
 
-            // 1. Validar Credenciales
+            // Si hay demasiados intentos fallidos, cortamos antes de validar
             const userCheck = await User.findByEmail(identifier) || await User.findByUsername(identifier);
             if (userCheck && userCheck.locked_until && new Date(userCheck.locked_until) > new Date()) {
                 const diff = Math.ceil((new Date(userCheck.locked_until) - new Date()) / 1000 / 60);
@@ -26,15 +24,15 @@ const authController = {
             }
 
             const { user, profileName, profileEmail } = await authService.validateCredentials(identifier, password);
-             // Si llegamos aquí, la contraseña es correcta, reseteamos intentos
+            // Si llegamos aquí, la contraseña es correcta, reseteamos intentos
             await User.resetFailedAttempts(user.id);
-            
+
             const targetEmail = profileEmail || user.email;
-            
+
             if (!targetEmail) {
                 // Modo bypass MFA para pacientes recién creados sin correo configurado
                 const { refreshToken, token, user: userData } = await authService.generateTokensForUser(user, profileEmail, profileName);
-                
+
                 const maxAgeDays = parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS) || 7;
                 res.cookie('refreshToken', refreshToken, {
                     httpOnly: true,
@@ -52,7 +50,7 @@ const authController = {
                 if (trustPayload && trustPayload.id === user.id) {
                     // Trust Token válido → saltar 2FA
                     const { refreshToken, token, user: userData } = await authService.generateTokensForUser(user, profileEmail, profileName);
-                    
+
                     const maxAgeDays = parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS) || 7;
                     res.cookie('refreshToken', refreshToken, {
                         httpOnly: true,
@@ -70,7 +68,7 @@ const authController = {
             await emailService.sendLoginOtp(targetEmail, otpRecord.token, profileName);
 
             // 3. Responder que se requiere 2FA
-            return res.status(206).json({ 
+            return res.status(206).json({
                 message: 'Código de verificación enviado al correo',
                 requires2FA: true,
                 userId: user.id
@@ -80,10 +78,8 @@ const authController = {
         }
     },
 
-    /**
-     * POST /api/auth/verify-login-otp
-     * Valida el OTP y entrega los verdaderos JWT Access/Refresh tokens.
-     */
+    // POST /api/auth/verify-login-otp
+    // Valida el OTP y entrega los verdaderos JWT Access/Refresh tokens.
     async verifyLoginOtp(req, res, next) {
         try {
             const { userId, otp, rememberDevice } = req.body;
@@ -94,7 +90,7 @@ const authController = {
             // Validar Lockout
             const userCheck = await User.findById(userId);
             if (!userCheck) return res.status(404).json({ error: 'Usuario no encontrado' });
-            
+
             if (userCheck.locked_until && new Date(userCheck.locked_until) > new Date()) {
                 const diff = Math.ceil((new Date(userCheck.locked_until) - new Date()) / 1000 / 60);
                 return res.status(429).json({ error: `Demasiados intentos. Tu cuenta está bloqueada por ${diff} minutos.` });
@@ -118,7 +114,7 @@ const authController = {
             // Emitir tokens finales
             const { user, profileName, profileEmail } = await authService.getProfileData(userId);
             const { refreshToken, token, user: userData } = await authService.generateTokensForUser(user, profileEmail, profileName);
-            
+
             // Configurar Cookie HttpOnly
             const maxAgeDays = parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS) || 7;
             res.cookie('refreshToken', refreshToken, {
@@ -140,10 +136,8 @@ const authController = {
         }
     },
 
-    /**
-     * POST /api/auth/refresh
-     * Renueva el Access Token usando el Refresh Token de la cookie
-     */
+    // POST /api/auth/refresh
+    // Renueva el Access Token usando el Refresh Token de la cookie
     async refresh(req, res, next) {
         try {
             const refreshToken = req.cookies.refreshToken;
@@ -169,14 +163,13 @@ const authController = {
         }
     },
 
-    /**
-     * POST /api/auth/logout
-     * Invalida el token JWT actual (Cerrar sesión)
-     */
+    // POST /api/auth/logout
+    // Invalida el token JWT actual (Cerrar sesión)
     async logout(req, res, next) {
         try {
             const token = req.token;
             if (token && req.user && req.user.exp) {
+                // Lo metemos a la lista negra para que no pueda reutilizarse
                 const expDate = new Date(req.user.exp * 1000);
                 await pool.query(
                     'INSERT INTO blacklisted_tokens (token, expires_at) VALUES ($1, $2) ON CONFLICT DO NOTHING',
@@ -184,6 +177,7 @@ const authController = {
                 );
             }
 
+            // Revocamos el refresh token y limpiamos la cookie
             const refreshToken = req.cookies.refreshToken;
             if (refreshToken) {
                 await pool.query('UPDATE refresh_tokens SET revoked = TRUE WHERE token = $1', [refreshToken]);
@@ -196,13 +190,11 @@ const authController = {
         }
     },
 
-    /**
-     * POST /api/auth/register
-     * Registro unificado del médico desde la landing page:
-     *   1. Crea cuenta en users (rol MEDICO)
-     *   2. Crea perfil en doctors (cédula, especialidad, etc.)
-     *   3. Envía correo de verificación automáticamente
-     */
+    // POST /api/auth/register
+    // Registro unificado del médico desde la landing page:
+    //   1. Crea cuenta en users (rol MEDICO)
+    //   2. Crea perfil en doctors (cédula, especialidad, etc.)
+    //   3. Envía correo de verificación automáticamente
     async register(req, res, next) {
         try {
             const {
@@ -234,7 +226,7 @@ const authController = {
                 return res.status(409).json({ error: 'El correo electrónico ya está registrado' });
             }
 
-            // Generar username a partir del email
+            // Generar username a partir del email (con sufijo si ya existe)
             let baseUsername = email.split('@')[0].toLowerCase().replace(/[^a-z0-9._]/g, '');
             if (!baseUsername) baseUsername = 'medico';
             let username = baseUsername;
@@ -290,10 +282,9 @@ const authController = {
         }
     },
 
-    /**
-     * POST /api/auth/forgot-password
-     * Envía un OTP de recuperación al correo (común para pacientes y médicos).
-     */
+    // POST /api/auth/forgot-password
+    // Envía un OTP de recuperación al correo (común para pacientes y médicos).
+    // Siempre respondemos igual, aunque el correo no exista, para no filtrar usuarios.
     async forgotPassword(req, res, next) {
         try {
             const { email } = req.body;
@@ -323,10 +314,8 @@ const authController = {
         }
     },
 
-    /**
-     * POST /api/auth/reset-password
-     * Verifica el OTP y cambia la contraseña del usuario.
-     */
+    // POST /api/auth/reset-password
+    // Verifica el OTP y cambia la contraseña del usuario.
     async resetPassword(req, res, next) {
         try {
             const { email, otp, newPassword } = req.body;

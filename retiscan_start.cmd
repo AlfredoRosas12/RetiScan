@@ -8,6 +8,7 @@ echo   * Landing Page (React):    http://localhost:5173
 echo   * App Web (Flutter PWA):   http://localhost:5174
 echo   * API (Node.js):           http://localhost:3000
 echo   * IA (Python FastAPI):     http://localhost:8000/docs
+echo   * MinIO (Consola):        http://localhost:9001
 echo   * Base de Datos (Adminer): http://localhost:8080
 echo ========================================================
 pause >nul
@@ -27,6 +28,7 @@ echo "  * Landing Page (React):    http://localhost:5173"
 echo "  * App Web (Flutter PWA):   http://localhost:5174"
 echo "  * API (Node.js):           http://localhost:3000"
 echo "  * IA (Python FastAPI):     http://localhost:8000/docs"
+echo "  * MinIO (Consola):        http://localhost:9001"
 echo "  * Base de Datos (Adminer): http://localhost:8080"
 echo "========================================================"
 echo ""

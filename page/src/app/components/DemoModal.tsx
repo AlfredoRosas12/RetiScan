@@ -12,7 +12,7 @@ interface DemoModalProps {
     onClose: () => void;
 }
 
-/* ─── Simulated Results Data ─── */
+/* Simulated Results Data */
 const diagnosisData = {
     severity: 'Moderada',
     confidence: 94.7,
@@ -24,7 +24,7 @@ const diagnosisData = {
     recommendation: 'Referir a especialista para evaluación detallada en los próximos 30 días.',
 };
 
-/* ─── Processing Animation Dots ─── */
+/* Processing Animation Dots */
 function ProcessingDots() {
     const [dots, setDots] = useState('');
     useEffect(() => {
@@ -34,7 +34,7 @@ function ProcessingDots() {
     return <span>{dots}</span>;
 }
 
-/* ─── Animated Progress Ring ─── */
+/* Animated Progress Ring */
 function ProgressRing({ progress, size = 80 }: { progress: number; size?: number }) {
     const strokeWidth = 6;
     const radius = (size - strokeWidth) / 2;
@@ -67,7 +67,7 @@ function ProgressRing({ progress, size = 80 }: { progress: number; size?: number
     );
 }
 
-/* ─── HOME Screen ─── */
+/* HOME Screen */
 function HomeScreen({ onScan }: { onScan: () => void }) {
     return (
         <div className="flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-800 text-white">
@@ -164,7 +164,7 @@ function HomeScreen({ onScan }: { onScan: () => void }) {
     );
 }
 
-/* ─── SCAN Screen ─── */
+/* SCAN Screen */
 function ScanScreen({ onCapture, onBack }: { onCapture: () => void; onBack: () => void }) {
     const [flash, setFlash] = useState(false);
 
@@ -283,7 +283,7 @@ function ScanScreen({ onCapture, onBack }: { onCapture: () => void; onBack: () =
     );
 }
 
-/* ─── PROCESSING Screen ─── */
+/* PROCESSING Screen */
 function ProcessingScreen({ onComplete }: { onComplete: () => void }) {
     const [progress, setProgress] = useState(0);
     const [stage, setStage] = useState(0);
@@ -383,7 +383,7 @@ function ProcessingScreen({ onComplete }: { onComplete: () => void }) {
     );
 }
 
-/* ─── RESULTS Screen ─── */
+/* RESULTS Screen */
 function ResultsScreen({ onReset }: { onReset: () => void }) {
     const [showDetails, setShowDetails] = useState(false);
 
@@ -493,9 +493,7 @@ function ResultsScreen({ onReset }: { onReset: () => void }) {
     );
 }
 
-/* ═══════════════════════════════════
-   ██  MAIN DEMO MODAL COMPONENT  ██
-   ═══════════════════════════════════ */
+// MAIN DEMO MODAL COMPONENT
 export function DemoModal({ isOpen, onClose }: DemoModalProps) {
     const [screen, setScreen] = useState<Screen>('home');
     const [transitioning, setTransitioning] = useState(false);

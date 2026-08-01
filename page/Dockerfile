@@ -1,4 +1,4 @@
-# ── Build Stage ──────────────────────────────────────────────
+# Etapa de construcción: generamos el bundle estático
 FROM node:20-alpine AS build
 
 WORKDIR /app
@@ -11,7 +11,7 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# ── Production Stage ─────────────────────────────────────────
+# Etapa de producción: servimos el bundle con nginx
 FROM nginx:stable-alpine AS runner
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf

@@ -246,7 +246,7 @@ class _TwoFactorScreenState extends State<TwoFactorScreen>
     super.dispose();
   }
 
-  // ─────────────────────────── BUILD ────────────────────────────
+  // BUILD
 
   @override
   Widget build(BuildContext context) {

@@ -10,9 +10,7 @@ class PatientService {
   factory PatientService() => _instance;
   PatientService._internal();
 
-  // ─────────────────────────────────────────────────────────────────
   // Helpers
-  // ─────────────────────────────────────────────────────────────────
   Patient _parsePatient(String body) {
     final decoded = jsonDecode(body);
     debugPrint('[PatientService] raw: $body');
@@ -35,9 +33,7 @@ class PatientService {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // MEDICO: Listar pacientes → GET /patients
-  // ─────────────────────────────────────────────────────────────────
   Future<List<Patient>> getPatients() async {
     final res = await ApiConfig.get('/patients');
     if (res.statusCode == 200) {
@@ -57,20 +53,16 @@ class PatientService {
     throw _apiError(res);
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // MEDICO: Obtener paciente → GET /patients/:id
-  // ─────────────────────────────────────────────────────────────────
   Future<Patient> getPatient(String id) async {
     final res = await ApiConfig.get('/patients/$id');
     if (res.statusCode == 200) return _parsePatient(res.body);
     throw _apiError(res);
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // MEDICO: Crear paciente → POST /patients
   // Solo requiere firstName, paternalSurname, maternalSurname
   // Devuelve también las credenciales generadas
-  // ─────────────────────────────────────────────────────────────────
   Future<Map<String, dynamic>> createPatient({
     required String firstName,
     required String paternalSurname,
@@ -99,18 +91,14 @@ class PatientService {
     throw _apiError(res);
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // MEDICO: Actualizar paciente → PUT /patients/:id
-  // ─────────────────────────────────────────────────────────────────
   Future<Patient> updatePatient(String id, Map<String, dynamic> data) async {
     final res = await ApiConfig.put('/patients/$id', body: data);
     if (res.statusCode == 200) return _parsePatient(res.body);
     throw _apiError(res);
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // MEDICO: Eliminar paciente → DELETE /patients/:id
-  // ─────────────────────────────────────────────────────────────────
   Future<void> deletePatient(String id) async {
     final res = await ApiConfig.delete('/patients/$id');
     if (res.statusCode != 200 && res.statusCode != 204) {
@@ -118,19 +106,15 @@ class PatientService {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // PACIENTE: Ver mi expediente → GET /patients/me
-  // ─────────────────────────────────────────────────────────────────
   Future<Patient> getMyRecord() async {
     final res = await ApiConfig.get('/patients/me');
     if (res.statusCode == 200) return _parsePatient(res.body);
     throw _apiError(res);
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // PACIENTE: Completar perfil (primer login) → PATCH /patients/me
   // Campos: birthDate, gender, email, phone
-  // ─────────────────────────────────────────────────────────────────
   Future<Patient> updateMyProfile({
     DateTime? birthDate,
     String?   gender,

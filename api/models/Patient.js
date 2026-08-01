@@ -1,10 +1,7 @@
 const pool = require('../config/database');
 
 const Patient = {
-    /**
-     * Crea un nuevo registro de paciente.
-     * @param {{ firstName, paternalSurname, maternalSurname, birthDate, phone, doctorId, userId? }} data
-     */
+    // Crea un paciente. El doctor_id indica a qué médico pertenece.
     async create({ firstName, paternalSurname, maternalSurname, birthDate, phone, doctorId, userId = null }) {
         const result = await pool.query(
             `INSERT INTO patients (first_name, paternal_surname, maternal_surname, birth_date, phone, doctor_id, user_id)
@@ -15,9 +12,7 @@ const Patient = {
         return result.rows[0];
     },
 
-    /**
-     * Vincula una cuenta de usuario (user_id) a un registro de paciente.
-     */
+    // Vincula una cuenta de app (user_id) al registro del paciente.
     async linkUser(patientId, userId) {
         const result = await pool.query(
             `UPDATE patients SET user_id = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
@@ -26,9 +21,7 @@ const Patient = {
         return result.rows[0] || null;
     },
 
-    /**
-     * Recupera todos los pacientes de un médico (aislamiento multi-tenant).
-     */
+    // Pacientes activos de un médico, con paginación y búsqueda por nombre/email.
     async findAllByDoctor(doctorId, limit = 50, offset = 0, search = '') {
         let baseQuery = 'SELECT * FROM patients WHERE doctor_id = $1 AND is_active = true';
         let countQuery = 'SELECT COUNT(*) FROM patients WHERE doctor_id = $1 AND is_active = true';
@@ -47,6 +40,7 @@ const Patient = {
         baseQuery += ` ORDER BY created_at DESC LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
         const dataValues = [...values, limit, offset];
 
+        // Corremos la consulta de datos y la de conteo en paralelo
         const [dataResult, countResult] = await Promise.all([
             pool.query(baseQuery, dataValues),
             pool.query(countQuery, values)
@@ -60,9 +54,7 @@ const Patient = {
         };
     },
 
-    /**
-     * Encuentra un paciente por UUID, verificando que pertenezca al médico.
-     */
+    // Paciente por UUID, solo si pertenece al médico y sigue activo.
     async findByIdAndDoctor(id, doctorId) {
         const result = await pool.query(
             'SELECT * FROM patients WHERE id = $1 AND doctor_id = $2 AND is_active = true',
@@ -71,7 +63,7 @@ const Patient = {
         return result.rows[0] || null;
     },
 
-    /** Encuentra un paciente por su user_id vinculado. */
+    // Paciente vinculado a un user_id (cuenta de la app).
     async findByUserId(userId) {
         const result = await pool.query(
             'SELECT * FROM patients WHERE user_id = $1 AND is_active = true',
@@ -80,9 +72,7 @@ const Patient = {
         return result.rows[0] || null;
     },
 
-    /**
-     * Actualiza los campos de un paciente (con validación de propiedad del médico).
-     */
+    // Actualiza solo los campos enviados, validando propiedad del médico.
     async updateByIdAndDoctor(id, doctorId, fields) {
         const map = {
             firstName: 'first_name',
@@ -122,7 +112,7 @@ const Patient = {
         return result.rows[0] || null;
     },
 
-    /** Incrementa el contador total_analyses y actualiza last_visit. */
+    // Cada análisis nuevo incrementa el contador y refresca la última visita.
     async incrementAnalyses(id) {
         const result = await pool.query(
             `UPDATE patients
@@ -136,7 +126,7 @@ const Patient = {
         return result.rows[0] || null;
     },
 
-    /** Oculta un paciente en lugar de borrarlo físicamente. */
+    // Soft delete: ocultamos al paciente en lugar de borrarlo.
     async deleteByIdAndDoctor(id, doctorId) {
         const result = await pool.query(
             'UPDATE patients SET is_active = false, updated_at = NOW() WHERE id = $1 AND doctor_id = $2 RETURNING id',
@@ -145,11 +135,7 @@ const Patient = {
         return result.rows[0] || null;
     },
 
-    /**
-     * Actualiza el health_status del paciente basado en el grade del AI.
-     * @param {string} patientId
-     * @param {string} aiGrade - Grade devuelto por el modelo ('No_DR', 'Mild', 'Moderate', 'Severe', 'Proliferate_DR')
-     */
+    // Traduce el grade del modelo de IA a un estado legible para el paciente.
     async updateHealthStatusFromAI(patientId, aiGrade) {
         const gradeMap = {
             'No_DR': 'Normal',

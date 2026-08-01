@@ -4,6 +4,8 @@ const Patient = require('../models/Patient');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 
+// Convierte la URI interna de la imagen a una URL firmada temporalmente.
+// Así el frontend puede mostrar la retinografía sin exponer el bucket.
 async function formatAnalysisWithPresignedUrl(analysis) {
     if (!analysis) return null;
     const formatted = { ...analysis };
@@ -14,17 +16,16 @@ async function formatAnalysisWithPresignedUrl(analysis) {
 }
 
 const analysisController = {
-    /**
-     * POST /api/analyses
-     * Devuelve inmediatamente un 202 Accepted con el registro PENDING.
-     * El procesamiento de IA comienza asincrónicamente en segundo plano.
-     */
+    // POST /api/analyses
+    // Respondemos de inmediato con 202 Accepted (status PENDING).
+    // La IA procesa la imagen en segundo plano.
     async createAnalysis(req, res, next) {
         try {
             const { eye, doctorNotes } = req.body;
             let patientId = req.body.patientId;
             let doctorId = req.user.id;
 
+            // Si quien sube es el paciente, resolvemos su registro y al médico dueño
             if (req.user.role === 'PACIENTE') {
                 const patient = await Patient.findByUserId(req.user.id);
                 if (!patient) {
@@ -37,7 +38,7 @@ const analysisController = {
             let imageUri = req.body.imageUri;
 
             if (req.file) {
-                // Subir buffer de la imagen directamente a MinIO
+                // Subir el buffer directo a MinIO con un nombre único
                 const filename = `${uuidv4()}${path.extname(req.file.originalname || '.jpg')}`;
                 imageUri = await storageService.uploadImage(req.file.buffer, filename, req.file.mimetype);
             }
@@ -45,7 +46,7 @@ const analysisController = {
             const analysis = await analysisService.createAnalysis({
                 patientId,
                 doctorId,
-                eye: eye || 'LEFT', // Default temporal
+                eye: eye || 'LEFT', // default temporal
                 imageUri,
                 doctorNotes,
             });
@@ -61,11 +62,8 @@ const analysisController = {
         }
     },
 
-    /**
-     * GET /api/analyses/patient/:patientId
-     * Lista todos los análisis de un paciente (solo los del médico autenticado).
-     * Requiere rol MEDICO.
-     */
+    // GET /api/analyses/patient/:patientId
+    // Lista de análisis de un paciente, solo los del médico autenticado.
     async getAnalysisByPatient(req, res, next) {
         try {
             const analyses = await analysisService.getByPatientAndDoctor(
@@ -79,11 +77,8 @@ const analysisController = {
         }
     },
 
-    /**
-     * GET /api/analyses/my
-     * Vista del paciente: devuelve sus propios análisis.
-     * Requiere rol PACIENTE.
-     */
+    // GET /api/analyses/my
+    // Vista del paciente: solo sus propios análisis.
     async getMyAnalyses(req, res, next) {
         try {
             const analyses = await analysisService.getByPatientUserId(req.user.id);
@@ -94,11 +89,9 @@ const analysisController = {
         }
     },
 
-    /**
-     * GET /api/analyses/:id
-     * Obtiene un análisis por ID (con verificación de propiedad del médico o paciente).
-     * Requiere rol MEDICO o PACIENTE.
-     */
+    // GET /api/analyses/:id
+    // Detalle de un análisis, con verificación de propiedad:
+    // el paciente solo ve los suyos y el médico solo los de sus pacientes.
     async getAnalysisById(req, res, next) {
         try {
             const id = req.params.id;
@@ -125,11 +118,8 @@ const analysisController = {
         }
     },
 
-    /**
-     * GET /api/analyses/:id/logs
-     * Logs de auditoría del procesamiento de IA.
-     * Requiere rol MEDICO.
-     */
+    // GET /api/analyses/:id/logs
+    // Logs de auditoría del procesamiento de IA.
     async getAnalysisLogs(req, res, next) {
         try {
             const logs = await analysisService.getLogsForAnalysis(req.params.id);
@@ -139,11 +129,8 @@ const analysisController = {
         }
     },
 
-    /**
-     * DELETE /api/analyses/:id
-     * Elimina un análisis (solo si pertenece al médico autenticado).
-     * Requiere rol MEDICO.
-     */
+    // DELETE /api/analyses/:id
+    // Elimina un análisis, siempre que pertenezca al médico autenticado.
     async deleteAnalysis(req, res, next) {
         try {
             await analysisService.delete(req.params.id, req.user.id);
@@ -153,11 +140,8 @@ const analysisController = {
         }
     },
 
-    /**
-     * PUT /api/analyses/:id/notes
-     * Actualizar notas médicas de un análisis.
-     * Requiere rol MEDICO.
-     */
+    // PUT /api/analyses/:id/notes
+    // Actualiza las notas médicas de un análisis.
     async updateAnalysisNotes(req, res, next) {
         try {
             const { notes } = req.body;

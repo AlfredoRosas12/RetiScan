@@ -3,9 +3,8 @@ const pool = require('../config/database');
 const jwt = require('jsonwebtoken');
 const env = require('../config/env');
 
-/**
- * Genera el payload del JWT incluyendo role y el nombre recuperado del perfil.
- */
+// Arma el payload del JWT. Le incluimos role y el nombre completo
+// recuperado del perfil para no tener que consultarlo luego.
 function signToken(user, profileName) {
     const payload = {
         id: user.id,
@@ -19,9 +18,8 @@ function signToken(user, profileName) {
 }
 
 const authService = {
-    /**
-     * Paso 1: Valida la contraseña y retorna la data básica (Sin emitir JWT)
-     */
+    // Paso 1 del login: valida identificador + contraseña y devuelve
+    // los datos del perfil (aún sin emitir ningún token).
     async validateCredentials(identifier, password) {
         if (!identifier || !password) {
             const err = new Error('Se requieren identificador y contraseña');
@@ -29,6 +27,7 @@ const authService = {
             throw err;
         }
 
+        // Aceptamos email (médicos) o username (pacientes)
         const isEmail = identifier.includes('@');
         let user;
 
@@ -51,6 +50,7 @@ const authService = {
             throw err;
         }
 
+        // El médico debe haber confirmado su correo antes de entrar
         if (user.role === 'MEDICO' && !user.is_verified) {
             const err = new Error('Debes verificar tu correo electrónico antes de iniciar sesión.');
             err.statusCode = 403;
@@ -60,9 +60,8 @@ const authService = {
         return this.getProfileData(user.id);
     },
 
-    /**
-     * Obtiene los nombres y email del perfil asociado al usuario
-     */
+    // Junta los nombres y el email del perfil asociado al usuario,
+    // según su rol (doctors o patients).
     async getProfileData(userId) {
         const uRes = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
         if (uRes.rows.length === 0) throw new Error('Usuario no encontrado');
@@ -95,16 +94,14 @@ const authService = {
         return { user, profileName, profileEmail };
     },
 
-    /**
-     * Paso Final: Genera el JWT y el Refresh Token
-     */
+    // Paso final del login: emite el Access Token y guarda el Refresh Token
+    // (token aleatorio persistido en la tabla refresh_tokens).
     async generateTokensForUser(user, profileEmail, profileName) {
         const token = signToken({ ...user, email: profileEmail }, profileName);
 
-        // Generar Refresh Token
         const crypto = require('crypto');
         const refreshToken = crypto.randomBytes(40).toString('hex');
-        
+
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + (env.REFRESH_TOKEN_EXPIRES_DAYS || 7));
 
@@ -129,20 +126,15 @@ const authService = {
         };
     },
 
-    /**
-     * Refresh Automático
-     */
+    // Renueva el Access Token sin tocar el Refresh Token (refresh automático).
     async generateTokenById(userId) {
         const { user, profileName, profileEmail } = await this.getProfileData(userId);
         return signToken({ ...user, email: profileEmail }, profileName);
     },
 
-    /**
-     * Genera un Trust Token (JWT firmado con secret separado, 30 días).
-     * Se emite tras una verificación 2FA exitosa si el usuario marcó "Recordar dispositivo".
-     * @param {string} userId
-     * @returns {string} trustToken
-     */
+    // Trust Token: JWT firmado con un secret aparte y vigencia de 30 días.
+    // Se entrega cuando el usuario marca "Recordar dispositivo" tras el 2FA
+    // y nos permite saltarnos el segundo factor en el siguiente login.
     generateTrustToken(userId) {
         return jwt.sign(
             { id: userId, purpose: 'device_trust' },
@@ -151,11 +143,8 @@ const authService = {
         );
     },
 
-    /**
-     * Verifica un Trust Token y retorna el payload si es válido.
-     * @param {string} token
-     * @returns {{ id: string } | null}
-     */
+    // Valida un Trust Token. Devuelve el payload solo si está bien firmado
+    // y trae el propósito correcto; si no, null.
     verifyTrustToken(token) {
         try {
             const payload = jwt.verify(token, env.JWT_SECRET + '_trust_device');

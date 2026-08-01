@@ -83,7 +83,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen>
     _loadDraft();
   }
 
-  // ── Caché Inteligente ──────────────────────────────────────────────
+  // Caché Inteligente
   static const _kGender    = 'profile_draft_gender';
   static const _kBirthDate = 'profile_draft_birthdate';
   static const _kEmail     = 'profile_draft_email';

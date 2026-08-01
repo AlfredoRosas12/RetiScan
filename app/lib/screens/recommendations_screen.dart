@@ -250,7 +250,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
     );
   }
 
-  // ── Tab 1: Recomendaciones generales ──
+  // Tab 1: Recomendaciones generales
   Widget _buildRecommendationsTab() {
     if (_recommendations.isEmpty) {
       return _buildEmptyState(
@@ -334,7 +334,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
     );
   }
 
-  // ── Tab 2: Medicamentos ──
+  // Tab 2: Medicamentos
   Widget _buildMedicationsTab() {
     if (_medications.isEmpty) {
       return _buildEmptyState(
@@ -488,7 +488,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
     );
   }
 
-  // ── Tab 3: Recordatorios (medicamentos con acción de confirmar) ──
+  // Tab 3: Recordatorios (medicamentos con acción de confirmar)
   Widget _buildRemindersTab() {
     final pendingMeds = _medications.where((m) {
       return m.nextDoseAt != null;

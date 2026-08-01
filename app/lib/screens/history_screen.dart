@@ -114,9 +114,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     super.dispose();
   }
 
-  // ══════════════════════════════════════════════
-  //  HELPERS
-  // ══════════════════════════════════════════════
+  // HELPERS
 
   String _translateGrade(String? grade) {
     switch (grade) {
@@ -190,9 +188,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     return "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
   }
 
-  // ══════════════════════════════════════════════
-  //  BUILD — LayoutBuilder responsive
-  // ══════════════════════════════════════════════
+  // BUILD — LayoutBuilder responsive
 
   @override
   Widget build(BuildContext context) {
@@ -205,9 +201,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     );
   }
 
-  // ══════════════════════════════════════════════
-  //  HEADER compartido
-  // ══════════════════════════════════════════════
+  // HEADER compartido
 
   Widget _buildHeader() {
     return Container(
@@ -266,9 +260,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     );
   }
 
-  // ══════════════════════════════════════════════
-  //  EMPTY STATE
-  // ══════════════════════════════════════════════
+  // EMPTY STATE
 
   Widget _buildEmptyState() {
     return Center(
@@ -293,9 +285,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     );
   }
 
-  // ══════════════════════════════════════════════
-  //  LAYOUT MÓVIL (timeline alternada)
-  // ══════════════════════════════════════════════
+  // LAYOUT MÓVIL (timeline alternada)
 
   Widget _buildMobileContent() {
     return Center(
@@ -474,9 +464,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     );
   }
 
-  // ══════════════════════════════════════════════
-  //  LAYOUT ESCRITORIO (cards horizontales)
-  // ══════════════════════════════════════════════
+  // LAYOUT ESCRITORIO (cards horizontales)
 
   Widget _buildDesktopContent() {
   return Padding(
@@ -673,9 +661,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     );
   }
 
-  // ══════════════════════════════════════════════
-  //  MODAL DETALLES
-  // ══════════════════════════════════════════════
+  // MODAL DETALLES
 
   void _showAnalysisDetails(Analysis analysis) {
     final statusColor = _getStatusColor(analysis.status);
@@ -846,9 +832,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     );
   }
 
-  // ══════════════════════════════════════════════
-  //  PAGINACIÓN
-  // ══════════════════════════════════════════════
+  // PAGINACIÓN
 
   Widget _buildPaginationControls() {
     return Container(

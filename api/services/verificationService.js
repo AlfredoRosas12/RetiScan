@@ -1,18 +1,15 @@
-/**
- * services/verificationService.js
- * Orquesta el flujo de verificación para médicos (link) y pacientes (OTP).
- */
+// services/verificationService.js
+// Orquesta los dos flujos de verificación:
+//  - Médicos: link por correo (token en la URL)
+//  - Pacientes: OTP de 6 dígitos
 const User = require('../models/User');
 const Patient = require('../models/Patient');
 const Verification = require('../models/Verification');
 const emailService = require('./emailService');
 
 const verificationService = {
-    /**
-     * MÉDICO: genera un token de link y lo envía al correo del médico.
-     * Se llama justo después de que el médico se registra.
-     * @param {string} userId
-     */
+    // MÉDICO: genera el token del link y lo manda al correo.
+    // Se llama justo después del registro.
     async sendDoctorVerificationEmail(userId) {
         const user = await User.findById(userId);
         if (!user) throw Object.assign(new Error('Usuario no encontrado'), { statusCode: 404 });
@@ -24,11 +21,7 @@ const verificationService = {
         return { message: 'Correo de verificación enviado' };
     },
 
-    /**
-     * MÉDICO: verifica el token del link y activa la cuenta.
-     * Activa también 30 días de suscripción de prueba.
-     * @param {string} token - Token hexadecimal
-     */
+    // MÉDICO: valida el token del link y activa la cuenta + 30 días de prueba.
     async verifyEmailLink(token) {
         if (!token) throw Object.assign(new Error('Token requerido'), { statusCode: 400 });
 
@@ -37,31 +30,25 @@ const verificationService = {
             throw Object.assign(new Error('Token inválido o expirado'), { statusCode: 400 });
         }
 
-        // Activar cuenta + 30 días de suscripción de prueba
+        // Cuenta verificada y suscripción de prueba por 30 días
         const trialEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
         await User.updateById(record.user_id, {
             is_verified: true,
             subscription_end_date: trialEnd,
         });
 
-        // Marcar token como usado
+        // El token no sirve dos veces
         await Verification.markUsed(record.id);
 
         return { message: 'Tu cuenta ha sido activada exitosamente. Ya puedes acceder a la infraestructura completa de RetiScan.' };
     },
 
-    /**
-     * PACIENTE: genera un OTP y lo envía al correo del paciente.
-     * El paciente debe haber proporcionado su email en el perfil.
-     * @param {string} userId
-     * @param {string} email   - Email ingresado por el paciente en su perfil
-     * @param {'OTP_EMAIL'} type
-     */
+    // PACIENTE: genera el OTP y lo envía al correo que él mismo puso en su perfil.
     async sendPatientOtp(userId, email, type = 'OTP_EMAIL') {
         const user = await User.findById(userId);
         if (!user) throw Object.assign(new Error('Usuario no encontrado'), { statusCode: 404 });
 
-        // ── Validación Precoz: correo duplicado ──────────────────────
+        // Validamos temprano que el correo no lo esté usando otra cuenta
         if (email) {
             if (email.length > 255) {
                 throw Object.assign(
@@ -80,34 +67,29 @@ const verificationService = {
 
         const verification = await Verification.createOtp(userId, type);
 
-        // Recuperar nombre del paciente para el correo
+        // Para armar el saludo usamos el nombre del paciente si existe
         let profileName = user.username;
         const patient = await Patient.findByUserId(userId);
         if (patient) {
             profileName = `${patient.first_name} ${patient.paternal_surname}${patient.maternal_surname ? ' ' + patient.maternal_surname : ''}`;
         }
 
-        // Para SMS simulado también enviamos al correo
+        // El SMS es simulado: en ambos casos el código llega por correo
         await emailService.sendOtp(email, verification.token, profileName);
 
         const response = { message: `Código OTP enviado al correo ${email}` };
-        // En desarrollo devolvemos el OTP en la respuesta para facilitar pruebas
+        // En desarrollo devolvemos el OTP para facilitar las pruebas
         if (process.env.NODE_ENV === 'development') {
             response._dev_otp = verification.token;
         }
         return response;
     },
 
-    /**
-     * PACIENTE: verifica el OTP ingresado y activa la cuenta.
-     * @param {string} userId
-     * @param {string} otp
-     * @param {'OTP_EMAIL'} type
-     */
+    // PACIENTE: valida el OTP y activa la cuenta.
     async verifyPatientOtp(userId, otp, type = 'OTP_EMAIL') {
         if (!otp) throw Object.assign(new Error('OTP requerido'), { statusCode: 400 });
 
-        // Validar Lockout
+        // Revisamos si la cuenta está en lockout por intentos fallidos
         const user = await User.findById(userId);
         if (user && user.locked_until && new Date(user.locked_until) > new Date()) {
             const diff = Math.ceil((new Date(user.locked_until) - new Date()) / 1000 / 60);
@@ -124,7 +106,7 @@ const verificationService = {
             throw Object.assign(new Error(`Código inválido o expirado. Intentos restantes: ${remaining}`), { statusCode: 400 });
         }
 
-        // Éxito: Resetear intentos y quemar OTP
+        // Todo bien: reseteamos intentos, activamos la cuenta y quemamos el OTP
         await User.resetFailedAttempts(userId);
         await User.updateById(userId, { is_verified: true });
         await Verification.markUsed(record.id);

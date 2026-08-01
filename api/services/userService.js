@@ -3,7 +3,7 @@ const Doctor = require('../models/Doctor');
 const Patient = require('../models/Patient');
 
 const userService = {
-    /** Obtiene el perfil completo del usuario (sin contraseña), uniendo datos de perfil. */
+    // Perfil completo del usuario (sin contraseña), uniendo los datos de su perfil.
     async getProfile(id) {
         const user = await User.findById(id);
         if (!user) {
@@ -12,7 +12,7 @@ const userService = {
             throw err;
         }
 
-        // Enriquecer con datos de perfil
+        // Enriquecimos el perfil con los datos específicos según el rol
         if (user.role === 'MEDICO') {
             const doc = await Doctor.findByUserId(user.id);
             if (doc) {
@@ -30,7 +30,7 @@ const userService = {
                 user.maternalSurname = pat.maternal_surname;
                 user.name = `${pat.first_name} ${pat.paternal_surname}${pat.maternal_surname ? ' ' + pat.maternal_surname : ''}`;
                 user.phone = pat.phone;
-                // Para pacientes, el email suele estar en la tabla patients
+                // En pacientes el correo principal vive en la tabla patients
                 if (!user.email) user.email = pat.email;
             }
         }
@@ -38,7 +38,7 @@ const userService = {
         return user;
     },
 
-    /** Actualiza los campos del usuario. */
+    // Actualiza los campos que vienen en `fields` (solo los permitidos en el modelo).
     async update(id, fields) {
         const updated = await User.updateById(id, fields);
         if (!updated) {
@@ -49,7 +49,7 @@ const userService = {
         return updated;
     },
 
-    /** Elimina una cuenta de usuario. */
+    // Elimina la cuenta de usuario.
     async delete(id) {
         const deleted = await User.deleteById(id);
         if (!deleted) {
@@ -60,11 +60,7 @@ const userService = {
         return deleted;
     },
 
-    /**
-     * Cambia la contraseña del usuario y borra la bandera must_change_password.
-     * @param {string} id - UUID del usuario
-     * @param {string} newPassword
-     */
+    // Cambia la contraseña y limpia la bandera must_change_password.
     async changePassword(id, newPassword) {
         const updated = await User.changePassword(id, newPassword);
         if (!updated) {

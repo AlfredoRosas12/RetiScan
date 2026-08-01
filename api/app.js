@@ -13,21 +13,21 @@ const errorMiddleware = require('./middlewares/errorMiddleware');
 const app = express();
 const PORT = env.PORT;
 
-// ── Middleware Global ──────────────────────────────────────────────────────
+// Middleware global
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
         return callback(null, origin);
     },
-    credentials: true // Obligatorio para enviar/recibir cookies HttpOnly
+    credentials: true // obligatorio para poder enviar/recibir cookies HttpOnly
 }));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(express.static('public')); // Sirve /public/index.html en /
+app.use(express.static('public')); // sirve /public/index.html en /
 
-// ── Swagger UI ─────────────────────────────────────────────────────────────
+// Swagger UI (documentación interactiva de la API)
 const swaggerUiOptions = {
     customSiteTitle: 'RetiScan API Docs',
     customCss: `
@@ -36,7 +36,7 @@ const swaggerUiOptions = {
     .swagger-ui .info .title { color: #e94560; }
   `,
     swaggerOptions: {
-        persistAuthorization: false, // Token se limpia en cada recarga
+        persistAuthorization: false, // el token se limpia en cada recarga
         filter: true,
         displayRequestDuration: true,
     },
@@ -54,20 +54,20 @@ app.get('/api/docs.json', (req, res) => {
     res.send(swaggerSpec);
 });
 
-// ── Rutas de la API ─────────────────────────────────────────────────────────────
+// Rutas de la API
 app.use('/api', routes);
 
-// ── Manejador 404 ────────────────────────────────────────────────────────────
+// Manejador 404
 app.use((req, res) => {
     res.status(404).json({ error: `Route not found: ${req.method} ${req.originalUrl}` });
 });
 
-// ── Manejador Global de Errores (debe ir al final) ───────────────────────────────────
+// Manejador global de errores (siempre al final)
 app.use(errorMiddleware);
 
-// ── Iniciar Servidor ───────────────────────────────────────────────────────────
+// Iniciar servidor
 app.listen(PORT, () => {
-    console.log(`\n🚀 RetiScan API corriendo en http://localhost:${PORT}`);
+    console.log(`\nRetiScan API corriendo en http://localhost:${PORT}`);
     console.log(`   Entorno : ${env.NODE_ENV}`);
     console.log(`   Health check: http://localhost:${PORT}/api/health`);
     console.log(`   Swagger UI  : http://localhost:${PORT}/api/docs`);

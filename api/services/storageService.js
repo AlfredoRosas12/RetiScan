@@ -1,10 +1,10 @@
-const { 
-    S3Client, 
-    HeadBucketCommand, 
-    CreateBucketCommand, 
-    PutObjectCommand, 
-    GetObjectCommand, 
-    DeleteObjectCommand 
+const {
+    S3Client,
+    HeadBucketCommand,
+    CreateBucketCommand,
+    PutObjectCommand,
+    GetObjectCommand,
+    DeleteObjectCommand
 } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
@@ -15,6 +15,7 @@ const accessKeyId = process.env.S3_ACCESS_KEY || 'retiscan';
 const secretAccessKey = process.env.S3_SECRET_KEY || 'retiscan123';
 const bucketName = process.env.S3_BUCKET || 'retina-images';
 
+// Cliente interno: apunta a MinIO dentro de la red de Docker.
 const s3Client = new S3Client({
     endpoint,
     region,
@@ -22,6 +23,7 @@ const s3Client = new S3Client({
     forcePathStyle: true
 });
 
+// Cliente público: lo usamos para firmar URLs que ve el navegador.
 const s3PublicClient = new S3Client({
     endpoint: publicEndpoint,
     region,
@@ -31,6 +33,7 @@ const s3PublicClient = new S3Client({
 
 let bucketInitialized = false;
 
+// MinIO no crea buckets solos; verificamos que exista o lo creamos.
 async function ensureBucketExists() {
     if (bucketInitialized) return;
     try {
@@ -54,6 +57,7 @@ ensureBucketExists().catch(() => {});
 const storageService = {
     bucketName,
 
+    // Sube la imagen y devuelve la llave con la que quedó guardada.
     async uploadImage(buffer, filename, mimeType = 'image/jpeg') {
         await ensureBucketExists();
         const key = filename.startsWith('retina-') ? filename : `retina-${filename}`;
@@ -69,6 +73,7 @@ const storageService = {
         return key;
     },
 
+    // Regresa la imagen como stream para reenviarla al servicio de IA.
     async getImageStream(key) {
         await ensureBucketExists();
 
@@ -81,6 +86,7 @@ const storageService = {
         return response.Body;
     },
 
+    // URL firmada (1 hora por defecto) para mostrar la imagen en el navegador.
     async getPresignedUrl(key, expiresInSeconds = 3600) {
         if (!key) return null;
         if (key.startsWith('http')) return key;

@@ -14,9 +14,7 @@ import '../widgets/dashboard_charts.dart';
 // Las referencias de color se obtendrán ahora directamente del Theme
 // para soportar tanto modo claro como modo oscuro dinámicamente.
 
-// ══════════════════════════════════════════════
-//  HOME SCREEN (Shell de navegación)
-// ══════════════════════════════════════════════
+// HOME SCREEN (Shell de navegación)
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -26,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _currentIndex = 0;
   final AuthService _authService = AuthService();
 
-  // ── Pantallas según rol y plataforma ──
+  // Pantallas según rol y plataforma
   List<Widget> _getScreens({required bool isDesktop}) {
     if (_authService.isDoctor) {
       if (isDesktop) {
@@ -65,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  // ── Items de navegación ──
+  // Items de navegación
   List<_NavItem> _getNavItems({required bool isDesktop}) {
     if (_authService.isDoctor) {
       if (isDesktop) {
@@ -121,9 +119,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // ═══════════════════════════════════════════
-  //  LAYOUT ESCRITORIO (Sidebar + contenido)
-  // ═══════════════════════════════════════════
+  // LAYOUT ESCRITORIO (Sidebar + contenido)
   Widget _buildDesktopLayout(List<Widget> screens, List<_NavItem> navItems) {
     final primaryColor = Theme.of(context).brightness == Brightness.dark 
         ? Theme.of(context).colorScheme.secondary 
@@ -138,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       backgroundColor: bgColor,
       body: Row(
         children: [
-          // ── Sidebar ──
+          // Sidebar
           Container(
             width: 260,
             decoration: BoxDecoration(
@@ -186,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 SizedBox(height: 40),
-                // ── Nav items ──
+                // Nav items
                 ...navItems.asMap().entries.map((entry) {
                   final i = entry.key;
                   final item = entry.value;
@@ -242,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
-          // ── Contenido principal ──
+          // Contenido principal
           Expanded(
             child: _currentIndex == 0
                 ? Scrollbar(
@@ -287,9 +283,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // ═══════════════════════════════════════════
-  //  LAYOUT MÓVIL (AppBar + BottomNav + FAB)
-  // ═══════════════════════════════════════════
+  // LAYOUT MÓVIL (AppBar + BottomNav + FAB)
   Widget _buildMobileLayout(List<Widget> screens, List<_NavItem> navItems) {
     final primaryColor = Theme.of(context).brightness == Brightness.dark 
         ? Theme.of(context).colorScheme.secondary 
@@ -432,9 +426,7 @@ class _NavItem {
   _NavItem(this.icon, this.activeIcon, this.label);
 }
 
-// ══════════════════════════════════════════════
-//  HOME CONTENT (Dashboard principal)
-// ══════════════════════════════════════════════
+// HOME CONTENT (Dashboard principal)
 class HomeContent extends StatefulWidget {
   @override
   _HomeContentState createState() => _HomeContentState();
@@ -615,9 +607,7 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  // ═══════════════════════════════════════════
-  //  LAYOUT MÓVIL (< 1000px) — Columna vertical
-  // ═══════════════════════════════════════════
+  // LAYOUT MÓVIL (< 1000px) — Columna vertical
   Widget _buildMobileContent(String userName, bool isDoctor) {
     final hPadding = MediaQuery.of(context).size.width < 600 ? 16.0 : 24.0;
 
@@ -649,9 +639,7 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  // ═══════════════════════════════════════════
-  //  LAYOUT ESCRITORIO (>= 1000px) — 2 columnas
-  // ═══════════════════════════════════════════
+  // LAYOUT ESCRITORIO (>= 1000px) — 2 columnas
   Widget _buildDesktopContent(String userName, bool isDoctor) {
   return Padding(
     padding: EdgeInsets.symmetric(horizontal: 32, vertical: 28),
@@ -694,9 +682,7 @@ class _HomeContentState extends State<HomeContent>
   );
 }
 
-  // ═══════════════════════════════════════════
-  //  Secciones reutilizables
-  // ═══════════════════════════════════════════
+  // Secciones reutilizables
   Widget _buildListSection(bool isDoctor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -811,7 +797,7 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  // ── Tarjeta de bienvenida ──
+  // Tarjeta de bienvenida
   Widget _buildWelcomeCard(BuildContext context, String name, bool isDoctor) {
     final primaryColor = Theme.of(context).brightness == Brightness.dark 
         ? Theme.of(context).colorScheme.secondary 
@@ -876,7 +862,7 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  // ── Stats Row (contextualizado) ──
+  // Stats Row (contextualizado)
   Widget _buildStatsRow(BuildContext context, bool isDoctor) {
     final isDesktop = MediaQuery.of(context).size.width >= 1000;
     final spacing = isDesktop ? 16.0 : (MediaQuery.of(context).size.width < 600 ? 8.0 : 12.0);
@@ -1006,7 +992,7 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  // ── Títulos de sección ──
+  // Títulos de sección
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
@@ -1064,7 +1050,7 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  // ── Tarjeta de paciente (doctor) ──
+  // Tarjeta de paciente (doctor)
   Widget _buildPatientCard(String name, String status, String date) {
     final statusColor = status == 'Normal' ? Color(0xFF04B5A2)
         : status == 'Leve' ? Color(0xFFFEB33B)
@@ -1109,7 +1095,7 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  // ── Acciones rápidas ──
+  // Acciones rápidas
   Widget _buildQuickAction(IconData icon, String text, VoidCallback onTap) {
     final primaryColor = Theme.of(context).brightness == Brightness.dark 
         ? Theme.of(context).colorScheme.secondary 

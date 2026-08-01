@@ -1,10 +1,8 @@
 const pool = require('../config/database');
 
 const Recommendation = {
-    /**
-     * Crear recomendación o medicamento para un paciente.
-     * @param {{ patientId, type, title, description, dosage, frequencyHours, createdBy }} data
-     */
+    // Crea una recomendación o un medicamento para el paciente.
+    // Para medicamentos calculamos la siguiente toma según la frecuencia.
     async create({ patientId, type, title, description, dosage, frequencyHours, createdBy }) {
         const nextDose = type === 'MEDICATION' && frequencyHours
             ? new Date(Date.now() + frequencyHours * 3600000).toISOString()
@@ -21,9 +19,7 @@ const Recommendation = {
         return result.rows[0];
     },
 
-    /**
-     * Obtener todas las recomendaciones activas de un paciente.
-     */
+    // Recomendaciones activas de un paciente.
     async findByPatient(patientId) {
         const result = await pool.query(
             `SELECT * FROM recommendations
@@ -34,9 +30,7 @@ const Recommendation = {
         return result.rows;
     },
 
-    /**
-     * Obtener una recomendación por ID.
-     */
+    // Busca una recomendación por su ID.
     async findById(id) {
         const result = await pool.query(
             'SELECT * FROM recommendations WHERE id = $1',
@@ -45,9 +39,7 @@ const Recommendation = {
         return result.rows[0] || null;
     },
 
-    /**
-     * Actualizar next_dose_at tras confirmar toma.
-     */
+    // Actualiza la próxima toma después de confirmar que el paciente la hizo.
     async updateNextDose(id, nextDoseAt) {
         const result = await pool.query(
             `UPDATE recommendations SET next_dose_at = $1, updated_at = NOW()
@@ -57,9 +49,7 @@ const Recommendation = {
         return result.rows[0] || null;
     },
 
-    /**
-     * Desactivar (soft delete) una recomendación.
-     */
+    // Soft delete: la ocultamos en vez de borrarla físicamente.
     async deactivate(id) {
         const result = await pool.query(
             `UPDATE recommendations SET is_active = false, updated_at = NOW()

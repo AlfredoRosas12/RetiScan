@@ -1,4 +1,4 @@
-# ── Build Stage ──────────────────────────────────────────────
+# Etapa de construcción: compilamos la app web de Flutter
 FROM debian:stable-slim AS build
 
 # Instalar dependencias necesarias para Flutter y compilación
@@ -35,7 +35,7 @@ RUN flutter pub get
 COPY . .
 RUN flutter build web --release
 
-# ── Production Stage ─────────────────────────────────────────
+# Etapa de producción: servimos la build con nginx
 FROM nginx:stable-alpine AS runner
 
 # Copiar archivos estáticos generados por Flutter
