@@ -13,9 +13,7 @@ class AuthService {
 
   User? _currentUser;
   
-  // ─────────────────────────────────────────────────────────────────
   // Autenticación Avanzada (JWT Access Token en RAM)
-  // ─────────────────────────────────────────────────────────────────
   String? _accessToken; // El token ahora vive solo en memoria, NO en localStorage
 
   User? get currentUser => _currentUser;
@@ -27,19 +25,18 @@ class AuthService {
 
   String? get token => _accessToken;
 
-  // ── Trust Token ("Recordar dispositivo" por 30 días) ──────────
+  // Trust Token ("Recordar dispositivo" por 30 días)
   static const _trustTokenKey = 'retiscan_trust_token';
 
   // Generamos un cliente HTTP que soporte cookies cross-origin (withCredentials)
   // crucial para que navegue el Refresh Token HttpOnly entre nuestra PWA y la API.
+  http.Client? _cachedClient;
   http.Client get _client {
-    var client = BrowserClient()..withCredentials = true;
-    return client;
+    _cachedClient ??= BrowserClient()..withCredentials = true;
+    return _cachedClient!;
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // Restaurar sesión al arrancar la app usando Refresh Token Cookie
-  // ─────────────────────────────────────────────────────────────────
   Future<bool> loadUserFromSession() async {
     // 1. Intentamos obtener un nuevo Access Token usando el Refresh Token (Cookie)
     final refreshOk = await doRefresh();
@@ -64,9 +61,7 @@ class AuthService {
     return false;
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // Lógica de Renovación Secreta de Sesión (/api/auth/refresh)
-  // ─────────────────────────────────────────────────────────────────
   Future<bool> doRefresh() async {
     try {
       final res = await _client.post(
@@ -84,9 +79,7 @@ class AuthService {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // Login → POST /auth/login
-  // ─────────────────────────────────────────────────────────────────
   Future<Map<String, dynamic>> login(String identifier, String password) async {
     try {
       // Adjuntar Trust Token si existe (para saltar 2FA)
@@ -136,9 +129,7 @@ class AuthService {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // Verificar OTP del Login (MFA Paso 2) → POST /auth/verify-login-otp
-  // ─────────────────────────────────────────────────────────────────
   Future<Map<String, dynamic>> verifyLoginOtp(String userId, String otp, {bool rememberDevice = false}) async {
     try {
       final res = await _client.post(
@@ -178,9 +169,7 @@ class AuthService {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // Cambiar contraseña → PUT /users/change-password
-  // ─────────────────────────────────────────────────────────────────
   Future<Map<String, dynamic>> changePassword(String newPassword, [String? otp]) async {
     final t = _accessToken;
     if (t == null) return {'success': false, 'message': 'No autenticado'};
@@ -207,11 +196,9 @@ class AuthService {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // Enviar OTP → POST /auth/send-otp
   // type: 'OTP_EMAIL' | 'OTP_SMS'
-  // ─────────────────────────────────────────────────────────────────
-  Future<Map<String, dynamic>> sendOtp(String email, {String type = 'OTP_EMAIL'}) async {
+  Future<Map<String, dynamic>> sendOtp(String email, {String type = 'OTP_EMAIL', int retryCount = 0}) async {
     final t = _accessToken;
     final headers = t == null ? ApiConfig.jsonHeaders : ApiConfig.authHeaders(t);
     try {
@@ -222,20 +209,17 @@ class AuthService {
       );
       final body = jsonDecode(res.body) as Map<String, dynamic>;
       
-      // Auto-refresh si el token expiró
-      if (res.statusCode == 401 && body['error'] == 'TOKEN_EXPIRED') {
+      // Auto-refresh si el token expiró (máximo 1 reintento)
+      if (res.statusCode == 401 && body['error'] == 'TOKEN_EXPIRED' && retryCount < 1) {
         final refreshed = await doRefresh();
         if (refreshed) {
-          return sendOtp(email, type: type); // Reintentar con el nuevo token
+          return sendOtp(email, type: type, retryCount: retryCount + 1);
         }
         return {'success': false, 'message': 'Tu sesión ha expirado por inactividad. Inicia sesión nuevamente para continuar.'};
       }
 
       if (res.statusCode == 200 || res.statusCode == 201) {
-        return {
-          'success': true,
-          'devOtp': body['_dev_otp']?.toString(),
-        };
+        return {'success': true};
       }
       return {'success': false, 'message': body['error'] ?? 'Error al enviar OTP'};
     } catch (e) {
@@ -245,10 +229,9 @@ class AuthService {
 
   // Métodos de compatibilidad para el nuevo flujo visual de registro (PWA)
   Future<String?> request2FAUnauth(String email) async {
-    // Simulamos el envío llamando a sendOtp (que intenta usar el endpoint de siempre)
     final res = await sendOtp(email);
     if (res['success'] == true) {
-      return res['devOtp']?.toString() ?? 'Enviado';
+      return 'Enviado';
     }
     return null;
   }
@@ -258,9 +241,7 @@ class AuthService {
     return res['success'] == true;
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // Verificar OTP → POST /auth/verify-otp
-  // ─────────────────────────────────────────────────────────────────
   Future<Map<String, dynamic>> verifyOtp(String otp, {String type = 'OTP_EMAIL'}) async {
     final t = _accessToken;
     if (t == null) return {'success': false, 'message': 'No autenticado'};
@@ -291,9 +272,7 @@ class AuthService {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // Cerrar sesión
-  // ─────────────────────────────────────────────────────────────────
   Future<void> logout() async {
     try {
       final t = _accessToken;
@@ -311,9 +290,7 @@ class AuthService {
     // para que al reloguear en el mismo dispositivo no pida 2FA
   }
 
-  // ─────────────────────────────────────────────────────────────────
   // Recuperación de contraseña (sin token — usuario no autenticado)
-  // ─────────────────────────────────────────────────────────────────
 
   /// Paso 1: Solicita un OTP al correo del usuario para recuperar su contraseña.
   Future<void> forgotPassword(String email) async {

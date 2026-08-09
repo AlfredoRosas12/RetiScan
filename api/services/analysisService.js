@@ -1,103 +1,88 @@
-/**
- * analysisService.js
- *
- * Implementa el pipeline de procesamiento asíncrono basado en EventEmitter
- * con aislamiento multi-tenant (doctor_id) y nuevos campos (eye, doctor_notes).
- */
-
 const EventEmitter = require('events');
 const Analysis = require('../models/Analysis');
 const Patient = require('../models/Patient');
 const AI_Processing_Log = require('../models/AI_Processing_Log');
 
-// ── Emisor compartido (actúa como el "message broker" en el proceso) ────────
 const analysisEmitter = new EventEmitter();
 const axios = require('axios');
 const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 
-// ── Consumidor de cola / trabajador asíncrono ──────────────────────────────
+// ─────────────────────────────────────────────────────────────────────
+// Worker en memoria: procesa los análisis en segundo plano para no
+// bloquear la respuesta HTTP del endpoint.
+// ─────────────────────────────────────────────────────────────────────
 analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
     console.log(`[Cola] Trabajo de análisis recibido: ${analysisId}`);
 
     let logEntry;
     try {
-        // 1. Crear el registro de auditoría (registra start_time)
         logEntry = await AI_Processing_Log.create(analysisId);
-        console.log(`[Cola] Log creado: ${logEntry.task_id}`);
 
-        // 2. Transición → PROCESSING
         await Analysis.updateStatus(analysisId, 'PROCESSING', null);
-        console.log(`[Cola]   Análisis ${analysisId} → PROCESSING`);
 
-        // Obtener la información del análisis para obtener la URI de la imagen
+        // Traemos la URI de la imagen guardada en MinIO
         const db = require('../config/database');
-        const result = await db.query('SELECT image_uri FROM analyses WHERE id = $1', [analysisId]);
+        const result = await db.query('SELECT image_uri, eye FROM analyses WHERE id = $1', [analysisId]);
         const analysisData = result.rows[0];
 
         if (!analysisData || !analysisData.image_uri) {
             throw new Error("No se encontró la imagen del análisis.");
         }
 
-        // 3. Preparar la petición a FastAPI
-        const filename = analysisData.image_uri.split('/').pop();
-        const absolutePath = path.join(__dirname, '..', 'uploads', filename);
-
-        if (!fs.existsSync(absolutePath)) {
-            throw new Error(`El archivo físico no existe: ${absolutePath}`);
-        }
+        // Descargamos la imagen y la mandamos al microservicio de IA
+        const storageService = require('./storageService');
+        const imageStream = await storageService.getImageStream(analysisData.image_uri);
 
         const formData = new FormData();
-        formData.append('image', fs.createReadStream(absolutePath));
+        formData.append('image', imageStream, { filename: 'retina.jpg' });
+        if (analysisData.eye) {
+            formData.append('eye', analysisData.eye);
+        }
 
-        // 4. Hacer la petición a FastAPI (puerto 8000)
-        console.log(`[Cola]  Enviando imagen a FastAPI (AI-RetiScan)...`);
-        const aiResponse = await axios.post('http://host.docker.internal:8000/predict', formData, {
+        console.log(`[Cola] Enviando imagen a servicio de IA...`);
+        const aiResponse = await axios.post('http://algorithms:8000/predict', formData, {
             headers: {
                 ...formData.getHeaders()
-            }
+            },
+            timeout: 90000 // 90s para inferencia de modelo PyTorch
         });
 
         const aiResult = aiResponse.data;
 
-        // 5. Transición → COMPLETED
         await Analysis.updateStatus(analysisId, 'COMPLETED', aiResult);
-        console.log(`[Cola] Análisis ${analysisId} → COMPLETED (grado: ${aiResult.grade})`);
 
-        // 6. Incrementar análisis del paciente
-        await Patient.incrementAnalyses(patientId);
+        await Patient.incrementAnalyses(patientId).catch(e =>
+            console.error(`[Cola] Error incrementando análisis del paciente:`, e.message)
+        );
+        if (aiResult.grade) {
+            await Patient.updateHealthStatusFromAI(patientId, aiResult.grade).catch(e =>
+                console.error(`[Cola] Error actualizando health_status:`, e.message)
+            );
+        }
 
-        // 7. Completar el registro de auditoría
         await AI_Processing_Log.complete(logEntry.task_id, 'COMPLETED');
-        console.log(`[Cola] Log completado`);
 
     } catch (err) {
-        console.error(`[Cola]  Error procesando análisis ${analysisId}:`, err.message);
+        console.error(`[Cola] Error procesando análisis ${analysisId}:`, err.message);
 
-        // Extraer el mensaje detallado de FastAPI si existe (ej: validación de imagen)
-        const errorMsg = err.response && err.response.data && err.response.data.detail 
-                         ? err.response.data.detail 
+        // Si la IA respondió con un detalle legible, lo guardamos como error
+        const errorMsg = err.response && err.response.data && err.response.data.detail
+                         ? err.response.data.detail
                          : err.message;
 
-        // Marcar análisis como FAILED para que los clientes no se queden haciendo polling
         await Analysis.updateStatus(analysisId, 'FAILED', { error: errorMsg }).catch(() => { });
 
-        // Intentar cerrar el registro de auditoría de todas formas
         if (logEntry) {
             await AI_Processing_Log.complete(logEntry.task_id, 'FAILED').catch(() => { });
         }
     }
 });
 
-// ── API del servicio ───────────────────────────────────────────────────────
 const analysisService = {
-    /**
-     * Crea un nuevo análisis con aislamiento de médico y lo envía al worker.
-     * Devuelve inmediatamente el registro PENDING — el cliente hace polling.
-     *
-     * @param {{ patientId, doctorId, eye, imageUri?, doctorNotes? }} params
-     */
+    // Crea el análisis (PENDING) y lo manda al worker.
+    // El cliente consulta el estado con polling a GET /analyses/:id.
     async createAnalysis({ patientId, doctorId, eye, imageUri, doctorNotes }) {
         if (!patientId) {
             const err = new Error('patientId es requerido');
@@ -110,7 +95,7 @@ const analysisService = {
             throw err;
         }
 
-        // Verificar que el paciente pertenece al médico
+        // El paciente debe pertenecer al médico que registra el análisis
         const patient = await Patient.findByIdAndDoctor(patientId, doctorId);
         if (!patient) {
             const err = new Error('Paciente no encontrado o no pertenece a este médico');
@@ -118,11 +103,10 @@ const analysisService = {
             throw err;
         }
 
-        // Insertar con estado = 'PENDING'
         const analysis = await Analysis.create(patientId, doctorId, eye, imageUri, doctorNotes);
         console.log(`[Servicio] Análisis creado: ${analysis.id} | Status: PENDING`);
 
-        // Fire-and-forget: emite el trabajo al trabajador
+        // Fire-and-forget: encolamos el trabajo sin esperar al worker
         setImmediate(() => {
             analysisEmitter.emit('analysis:queued', {
                 analysisId: analysis.id,
@@ -133,7 +117,7 @@ const analysisService = {
         return analysis;
     },
 
-    /** Recupera un solo análisis por UUID, con verificación de dueño (médico o paciente). */
+    // Un solo análisis por UUID, con verificación de dueño (médico o paciente).
     async getById(id, doctorId) {
         const analysis = await Analysis.findByIdAndDoctor(id, doctorId);
         if (!analysis) {
@@ -144,24 +128,24 @@ const analysisService = {
         return analysis;
     },
 
-    /** Recupera todos los análisis de un paciente (filtrado por doctor). */
+    // Análisis de un paciente, filtrados por el médico.
     async getByPatientAndDoctor(patientId, doctorId) {
         return Analysis.findByPatientAndDoctor(patientId, doctorId);
     },
 
-    /** Recupera todos los análisis que puede ver un paciente (por su user_id). */
+    // Análisis que puede ver un paciente (resolviendo su user_id).
     async getByPatientUserId(userId) {
         const patient = await Patient.findByUserId(userId);
         if (!patient) return [];
         return Analysis.findByPatientId(patient.id);
     },
 
-    /** Obtiene todos los logs de procesamiento para un análisis. */
+    // Logs de procesamiento de un análisis.
     async getLogsForAnalysis(analysisId) {
         return AI_Processing_Log.findByAnalysisId(analysisId);
     },
 
-    /** Elimina un análisis (con verificación de propiedad). */
+    // Elimina un análisis (con verificación de propiedad).
     async delete(id, doctorId) {
         const deleted = await Analysis.deleteByIdAndDoctor(id, doctorId);
         if (!deleted) {
@@ -172,7 +156,7 @@ const analysisService = {
         return deleted;
     },
 
-    /** Actualiza las notas médicas de un análisis. */
+    // Actualiza las notas médicas de un análisis.
     async updateNotes(id, doctorId, notes) {
         const updated = await Analysis.updateNotes(id, doctorId, notes);
         if (!updated) {

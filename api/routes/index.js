@@ -9,13 +9,26 @@ const recommendationRoutes = require('./recommendationRoutes');
 
 const router = Router();
 
-// Health-check (sin autenticación)
-router.get('/health', (req, res) => {
-    res.status(200).json({
+// Health-check (sin autenticación) — verifica DB + API
+router.get('/health', async (req, res) => {
+    const health = {
         status: 'OK',
         service: 'RetiScan SaaS API',
+        database: 'unknown',
         timestamp: new Date().toISOString(),
-    });
+    };
+
+    try {
+        const pool = require('../config/database');
+        await pool.query('SELECT 1');
+        health.database = 'connected';
+    } catch (err) {
+        health.status = 'ERROR';
+        health.database = 'disconnected';
+        return res.status(503).json(health);
+    }
+
+    res.status(200).json(health);
 });
 
 router.use('/auth', authRoutes);

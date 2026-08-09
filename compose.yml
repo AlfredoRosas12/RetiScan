@@ -1,11 +1,6 @@
-# ─────────────────────────────────────────────────────────────
-#  RetiScan — Orquestación Global de Infraestructura
-#  Servicios: api, db, landing-page, pwa, adminer
-# ─────────────────────────────────────────────────────────────
-
 services:
 
-  # ── PostgreSQL Database ──────────────────────────────────────
+  # Base de datos PostgreSQL
   db:
     image: postgres:16-alpine
     container_name: retiscan_db
@@ -26,7 +21,27 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── Node.js API ──────────────────────────────────────────────
+  # Almacenamiento MinIO S3
+  minio:
+    image: minio/minio:latest
+    container_name: retiscan_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER:     ${S3_ACCESS_KEY:-retiscan}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-retiscan123}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Node.js / Express
   api:
     build:
       context: ./api
@@ -41,8 +56,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      algorithms:
+        condition: service_started
+      minio:
+        condition: service_started
 
-  # ── Landing Page (React/Vite) ────────────────────────────────
+  # Landing Page
   landing-page:
     build:
       context: ./page
@@ -51,8 +70,10 @@ services:
     restart: unless-stopped
     ports:
       - "5173:80"
+    depends_on:
+      - api
 
-  # ── PWA (Flutter) ────────────────────────────────────────────
+  # App PWA (Flutter)
   pwa:
     build:
       context: ./app
@@ -62,7 +83,7 @@ services:
     ports:
       - "5174:80"
 
-  # ── Adminer (DB GUI) ─────────────────────────────────────────
+  # Adminer (UI PostgreSQL)
   adminer:
     image: adminer:latest
     container_name: retiscan_adminer
@@ -75,7 +96,7 @@ services:
       db:
         condition: service_healthy
 
-  # ── AI Algorithms (Python) ───────────────────────────────────
+  # Servicio de IA (Python / FastAPI)
   algorithms:
     build:
       context: ./algorithms
@@ -84,9 +105,10 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
-    volumes:
-      - ./api/uploads:/app/uploads
 
 volumes:
   pg_data:
     name: retiscan_pg_data
+  minio_data:
+    name: retiscan_minio_data
+

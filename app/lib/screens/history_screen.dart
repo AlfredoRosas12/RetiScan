@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/api_config.dart';
 import '../models/analysis.dart';
 import '../services/analysis_service.dart';
 
@@ -19,9 +20,12 @@ class _HistoryScreenState extends State<HistoryScreen>
 
   // -- Paginación --
   int _currentPage = 1;
-  int _itemsPerPage = 10;
   List<Analysis> _paginatedAnalyses = [];
-  int get _totalPages => (_analyses.isEmpty) ? 1 : (_analyses.length / _itemsPerPage).ceil();
+  int get _effectiveItemsPerPage {
+    final width = MediaQuery.of(context).size.width;
+    return width >= 1000 ? 15 : 10;
+  }
+  int get _totalPages => (_analyses.isEmpty) ? 1 : (_analyses.length / _effectiveItemsPerPage).ceil();
 
   @override
   void initState() {
@@ -49,8 +53,9 @@ class _HistoryScreenState extends State<HistoryScreen>
   }
 
   void _paginate() {
-    final startIndex = (_currentPage - 1) * _itemsPerPage;
-    final endIndex = startIndex + _itemsPerPage;
+    final itemsPerPage = _effectiveItemsPerPage;
+    final startIndex = (_currentPage - 1) * itemsPerPage;
+    final endIndex = startIndex + itemsPerPage;
     setState(() {
       _paginatedAnalyses = _analyses.sublist(
         startIndex,
@@ -109,6 +114,19 @@ class _HistoryScreenState extends State<HistoryScreen>
     super.dispose();
   }
 
+  // HELPERS
+
+  String _translateGrade(String? grade) {
+    switch (grade) {
+      case 'No_DR': return 'Normal';
+      case 'Mild': return 'Leve';
+      case 'Moderate': return 'Moderado';
+      case 'Severe': return 'Severo';
+      case 'Proliferate_DR': return 'Proliferativa';
+      default: return grade ?? 'Normal';
+    }
+  }
+
   IconData _getStatusIcon(String status) {
     switch (status.toUpperCase()) {
       case 'COMPLETED':
@@ -137,71 +155,150 @@ class _HistoryScreenState extends State<HistoryScreen>
     }
   }
 
+  Color _getGradeColor(String grade) {
+    switch (grade) {
+      case 'Normal':
+      case 'No_DR':
+        return Colors.green;
+      case 'Mild':
+        return Colors.orange;
+      case 'Moderate':
+        return Colors.deepOrange;
+      case 'Severe':
+      case 'Proliferate_DR':
+        return Colors.red;
+      default:
+        return Colors.green;
+    }
+  }
+
+  String _formatLesionName(String name) {
+    return name
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((word) => word[0].toUpperCase() + word.substring(1))
+        .join(' ');
+  }
+
+  String _formatDate(DateTime date) {
+    return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
+  }
+
+  String _formatTime(DateTime date) {
+    return "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
+  }
+
+  // BUILD — LayoutBuilder responsive
+
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth >= 1000;
+        if (isDesktop) return _buildDesktopContent();
+        return _buildMobileContent();
+      },
+    );
+  }
+
+  // HEADER compartido
+
+  Widget _buildHeader() {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.timeline,
+              color: Theme.of(context).colorScheme.primary,
+              size: 28,
+            ),
+          ),
+          SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Total de Análisis',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  '${_analyses.length} registros',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).textTheme.headlineMedium?.color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // EMPTY STATE
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.history,
+            size: 64,
+            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.2),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'No tienes análisis registrados aún',
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // LAYOUT MÓVIL (timeline alternada)
+
+  Widget _buildMobileContent() {
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: 800),
         child: Column(
           children: [
-            Container(
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-                  ],
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.timeline,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 28,
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Total de Análisis',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          '${_analyses.length} registros',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).textTheme.headlineMedium?.color,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _buildHeader(),
             Expanded(
               child: _isLoading
                   ? Center(child: CircularProgressIndicator())
                   : _analyses.isEmpty
-                      ? Center(child: Text('No tienes análisis registrados aún', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5))))
+                      ? _buildEmptyState()
                       : Column(
                           children: [
                             Expanded(
@@ -214,7 +311,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                                     position: _slideAnimations[index],
                                     child: FadeTransition(
                                       opacity: _fadeAnimations[index],
-                                      child: _buildHistoryCard(analysis, index),
+                                      child: _buildMobileHistoryCard(analysis, index),
                                     ),
                                   );
                                 },
@@ -230,7 +327,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     );
   }
 
-  Widget _buildHistoryCard(Analysis analysis, int index) {
+  Widget _buildMobileHistoryCard(Analysis analysis, int index) {
     final statusColor = _getStatusColor(analysis.status);
     final statusIcon = _getStatusIcon(analysis.status);
     final isLeft = index % 2 == 0;
@@ -264,7 +361,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(16),
-                  onTap: () {},
+                  onTap: () => _showAnalysisDetails(analysis),
                   child: Padding(
                     padding: EdgeInsets.all(16),
                     child: Column(
@@ -290,7 +387,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "${analysis.createdAt.day.toString().padLeft(2, '0')}/${analysis.createdAt.month.toString().padLeft(2, '0')}/${analysis.createdAt.year}",
+                                    _formatDate(analysis.createdAt),
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
@@ -299,7 +396,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                                   ),
                                   SizedBox(height: 2),
                                   Text(
-                                    "${analysis.createdAt.hour.toString().padLeft(2, '0')}:${analysis.createdAt.minute.toString().padLeft(2, '0')}",
+                                    _formatTime(analysis.createdAt),
                                     style: TextStyle(
                                       color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
                                       fontSize: 13,
@@ -312,8 +409,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                         ),
                         SizedBox(height: 12),
                         Container(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: statusColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
@@ -367,6 +463,376 @@ class _HistoryScreenState extends State<HistoryScreen>
       ),
     );
   }
+
+  // LAYOUT ESCRITORIO (cards horizontales)
+
+  Widget _buildDesktopContent() {
+  return Padding(
+    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+    child: Column(
+      children: [
+        _buildHeader(),
+        SizedBox(height: 24),
+        Expanded(
+          child: _isLoading
+              ? Center(child: CircularProgressIndicator())
+              : _analyses.isEmpty
+                  ? _buildEmptyState()
+                  : Column(
+                      children: [
+                        Expanded(
+                          child: Scrollbar(
+                            thumbVisibility: true,
+                            child: ListView.builder(
+                              padding: EdgeInsets.only(right: 8), // espacio para scrollbar
+                              itemCount: _paginatedAnalyses.length,
+                              itemBuilder: (context, index) {
+                                final analysis = _paginatedAnalyses[index];
+                                return SlideTransition(
+                                  position: _slideAnimations[index],
+                                  child: FadeTransition(
+                                    opacity: _fadeAnimations[index],
+                                    child: _buildDesktopHistoryCard(analysis),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        _buildPaginationControls(),
+                      ],
+                    ),
+        ),
+      ],
+    ),
+  );
+}
+
+  Widget _buildDesktopHistoryCard(Analysis analysis) {
+    final statusColor = _getStatusColor(analysis.status);
+    final grade = analysis.aiResult?['grade'] ?? 'Normal';
+    final translatedGrade = _translateGrade(grade);
+    final confidence = analysis.aiResult?['confidence'];
+    final gradeColor = _getGradeColor(grade);
+    final textSecondary = Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7);
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _showAnalysisDetails(analysis),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardTheme.color,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: statusColor.withOpacity(0.15),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: statusColor.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                _buildTimelineDot(statusColor),
+                SizedBox(width: 20),
+                SizedBox(
+                  width: 140,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _formatDate(analysis.createdAt),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        _formatTime(analysis.createdAt),
+                        style: TextStyle(
+                          color: textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 16),
+                _buildGradeBadge(translatedGrade, gradeColor),
+                SizedBox(width: 16),
+                if (analysis.eye != null) ...[
+                  _buildEyeBadge(analysis.eye!),
+                  SizedBox(width: 16),
+                ],
+                if (confidence != null) ...[
+                  Text(
+                    '${(confidence * 100).toInt()}%',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                ],
+                Spacer(),
+                _buildStatusBadge(analysis.status, statusColor),
+                SizedBox(width: 12),
+                Icon(
+                  Icons.chevron_right,
+                  color: textSecondary,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradeBadge(String grade, Color color) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
+      ),
+      child: Text(
+        grade,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEyeBadge(String eye) {
+    final label = eye == 'LEFT' ? 'OI' : 'OD';
+    final color = Theme.of(context).colorScheme.secondary;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String status, Color color) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  // MODAL DETALLES
+
+  void _showAnalysisDetails(Analysis analysis) {
+    final statusColor = _getStatusColor(analysis.status);
+    final grade = analysis.aiResult?['grade'] ?? 'Normal';
+    final confidence = analysis.aiResult?['confidence'];
+    final lesions = analysis.aiResult?['lesions_detected'] as Map<String, dynamic>? ?? {};
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(_getStatusIcon(analysis.status), color: statusColor, size: 24),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Detalles del Análisis',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                            ),
+                          ),
+                          Text(
+                            '${_formatDate(analysis.createdAt)} ${_formatTime(analysis.createdAt)}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                _buildDetailRow('Estado', analysis.status, statusColor),
+                SizedBox(height: 12),
+                _buildDetailRow('Grado DR', _translateGrade(grade), _getGradeColor(grade)),
+                SizedBox(height: 12),
+                if (confidence != null)
+                  _buildDetailRow('Confianza IA', '${(confidence * 100).toInt()}%', Colors.blue),
+                if (confidence != null) SizedBox(height: 12),
+                if (analysis.eye != null)
+                  _buildDetailRow('Ojo analizado', analysis.eye == 'LEFT' ? 'Izquierdo' : 'Derecho', Colors.purple),
+                if (analysis.eye != null) SizedBox(height: 16),
+                if (lesions.isNotEmpty) ...[
+                  Text(
+                    'Lesiones Detectadas',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  ...lesions.entries.map((entry) => Padding(
+                    padding: EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        Icon(
+                          entry.value == true ? Icons.warning_amber_rounded : Icons.check_circle_outline,
+                          size: 16,
+                          color: entry.value == true ? Colors.orange : Colors.green,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${_formatLesionName(entry.key)}: ${entry.value == true ? 'Detectado' : 'No detectado'}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+                ],
+                SizedBox(height: 16),
+                if (analysis.imageUri != null) ...[
+                  Text(
+                    'Imagen',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Container(
+                    height: 150,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: Theme.of(context).dividerColor.withOpacity(0.1),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        ApiConfig.imageUrl(analysis.imageUri),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Center(
+                          child: Icon(Icons.image_not_supported, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.3)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, Color valueColor) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: valueColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: valueColor,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // PAGINACIÓN
 
   Widget _buildPaginationControls() {
     return Container(

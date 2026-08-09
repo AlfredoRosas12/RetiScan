@@ -17,9 +17,25 @@ dist
 
 # Exclude environment files
 .env
+.env.production
+.env.production.example
 *.pem
 
 # Docker specifics
-docker-compose.yml
+compose.yml
+compose.prod.yml
 Dockerfile
 .dockerignore
+
+# Deployment files
+deploy.sh
+nginx/
+certbot-conf/
+certbot-www/
+
+# Documentation
+*.md
+LICENSE
+Flujo_de_trabajo.md
+retiscan_start.cmd
+retiscan_stop.cmd

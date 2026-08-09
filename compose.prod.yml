@@ -1,0 +1,193 @@
+# ============================================================
+#  RetiScan - Compose para Producción (VPS Hostinger)
+#  Docker Compose V2 - Usa: compose.prod.yml
+#  Uso: docker compose -f compose.prod.yml --env-file .env.production up -d
+# ============================================================
+
+services:
+
+  # ── Nginx Reverse Proxy Edge (único servicio expuesto) ────
+  nginx:
+    image: nginx:stable-alpine
+    container_name: retiscan_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot-conf:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+    depends_on:
+      - api
+      - landing-page
+      - pwa
+    networks:
+      - retiscan-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+
+  # ── Base de datos PostgreSQL ───────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: retiscan_db
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      POSTGRES_USER:     ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB:       ${DB_NAME}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./api/config/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - retiscan-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  # ── Almacenamiento MinIO S3 ───────────────────────────────
+  minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    container_name: retiscan_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    env_file: .env.production
+    environment:
+      MINIO_ROOT_USER:     ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+    volumes:
+      - minio_data:/data
+    networks:
+      - retiscan-net
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+  # ── API Node.js / Express ─────────────────────────────────
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: retiscan_api
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      DB_HOST: db
+    networks:
+      - retiscan-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+  # ── Landing Page (React + Vite + Nginx) ───────────────────
+  landing-page:
+    build:
+      context: ./page
+      dockerfile: Dockerfile
+    container_name: retiscan_landing
+    restart: unless-stopped
+    networks:
+      - retiscan-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+
+  # ── App PWA (Flutter + Nginx) ────────────────────────────
+  pwa:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: retiscan_pwa
+    restart: unless-stopped
+    networks:
+      - retiscan-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+
+  # ── Servicio de IA (Python / FastAPI + PyTorch) ──────────
+  algorithms:
+    build:
+      context: ./algorithms
+      dockerfile: Dockerfile
+    container_name: retiscan_ai
+    restart: unless-stopped
+    networks:
+      - retiscan-net
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+
+  # ── Certbot (renovación automática de SSL) ────────────────
+  certbot:
+    image: certbot/certbot
+    container_name: retiscan_certbot
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h & wait $${!}; done;'"
+    networks:
+      - retiscan-net
+
+volumes:
+  pg_data:
+    name: retiscan_pg_data
+  minio_data:
+    name: retiscan_minio_data
+  certbot-conf:
+    name: retiscan_certbot_conf
+  certbot-www:
+    name: retiscan_certbot_www
+
+networks:
+  retiscan-net:
+    name: retiscan_network
+    driver: bridge

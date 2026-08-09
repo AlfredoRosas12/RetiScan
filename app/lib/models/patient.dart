@@ -12,6 +12,7 @@ class Patient {
   final String? doctorId;
   final String? userId;
   final int totalAnalyses;
+  final String? healthStatus; // 'Normal' | 'Leve' | 'Moderado' | 'Severo'
   final DateTime? createdAt;
   final DateTime? lastVisit;
 
@@ -27,6 +28,7 @@ class Patient {
     this.doctorId,
     this.userId,
     this.totalAnalyses = 0,
+    this.healthStatus,
     this.createdAt,
     this.lastVisit,
   });
@@ -79,6 +81,7 @@ class Patient {
         doctorId:        json['doctor_id']?.toString(),
         userId:          json['user_id']?.toString(),
         totalAnalyses:   ((json['total_analyses'] ?? json['totalAnalyses']) as num?)?.toInt() ?? 0,
+        healthStatus:    json['health_status']?.toString() ?? json['healthStatus']?.toString(),
         createdAt:       ca,
         lastVisit:       lv,
       );
@@ -97,6 +100,7 @@ class Patient {
     if (gender != null) 'gender': gender,
     if (email  != null) 'email':  email,
     if (phone  != null) 'phone':  phone,
+    if (healthStatus != null) 'healthStatus': healthStatus,
     if (lastVisit != null) 'lastVisit': lastVisit!.toIso8601String(),
     if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
   };
@@ -113,6 +117,7 @@ class Patient {
     String?   doctorId,
     String?   userId,
     int?      totalAnalyses,
+    String?   healthStatus,
     DateTime? createdAt,
     DateTime? lastVisit,
   }) {
@@ -128,6 +133,7 @@ class Patient {
       doctorId:        doctorId        ?? this.doctorId,
       userId:          userId          ?? this.userId,
       totalAnalyses:   totalAnalyses   ?? this.totalAnalyses,
+      healthStatus:    healthStatus    ?? this.healthStatus,
       createdAt:       createdAt       ?? this.createdAt,
       lastVisit:       lastVisit       ?? this.lastVisit,
     );

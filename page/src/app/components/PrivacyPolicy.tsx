@@ -30,9 +30,9 @@ export function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
           <section>
             <h2 className="text-xl font-semibold text-white mb-4">1. Información del Responsable</h2>
             <p>
-              El responsable del tratamiento de los datos personales es RetiScan,
-              herramienta de inteligencia artificial dedicada a la detección temprana
-              de retinopatía diabética a través del análisis de imágenes retinianas.
+              El responsable del tratamiento de tus datos personales es RetiScan, una plataforma
+              web para el análisis de imágenes de retina mediante inteligencia artificial, diseñada
+              para apoyar a profesionales de la salud en la detección temprana de retinopatía diabética.
             </p>
             <p className="mt-2">
               Para consultas relacionadas con esta política, puedes contactarnos a:{' '}
@@ -44,55 +44,121 @@ export function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
 
           <div className="border-t border-slate-700/50" />
 
-          {/* 2. Datos recopilados */}
+          {/* 2. Qué es RetiScan */}
           <section>
-            <h2 className="text-xl font-semibold text-white mb-4">2. Datos Personales Recopilados</h2>
-            <p className="mb-4">RetiScan recopila los siguientes datos personales durante el registro y uso del servicio:</p>
-            <ul className="space-y-2 ml-4 list-disc list-outside">
-              <li><strong className="text-slate-200">Nombre completo:</strong> nombre, apellido paterno y materno</li>
-              <li><strong className="text-slate-200">Correo electrónico</strong></li>
-              <li><strong className="text-slate-200">Contraseña:</strong> almacenada de forma encriptada</li>
-              <li><strong className="text-slate-200">Número de licencia médica</strong></li>
-              <li><strong className="text-slate-200">Especialidad médica</strong></li>
-              <li><strong className="text-slate-200">Institución o clínica</strong></li>
-              <li><strong className="text-slate-200">Teléfono de contacto</strong></li>
-              <li><strong className="text-slate-200">Imágenes retinianas:</strong> utilizadas exclusivamente para el análisis de IA</li>
-            </ul>
-          </section>
-
-          <div className="border-t border-slate-700/50" />
-
-          {/* 3. Finalidad */}
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-4">3. Finalidad del Tratamiento</h2>
-            <p className="mb-4">Los datos personales son tratados para las siguientes finalidades:</p>
-            <ul className="space-y-2 ml-4 list-disc list-outside">
-              <li>Prestación del servicio de análisis de retinopatía diabética mediante inteligencia artificial</li>
-              <li>Gestión de la cuenta de usuario profesional</li>
-              <li>Comunicaciones relacionadas con el servicio, incluyendo actualizaciones y notificaciones</li>
-              <li>Cumplimiento de obligaciones legales y regulatorias en materia de salud</li>
-            </ul>
-          </section>
-
-          <div className="border-t border-slate-700/50" />
-
-          {/* 4. Base legal */}
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-4">4. Base Legal del Tratamiento</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">2. Qué es RetiScan</h2>
             <p>
-              El tratamiento de datos se fundamenta en el consentimiento explícito del usuario
-              al registrarse en la plataforma, así como en la relación contractual necesaria
-              para la prestación del servicio de análisis diagnóstico asistido por IA.
+              RetiScan es una aplicación web que utiliza inteligencia artificial para analizar
+              imágenes de retina y detectar posibles signos de retinopatía diabética. Está dirigida
+              a médicos que pueden capturar o subir imágenes de sus pacientes, y a pacientes que
+              desean revisar su salud visual. La aplicación genera resultados orientativos que
+              ayudan al médico a tomar decisiones, pero no reemplaza un diagnóstico profesional.
             </p>
           </section>
 
           <div className="border-t border-slate-700/50" />
 
-          {/* 5. Derechos ARCO */}
+          {/* 3. Datos que recopilamos */}
           <section>
-            <h2 className="text-xl font-semibold text-white mb-4">5. Derechos ARCO</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">3. Datos que Recopilamos</h2>
             <p className="mb-4">
-              Tienes derecho a ejercer tus derechos ARCO en cualquier momento:
+              Recopilamos información dependiendo del tipo de usuario que seas:
+            </p>
+            <div className="space-y-4">
+              <div>
+                <p className="font-medium text-slate-200 mb-2">Si eres Médico:</p>
+                <ul className="space-y-1 ml-4 list-disc list-outside">
+                  <li>Nombre completo</li>
+                  <li>Correo electrónico</li>
+                  <li>Contraseña (almacenada de forma encriptada)</li>
+                  <li>Cédula Profesional</li>
+                  <li>Especialidad médica</li>
+                  <li>Institución o clínica donde labora</li>
+                  <li>Teléfono de contacto</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium text-slate-200 mb-2">Si eres Paciente:</p>
+                <ul className="space-y-1 ml-4 list-disc list-outside">
+                  <li>Nombre completo</li>
+                  <li>Fecha de nacimiento</li>
+                  <li>Género</li>
+                  <li>Correo electrónico</li>
+                  <li>Teléfono de contacto</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium text-slate-200 mb-2">Para ambos usuarios:</p>
+                <ul className="space-y-1 ml-4 list-disc list-outside">
+                  <li>Imágenes de retina capturadas o subidas para su análisis</li>
+                  <li>Resultados generados por la inteligencia artificial</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <div className="border-t border-slate-700/50" />
+
+          {/* 4. Cómo usamos tus datos */}
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-4">4. Cómo Usamos tus Datos</h2>
+            <p className="mb-4">
+              Utilizamos tu información para:
+            </p>
+            <ul className="space-y-2 ml-4 list-disc list-outside">
+              <li>Analizar las imágenes de retina que subes para detectar signos de retinopatía diabética</li>
+              <li>Generar resultados orientativos que ayuden al médico en su evaluación</li>
+              <li>Crear reportes y expedientes de cada análisis realizado</li>
+              <li>Gestionar tu cuenta y mantener tu sesión activa</li>
+              <li>Enviarte notificaciones importantes sobre el servicio</li>
+            </ul>
+          </section>
+
+          <div className="border-t border-slate-700/50" />
+
+          {/* 5. Cómo protegemos tu información */}
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-4">5. Cómo Protegemos tu Información</h2>
+            <p>
+              Tomamos medidas de seguridad para cuidar tus datos. Las contraseñas se guardan
+              encriptadas, el acceso a la plataforma requiere iniciar sesión, y cada usuario
+              solo puede ver la información que le corresponde. Almacenamos los datos en
+              servidores seguros con protección de acceso.
+            </p>
+          </section>
+
+          <div className="border-t border-slate-700/50" />
+
+          {/* 6. Inteligencia Artificial */}
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-4">6. Inteligencia Artificial</h2>
+            <p className="mb-4">
+              Las imágenes de retina que subes son analizadas por un sistema de inteligencia
+              artificial que hace lo siguiente:
+            </p>
+            <ul className="space-y-2 ml-4 list-disc list-outside">
+              <li>Verifica que la imagen sea clara y esté bien enfocada</li>
+              <li>Revisa la imagen buscando señales de retinopatía diabética</li>
+              <li>Clasifica el grado de severidad detectado</li>
+              <li>Identifica posibles lesiones como microaneurismas o hemorragias</li>
+            </ul>
+            <p className="mt-4">
+              <strong className="text-slate-200">Es importante que sepas que:</strong>
+            </p>
+            <ul className="space-y-2 ml-4 list-disc list-outside">
+              <li>Los resultados son <strong className="text-slate-200">orientativos</strong>, no un diagnóstico definitivo</li>
+              <li>La inteligencia artificial <strong className="text-slate-200">no reemplaza</strong> la valoración de un médico</li>
+              <li>El médico es quien debe interpretar y validar los resultados</li>
+            </ul>
+          </section>
+
+          <div className="border-t border-slate-700/50" />
+
+          {/* 7. Tus derechos */}
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-4">7. Tus Derechos (ARCO)</h2>
+            <p className="mb-4">
+              Tienes derecho a:
             </p>
             <ul className="space-y-2 ml-4 list-disc list-outside">
               <li><strong className="text-slate-200">Acceso:</strong> conocer qué datos personales tenemos sobre ti</li>
@@ -110,54 +176,23 @@ export function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
 
           <div className="border-t border-slate-700/50" />
 
-          {/* 6. Medidas de seguridad */}
+          {/* 8. Cuánto guardamos tus datos */}
           <section>
-            <h2 className="text-xl font-semibold text-white mb-4">6. Medidas de Seguridad</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">8. Cuánto Guardamos tus Datos</h2>
             <p>
-              RetiScan implementa medidas de seguridad técnicas y administrativas para proteger
-              tus datos personales, incluyendo encriptación de datos en tránsito y en reposo,
-              controles de acceso restringido, y auditorías periódicas de seguridad.
+              Conservamos tu información mientras tu cuenta esté activa en la plataforma.
+              Sieliminas tu cuenta, tus datos serán eliminados de manera segura.
             </p>
           </section>
 
           <div className="border-t border-slate-700/50" />
 
-          {/* 7. Uso de IA */}
+          {/* 9. Dónde se almacenan */}
           <section>
-            <h2 className="text-xl font-semibold text-white mb-4">7. Uso de Inteligencia Artificial</h2>
-            <p className="mb-4">
-              Las imágenes retinianas proporcionadas son procesadas por modelos de inteligencia
-              artificial entrenados para detectar signos de retinopatía diabética. Es importante
-              que sepas que:
-            </p>
-            <ul className="space-y-2 ml-4 list-disc list-outside">
-              <li>Los resultados generados por la IA son orientativos y deben ser interpretados por un profesional certificado</li>
-              <li>La inteligencia artificial asiste en el proceso diagnóstico pero no reemplaza el juicio clínico</li>
-              <li>Los modelos de IA continúan en proceso de validación y mejora continua</li>
-            </ul>
-          </section>
-
-          <div className="border-t border-slate-700/50" />
-
-          {/* 8. Conservación */}
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-4">8. Conservación de Datos</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">9. Dónde se Almacenan los Datos</h2>
             <p>
-              Los datos personales serán conservados mientras el usuario mantenga una cuenta activa
-              en la plataforma, o mientras sea necesario para cumplir con las finalidades descritas
-              en esta política y las obligaciones legales aplicables.
-            </p>
-          </section>
-
-          <div className="border-t border-slate-700/50" />
-
-          {/* 9. Transferencias */}
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-4">9. Transferencias Internacionales</h2>
-            <p>
-              En la actualidad, los datos se procesan en servidores dentro de la República Mexicana.
-              En caso de que se requieran transferencias internacionales en el futuro, se solicitará
-              tu consentimiento previo y se garantizarán las medidas de protección adecuadas.
+              Todos los datos se almacenan en servidores ubicados dentro de la República
+              Mexicana. No se transfieren a otros países.
             </p>
           </section>
 
@@ -165,11 +200,11 @@ export function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
 
           {/* 10. Cookies */}
           <section>
-            <h2 className="text-xl font-semibold text-white mb-4">10. Cookies y Tecnologías de Rastreo</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">10. Cookies</h2>
             <p>
-              RetiScan utiliza cookies y tecnologías similares para mejorar la experiencia del usuario,
-              mantener sesiones activas y analizar el uso de la plataforma. Puedes configurar tus
-              preferencias de cookies desde tu navegador.
+              RetiScan utiliza cookies para mantener tu sesión activa, recordar tus preferencias
+              y mejorar tu experiencia dentro de la plataforma. Puedes configurar las cookies
+              desde tu navegador.
             </p>
           </section>
 
@@ -179,9 +214,9 @@ export function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
           <section>
             <h2 className="text-xl font-semibold text-white mb-4">11. Cambios en esta Política</h2>
             <p>
-              Nos reservamos el derecho de actualizar esta política de privacidad en cualquier momento.
-              Los cambios serán publicados en esta página con la fecha de la última actualización.
-              Te recomendamos revisar periódicamente esta política.
+              Nos reservamos el derecho de actualizar esta política de privacidad en cualquier
+              momento. Los cambios serán publicados en esta página con la fecha de la última
+              actualización. Te recomendamos revisarla periódicamente.
             </p>
           </section>
 
@@ -191,8 +226,8 @@ export function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
           <section>
             <h2 className="text-xl font-semibold text-white mb-4">12. Contacto</h2>
             <p>
-              Si tienes preguntas sobre esta política de privacidad o sobre el tratamiento de tus
-              datos personales, contáctanos a través de:{' '}
+              Si tienes preguntas sobre esta política de privacidad o sobre el tratamiento de
+              tus datos personales, contáctanos a través de:{' '}
               <a href="mailto:retiscan2026@gmail.com" className="text-cyan-400 hover:text-cyan-300 transition-colors">
                 retiscan2026@gmail.com
               </a>

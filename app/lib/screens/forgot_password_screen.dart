@@ -5,13 +5,11 @@ import 'dart:math' as math;
 import '../widgets/glassmorphic_card.dart';
 import '../services/auth_service.dart';
 
-// ══════════════════════════════════════════════════
-//  FORGOT PASSWORD SCREEN
-//  Flujo de 3 pasos:
-//    1. Ingresar correo electrónico
-//    2. Ingresar código OTP que llegó al correo
-//    3. Ingresar y confirmar nueva contraseña
-// ══════════════════════════════════════════════════
+// FORGOT PASSWORD SCREEN
+// Flujo de 3 pasos:
+// 1. Ingresar correo electrónico
+// 2. Ingresar código OTP que llegó al correo
+// 3. Ingresar y confirmar nueva contraseña
 class ForgotPasswordScreen extends StatefulWidget {
   @override
   _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
@@ -80,7 +78,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     super.dispose();
   }
 
-  // ── PASO 1: Enviar correo con OTP ──
+  // PASO 1: Enviar correo con OTP
   Future<void> _sendOtp({bool isResend = false}) async {
     final email = _emailController.text.trim();
     if (email.isEmpty || !email.contains('@')) {
@@ -122,7 +120,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     }
   }
 
-  // ── PASO 2: Validar OTP y pasar a nueva contraseña ──
+  // PASO 2: Validar OTP y pasar a nueva contraseña
   void _verifyOtp() {
     final otp = _otpController.text.trim();
     if (otp.length != 6) {
@@ -134,7 +132,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     setState(() => _currentStep = 2);
   }
 
-  // ── PASO 3: Restablecer contraseña ──
+  // PASO 3: Restablecer contraseña
   Future<void> _resetPassword() async {
     final otp = _otpController.text.trim();
     final email = _emailController.text.trim();
@@ -247,7 +245,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     );
   }
 
-  // ── Logo header idéntico al login ──
+  // Logo header idéntico al login
   Widget _buildLogoHeader() {
     return ScaleTransition(
       scale: _logoAnimation,
@@ -268,7 +266,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
               ],
             ),
             child: Image.asset(
-              'assets/ilustrator/logo_sin_fondo.png',
+              'assets/ilustrator/OJO_RETISCAN.png',
               width: 80, height: 80, fit: BoxFit.contain,
               errorBuilder: (_, __, ___) => Icon(Icons.visibility, size: 60, color: Colors.white),
             ),
@@ -293,7 +291,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     );
   }
 
-  // ── Indicador de los 3 pasos ──
+  // Indicador de los 3 pasos
   Widget _buildStepIndicator() {
     final steps = ['Correo', 'Código', 'Nueva clave'];
     return Row(
@@ -338,7 +336,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     );
   }
 
-  // ── Fondo gradiente ──
+  // Fondo gradiente
   Widget _buildGradientBackground() {
     return Container(
       decoration: BoxDecoration(
@@ -351,7 +349,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     );
   }
 
-  // ── Partículas flotantes ──
+  // Partículas flotantes
   Widget _buildFloatingParticles() {
     return AnimatedBuilder(
       animation: _particleController,
@@ -362,7 +360,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     );
   }
 
-  // ── Helper para campos de texto con estilo glassmorphic ──
+  // Helper para campos de texto con estilo glassmorphic
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -404,7 +402,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     );
   }
 
-  // ── Botón de acción principal ──
+  // Botón de acción principal
   Widget _buildActionButton(String label, VoidCallback onPressed) {
     return SizedBox(
       width: double.infinity,
@@ -424,7 +422,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     );
   }
 
-  // ── PASO 1: Card de correo electrónico ──
+  // PASO 1: Card de correo electrónico
   Widget _buildStep1Card() {
     return GlassmorphicCard(
       borderRadius: 24,
@@ -455,7 +453,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     );
   }
 
-  // ── PASO 2: Card de ingreso del OTP ──
+  // PASO 2: Card de ingreso del OTP
   Widget _buildStep2Card() {
     return GlassmorphicCard(
       borderRadius: 24,
@@ -498,7 +496,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     );
   }
 
-  // ── PASO 3: Card de nueva contraseña ──
+  // PASO 3: Card de nueva contraseña
   Widget _buildStep3Card() {
     return GlassmorphicCard(
       borderRadius: 24,
@@ -538,7 +536,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   }
 }
 
-// ── Painter de partículas (reutilizado del login) ──
+// Painter de partículas (reutilizado del login)
 class _ForgotParticlePainter extends CustomPainter {
   final double progress;
   _ForgotParticlePainter(this.progress);

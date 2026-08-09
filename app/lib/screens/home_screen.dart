@@ -5,6 +5,8 @@ import 'history_screen.dart';
 import 'profile_screen.dart';
 import 'settings_screen.dart';
 import 'patient_management_screen.dart';
+import 'retiscan_loading_screen.dart';
+import 'login_screen.dart';
 import '../services/auth_service.dart';
 import '../services/patient_service.dart';
 import '../services/analysis_service.dart';
@@ -14,9 +16,7 @@ import '../widgets/dashboard_charts.dart';
 // Las referencias de color se obtendrán ahora directamente del Theme
 // para soportar tanto modo claro como modo oscuro dinámicamente.
 
-// ══════════════════════════════════════════════
-//  HOME SCREEN (Shell de navegación)
-// ══════════════════════════════════════════════
+// HOME SCREEN (Shell de navegación)
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -26,26 +26,42 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _currentIndex = 0;
   final AuthService _authService = AuthService();
 
-  // ── Pantallas según rol y plataforma ──
+  // Pantallas según rol y plataforma
+  // Callback para navegar entre pantallas desde HomeContent
+  void _navigateToTab(int index) {
+    setState(() => _currentIndex = index);
+  }
+
   List<Widget> _getScreens({required bool isDesktop}) {
     if (_authService.isDoctor) {
-      return [
-        HomeContent(),
-        PatientManagementScreen(),
-        ProfileScreen(),
-      ];
-    } else {
       if (isDesktop) {
         return [
-          HomeContent(),
+          HomeContent(onNavigate: _navigateToTab),
           CaptureScreen(),
-          RecommendationsScreen(),
-          HistoryScreen(),
+          PatientManagementScreen(),
           ProfileScreen(),
+          SettingsScreen(),
         ];
       } else {
         return [
-          HomeContent(),
+          HomeContent(onNavigate: _navigateToTab),
+          CaptureScreen(),
+          PatientManagementScreen(),
+          ProfileScreen(),
+        ];
+      }
+    } else {
+      if (isDesktop) {
+        return [
+          HomeContent(onNavigate: _navigateToTab),
+          RecommendationsScreen(),
+          HistoryScreen(),
+          ProfileScreen(),
+          SettingsScreen(),
+        ];
+      } else {
+        return [
+          HomeContent(onNavigate: _navigateToTab),
           RecommendationsScreen(),
           HistoryScreen(),
           ProfileScreen(),
@@ -54,19 +70,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  // ── Items de navegación ──
+  // Items de navegación
   List<_NavItem> _getNavItems({required bool isDesktop}) {
     if (_authService.isDoctor) {
-      return [
-        _NavItem(Icons.dashboard_outlined, Icons.dashboard, 'Inicio'),
-        _NavItem(Icons.people_outline, Icons.people, 'Pacientes'),
-        _NavItem(Icons.person_outline, Icons.person, 'Perfil'),
-      ];
-    } else {
       if (isDesktop) {
         return [
           _NavItem(Icons.dashboard_outlined, Icons.dashboard, 'Inicio'),
           _NavItem(Icons.camera_alt_outlined, Icons.camera_alt, 'Captura'),
+          _NavItem(Icons.people_outline, Icons.people, 'Pacientes'),
+          _NavItem(Icons.person_outline, Icons.person, 'Perfil'),
+        ];
+      } else {
+        return [
+          _NavItem(Icons.dashboard_outlined, Icons.dashboard, 'Inicio'),
+          _NavItem(Icons.camera_alt_outlined, Icons.camera_alt, 'Captura'),
+          _NavItem(Icons.people_outline, Icons.people, 'Pacientes'),
+          _NavItem(Icons.person_outline, Icons.person, 'Perfil'),
+        ];
+      }
+    } else {
+      if (isDesktop) {
+        return [
+          _NavItem(Icons.dashboard_outlined, Icons.dashboard, 'Inicio'),
           _NavItem(Icons.recommend_outlined, Icons.recommend, 'Recomendaciones'),
           _NavItem(Icons.history_outlined, Icons.history, 'Histórico'),
           _NavItem(Icons.person_outline, Icons.person, 'Perfil'),
@@ -101,9 +126,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // ═══════════════════════════════════════════
-  //  LAYOUT ESCRITORIO (Sidebar + contenido)
-  // ═══════════════════════════════════════════
+  // LAYOUT ESCRITORIO (Sidebar + contenido)
   Widget _buildDesktopLayout(List<Widget> screens, List<_NavItem> navItems) {
     final primaryColor = Theme.of(context).brightness == Brightness.dark 
         ? Theme.of(context).colorScheme.secondary 
@@ -118,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       backgroundColor: bgColor,
       body: Row(
         children: [
-          // ── Sidebar ──
+          // Sidebar
           Container(
             width: 260,
             decoration: BoxDecoration(
@@ -135,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   padding: EdgeInsets.symmetric(horizontal: 24),
                   child: Row(
                     children: [
-                      Image.asset('assets/ilustrator/logo_sin_fondo.png', width: 32, height: 32),
+                      Image.asset('assets/ilustrator/OJO_RETISCAN.png', width: 32, height: 32),
                       SizedBox(width: 12),
                       Text(
                         'RetiScan',
@@ -166,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 SizedBox(height: 40),
-                // ── Nav items ──
+                // Nav items
                 ...navItems.asMap().entries.map((entry) {
                   final i = entry.key;
                   final item = entry.value;
@@ -211,28 +234,45 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Divider(color: Theme.of(context).dividerColor.withOpacity(0.1), indent: 24, endIndent: 24),
                 // Ajustes
                 _buildSidebarFooterItem(Icons.settings_outlined, 'Ajustes', () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => Scaffold(
-                      appBar: AppBar(title: Text('Ajustes'), backgroundColor: cardColor, foregroundColor: textPrimary),
-                      body: SettingsScreen(),
-                    ),
-                  ));
+                  setState(() => _currentIndex = screens.length - 1);
                 }, textSecondary),
                 // Cerrar Sesión
                 _buildSidebarFooterItem(Icons.logout, 'Cerrar Sesión', () {
-                  _authService.logout();
-                  Navigator.of(context).pushReplacementNamed('/');
+                  Navigator.of(context).pushReplacement(
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          RetiScanLoadingScreen(
+                            statusText: 'CERRANDO SESIÓN',
+                            onLoad: () => _authService.logout(),
+                            onNavigate: () => LoginScreen(),
+                          ),
+                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
+                      transitionDuration: Duration(milliseconds: 600),
+                    ),
+                  );
                 }, Theme.of(context).colorScheme.error),
                 SizedBox(height: 24),
               ],
             ),
           ),
-          // ── Contenido principal ──
+          // Contenido principal
           Expanded(
-            child: AnimatedSwitcher(
-              duration: Duration(milliseconds: 300),
-              child: screens[_currentIndex],
-            ),
+            child: _currentIndex == 0
+                ? Scrollbar(
+                    thumbVisibility: true,
+                    child: SingleChildScrollView(
+                      child: AnimatedSwitcher(
+                        duration: Duration(milliseconds: 300),
+                        child: screens[_currentIndex],
+                      ),
+                    ),
+                  )
+                : AnimatedSwitcher(
+                    duration: Duration(milliseconds: 300),
+                    child: screens[_currentIndex],
+                  ),
           ),
         ],
       ),
@@ -262,9 +302,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // ═══════════════════════════════════════════
-  //  LAYOUT MÓVIL (AppBar + BottomNav + FAB)
-  // ═══════════════════════════════════════════
+  // LAYOUT MÓVIL (AppBar + BottomNav + FAB)
   Widget _buildMobileLayout(List<Widget> screens, List<_NavItem> navItems) {
     final primaryColor = Theme.of(context).brightness == Brightness.dark 
         ? Theme.of(context).colorScheme.secondary 
@@ -282,7 +320,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         elevation: 0,
         title: Row(
           children: [
-            Image.asset('assets/ilustrator/logo_sin_fondo.png', width: 28, height: 28),
+            Image.asset('assets/ilustrator/OJO_RETISCAN.png', width: 28, height: 28),
             SizedBox(width: 10),
             Text(
               'RetiScan',
@@ -324,74 +362,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         duration: Duration(milliseconds: 300),
         child: screens[_currentIndex],
       ),
-      // FAB central (Imagen 1)
-      floatingActionButton: _authService.isDoctor ? null : FloatingActionButton(
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => CaptureScreen()));
-        },
-        backgroundColor: primaryColor,
-        elevation: 8,
-        shape: CircleBorder(),
-        child: Icon(Icons.camera_alt, color: Theme.of(context).colorScheme.onPrimary, size: 28),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      // Bottom Nav simple y directo
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.08))),
-        ),
-        child: BottomAppBar(
-          color: cardColor,
-          elevation: 0,
-          shape: _authService.isDoctor ? null : CircularNotchedRectangle(),
-        notchMargin: 8,
-        child: SizedBox(
-          height: 60,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              ...navItems.asMap().entries.map((entry) {
-                final i = entry.key;
-                final item = entry.value;
-                final isSelected = _currentIndex == i;
-                // Insertar espacio en el medio para el FAB solo si no es doctor
-                final middleIndex = navItems.length ~/ 2;
-                final widgets = <Widget>[];
-                if (!_authService.isDoctor && i == middleIndex) {
-                  widgets.add(SizedBox(width: 48)); // Espacio para el FAB
-                }
-                widgets.add(
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => setState(() => _currentIndex = i),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            isSelected ? item.activeIcon : item.icon,
-                            color: isSelected ? primaryColor : textSecondary,
-                            size: 24,
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            item.label,
-                            style: TextStyle(
-                              color: isSelected ? primaryColor : textSecondary,
-                              fontSize: 10,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-                return widgets;
-              }).expand((w) => w),
-            ],
-          ),
-        ),
-      ),
+      // TODO: FAB central - Pendiente de implementación futura
+      // floatingActionButton: _authService.isDoctor
+      //     ? FloatingActionButton(
+      //         onPressed: () {
+      //           Navigator.push(context, MaterialPageRoute(builder: (_) => CaptureScreen()));
+      //         },
+      //         backgroundColor: primaryColor,
+      //         elevation: 8,
+      //         shape: CircleBorder(),
+      //         child: Icon(Icons.camera_alt, color: Theme.of(context).colorScheme.onPrimary, size: 28),
+      //       )
+      //     : null,
+      // floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      // Animated Bottom Nav - Estilo Meniscus
+      bottomNavigationBar: AnimatedBottomNav(
+        currentIndex: _currentIndex,
+        items: navItems,
+        onTap: (index) => setState(() => _currentIndex = index),
+        activeColor: primaryColor,
+        inactiveColor: textSecondary,
+        backgroundColor: cardColor,
       ),
     );
   }
@@ -405,10 +396,177 @@ class _NavItem {
   _NavItem(this.icon, this.activeIcon, this.label);
 }
 
-// ══════════════════════════════════════════════
-//  HOME CONTENT (Dashboard principal)
-// ══════════════════════════════════════════════
+// Animated Bottom Navigation Bar - Estilo Meniscus
+class AnimatedBottomNav extends StatelessWidget {
+  final int currentIndex;
+  final List<_NavItem> items;
+  final Function(int) onTap;
+  final Color activeColor;
+  final Color inactiveColor;
+  final Color backgroundColor;
+
+  const AnimatedBottomNav({
+    Key? key,
+    required this.currentIndex,
+    required this.items,
+    required this.onTap,
+    required this.activeColor,
+    required this.inactiveColor,
+    required this.backgroundColor,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.fromLTRB(24, 0, 24, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+           // Barra principal con íconos + labels integrados
+           Container(
+             height: 60,
+             padding: EdgeInsets.symmetric(horizontal: 16),
+             decoration: BoxDecoration(
+               color: backgroundColor,
+               borderRadius: BorderRadius.circular(30),
+               boxShadow: [
+                 BoxShadow(
+                   color: Colors.black.withOpacity(0.2),
+                   blurRadius: 24,
+                   offset: Offset(0, 8),
+                 ),
+               ],
+             ),
+             child: Row(
+               mainAxisAlignment: MainAxisAlignment.spaceAround,
+               children: List.generate(items.length, (index) {
+                 final item = items[index];
+                 final isSelected = currentIndex == index;
+                 return GestureDetector(
+                   onTap: () => onTap(index),
+                   behavior: HitTestBehavior.opaque,
+                    child: SizedBox(
+                      width: 56,
+                      height: 60,
+                     child: Stack(
+                       clipBehavior: Clip.none,
+                       alignment: Alignment.center,
+                       children: [
+                          // Glow circular (solo visible cuando está seleccionado)
+                          AnimatedPositioned(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                            top: isSelected ? 6 : 14,
+                           child: AnimatedOpacity(
+                             duration: Duration(milliseconds: 250),
+                             opacity: isSelected ? 1.0 : 0.0,
+                             child: Container(
+                               width: 44,
+                               height: 44,
+                               decoration: BoxDecoration(
+                                 shape: BoxShape.circle,
+                                 color: Colors.transparent,
+                                 boxShadow: [
+                                   BoxShadow(
+                                     color: activeColor.withOpacity(0.4),
+                                     blurRadius: 10,
+                                     spreadRadius: 0,
+                                   ),
+                                   BoxShadow(
+                                     color: activeColor.withOpacity(0.2),
+                                     blurRadius: 20,
+                                     spreadRadius: 2,
+                                   ),
+                                 ],
+                               ),
+                             ),
+                           ),
+                         ),
+                          // Ícono (se mueve hacia arriba cuando está seleccionado)
+                          AnimatedPositioned(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                            top: isSelected ? 6 : 14,
+                           child: AnimatedOpacity(
+                             duration: Duration(milliseconds: 200),
+                             opacity: isSelected ? 1.0 : 0.0,
+                             child: AnimatedContainer(
+                               duration: Duration(milliseconds: 200),
+                               padding: EdgeInsets.all(6),
+                               decoration: isSelected
+                                   ? BoxDecoration(
+                                       color: activeColor,
+                                       shape: BoxShape.circle,
+                                     )
+                                   : null,
+                               child: Icon(
+                                 item.activeIcon,
+                                 color: Colors.white,
+                                 size: 22,
+                               ),
+                             ),
+                           ),
+                         ),
+                          // Label (visible cuando NO está seleccionado)
+                          AnimatedPositioned(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                            top: isSelected ? 12 : 14,
+                           child: AnimatedOpacity(
+                             duration: Duration(milliseconds: 200),
+                             opacity: isSelected ? 0.0 : 1.0,
+                             child: Text(
+                               item.label,
+                               style: TextStyle(
+                                 color: inactiveColor,
+                                 fontSize: 11,
+                                 fontWeight: FontWeight.w600,
+                               ),
+                             ),
+                           ),
+                         ),
+                       ],
+                     ),
+                   ),
+                 );
+               }),
+             ),
+           ),
+         ],
+      ),
+    );
+  }
+}
+
+// Widget individual de cada tab (ya no se usa, integrado en AnimatedBottomNav)
+class _NavItemWidget extends StatelessWidget {
+  final _NavItem item;
+  final bool isSelected;
+  final Color activeColor;
+  final Color inactiveColor;
+  final VoidCallback onTap;
+
+  const _NavItemWidget({
+    Key? key,
+    required this.item,
+    required this.isSelected,
+    required this.activeColor,
+    required this.inactiveColor,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.shrink();
+  }
+}
+
+// HOME CONTENT (Dashboard principal)
 class HomeContent extends StatefulWidget {
+  final Function(int)? onNavigate;
+
+  const HomeContent({this.onNavigate});
+
   @override
   _HomeContentState createState() => _HomeContentState();
 }
@@ -574,115 +732,183 @@ class _HomeContentState extends State<HomeContent>
     final isDoctor = user?.isDoctor ?? false;
     final userName = _realName ?? user?.fullName ?? user?.email ?? 'Usuario';
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    final hPadding = isMobile ? 16.0 : 24.0;
-
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 900),
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 24),
-            child: SizedBox(
-              width: double.infinity,
-              child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isDesktop = constraints.maxWidth >= 1000;
+          if (isDesktop) {
+            return _buildDesktopContent(userName, isDoctor);
+          }
+          return _buildMobileContent(userName, isDoctor);
+        },
+      ),
+    );
+  }
+
+  // LAYOUT MÓVIL (< 1000px) — Columna vertical
+  Widget _buildMobileContent(String userName, bool isDoctor) {
+    final hPadding = MediaQuery.of(context).size.width < 600 ? 16.0 : 24.0;
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 900),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 24),
+          child: SizedBox(
+            width: double.infinity,
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Tarjeta de bienvenida ──
                 _animated(0, _buildWelcomeCard(context, userName, isDoctor)),
                 SizedBox(height: 24),
-
-                // ── Stats Row ──
                 _animated(1, _buildStatsRow(context, isDoctor)),
                 SizedBox(height: 28),
-
-                // ── Gráfico de análisis ──
                 _animated(2, _buildChartCard(context, isDoctor)),
                 SizedBox(height: 28),
-
-                // ── Listas contextuales ──
-                if (isDoctor) ...[
-                  _animated(3, _buildSectionTitle('Pacientes Recientes')),
-                  SizedBox(height: 12),
-                  if (_isLoadingPatients)
-                    _animated(4, Center(child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(),
-                    )))
-                  else if (_recentPatients.isEmpty)
-                    _animated(4, Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Center(child: Text('No hay pacientes registrados aún.', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)))),
-                    ))
-                  else
-                    ..._recentPatients.map((p) {
-                      final name = p.fullName ?? '—';
-                      final date = p.lastVisit != null
-                          ? '${p.lastVisit!.day} ${_monthName(p.lastVisit!.month)} ${p.lastVisit!.year}'
-                          : 'Sin visitas';
-                      return _animated(4, _buildPatientCard(name, 'Activo', date));
-                    }).toList(),
-                ] else ...[
-                  _animated(3, _buildSectionTitle('Últimos Análisis')),
-                  SizedBox(height: 12),
-                  if (_isLoadingAnalyses)
-                    _animated(4, Center(child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(),
-                    )))
-                  else if (_patientAnalyses.isEmpty)
-                    _animated(4, Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Center(child: Text('Aún no tienes análisis.', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)))),
-                    ))
-                  else
-                    ..._patientAnalyses.take(3).map((a) {
-                      final grade = a.aiResult?['grade'] ?? 'Normal';
-                      final date = '${a.createdAt.day} ${_monthName(a.createdAt.month)} ${a.createdAt.year}';
-                      return _animated(4, _buildAnalysisCard(date, grade));
-                    }).toList(),
-                ],
+                _buildListSection(isDoctor),
                 SizedBox(height: 28),
-
-                // ── Acciones rápidas ──
-                _animated(5, _buildSectionTitle('Acciones Rápidas')),
-                SizedBox(height: 12),
-                if (isDoctor) ...[
-                  _animated(5, _buildQuickAction(Icons.person_add_outlined, 'Registrar nuevo paciente', () {
-                    final cardColor = Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface;
-                    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
-                      appBar: AppBar(title: Text('Gestión de Pacientes'), backgroundColor: cardColor, foregroundColor: textPrimary),
-                      body: PatientManagementScreen(),
-                    )));
-                  })),
-                  _animated(5, _buildQuickAction(Icons.assignment_outlined, 'Revisar diagnósticos', () {
-                    final cardColor = Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface;
-                    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
-                      appBar: AppBar(title: Text('Gestión de Pacientes'), backgroundColor: cardColor, foregroundColor: textPrimary),
-                      body: PatientManagementScreen(),
-                    )));
-                  })),
-                ] else ...[
-                  _animated(5, _buildQuickAction(Icons.camera_alt_outlined, 'Realizar nueva captura', () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => CaptureScreen()));
-                  })),
-                  _animated(5, _buildQuickAction(Icons.calendar_today_outlined, 'Programar próxima revisión', () {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Esta función de calendario pronto estará lista')));
-                  })),
-                ],
+                _buildQuickActionsSection(isDoctor),
                 SizedBox(height: 24),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  // LAYOUT ESCRITORIO (>= 1000px) — 2 columnas
+  Widget _buildDesktopContent(String userName, bool isDoctor) {
+  return Padding(
+    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _animated(0, _buildWelcomeCard(context, userName, isDoctor)),
+        SizedBox(height: 28),
+        _animated(1, _buildStatsRow(context, isDoctor)),
+        SizedBox(height: 32),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 55,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _animated(2, _buildChartCard(context, isDoctor)),
+                  SizedBox(height: 28),
+                  _buildQuickActionsSection(isDoctor),
+                ],
+              ),
+              ),
+            SizedBox(width: 28),
+            Expanded(
+              flex: 45,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildListSection(isDoctor),
+                ],
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 24),
+      ],
     ),
   );
 }
+
+  // Secciones reutilizables
+  Widget _buildListSection(bool isDoctor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _animated(3, _buildSectionTitle(isDoctor ? 'Pacientes Recientes' : 'Últimos Análisis')),
+        SizedBox(height: 12),
+        if (isDoctor) ...[
+          if (_isLoadingPatients)
+            _animated(4, Center(child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(),
+            )))
+          else if (_recentPatients.isEmpty)
+            _animated(4, Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: Text('No hay pacientes registrados aún.', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)))),
+            ))
+          else
+            ..._recentPatients.map((p) {
+              final name = p.fullName ?? '—';
+              final date = p.lastVisit != null
+                  ? '${p.lastVisit!.day} ${_monthName(p.lastVisit!.month)} ${p.lastVisit!.year}'
+                  : 'Sin visitas';
+              return _animated(4, _buildPatientCard(name, 'Activo', date));
+            }).toList(),
+        ] else ...[
+          if (_isLoadingAnalyses)
+            _animated(4, Center(child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(),
+            )))
+          else if (_patientAnalyses.isEmpty)
+            _animated(4, Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: Text('Aún no tienes análisis.', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)))),
+            ))
+          else
+            ..._patientAnalyses.take(3).map((a) {
+              final grade = _translateGrade(a.aiResult?['grade']);
+              final date = '${a.createdAt.day} ${_monthName(a.createdAt.month)} ${a.createdAt.year}';
+              return _animated(4, _buildAnalysisCard(date, grade));
+            }).toList(),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildQuickActionsSection(bool isDoctor) {
+    final actions = <Widget>[];
+
+    if (isDoctor) {
+      actions.add(_animated(5, _buildQuickAction(Icons.camera_alt_outlined, 'Realizar captura de retina', () {
+        widget.onNavigate?.call(1); // Navigate to CaptureScreen (index 1)
+      })));
+      actions.add(_animated(5, _buildQuickAction(Icons.people_outlined, 'Gestionar pacientes', () {
+        widget.onNavigate?.call(2); // Navigate to PatientManagementScreen (index 2)
+      })));
+    } else {
+      actions.add(_animated(5, _buildQuickAction(Icons.history_outlined, 'Ver análisis', () {
+        widget.onNavigate?.call(2); // Navigate to HistoryScreen (index 2)
+      })));
+      actions.add(_animated(5, _buildQuickAction(Icons.recommend_outlined, 'Ver recomendaciones', () {
+        widget.onNavigate?.call(1); // Navigate to RecommendationsScreen (index 1)
+      })));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Acciones Rápidas'),
+        SizedBox(height: 12),
+        ...actions,
+      ],
+    );
+  }
+
+  // Traducción de las enfermedades
+  String _translateGrade(String? grade) {
+    switch (grade) {
+      case 'No_DR': return 'Normal';
+      case 'Mild': return 'Leve';
+      case 'Moderate': return 'Moderado';
+      case 'Severe': return 'Severo';
+      case 'Proliferate_DR': return 'Proliferativa';
+      default: return grade ?? 'Normal';
+    }
+  }
 
   // Convierte número de mes a nombre en español
   String _monthName(int month) {
@@ -700,7 +926,7 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  // ── Tarjeta de bienvenida ──
+  // Tarjeta de bienvenida
   Widget _buildWelcomeCard(BuildContext context, String name, bool isDoctor) {
     final primaryColor = Theme.of(context).brightness == Brightness.dark 
         ? Theme.of(context).colorScheme.secondary 
@@ -732,7 +958,7 @@ class _HomeContentState extends State<HomeContent>
             top: -30,
             child: Opacity(
               opacity: 0.08,
-              child: Image.asset('assets/ilustrator/logo_sin_fondo.png', width: 120, height: 120),
+              child: Image.asset('assets/ilustrator/OJO_RETISCAN.png', width: 120, height: 120),
             ),
           ),
           Column(
@@ -765,11 +991,12 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  // ── Stats Row (contextualizado) ──
+  // Stats Row (contextualizado)
   Widget _buildStatsRow(BuildContext context, bool isDoctor) {
-    if (isDoctor) {
-      final spacing = MediaQuery.of(context).size.width < 600 ? 8.0 : 12.0;
+    final isDesktop = MediaQuery.of(context).size.width >= 1000;
+    final spacing = isDesktop ? 16.0 : (MediaQuery.of(context).size.width < 600 ? 8.0 : 12.0);
 
+    if (isDoctor) {
       return Row(
         children: [
           Expanded(child: _buildStatCard(Icons.people, 'Pacientes', _isLoadingPatients ? '...' : '$_totalPatientsCount')),
@@ -781,12 +1008,10 @@ class _HomeContentState extends State<HomeContent>
       );
     }
     
-    final spacing = MediaQuery.of(context).size.width < 600 ? 8.0 : 12.0;
-    
     // Patient Stats
     final totalAnalyses = _isLoadingAnalyses ? '...' : '${_patientAnalyses.length}';
     final lastStatus = _patientAnalyses.isNotEmpty 
-        ? (_patientAnalyses.first.aiResult?['grade'] ?? 'Normal')
+        ? _translateGrade(_patientAnalyses.first.aiResult?['grade'])
         : '—';
     final nextRev = _patientAnalyses.isNotEmpty 
         ? '${_patientAnalyses.first.createdAt.add(Duration(days: 365)).day} ${_monthName(_patientAnalyses.first.createdAt.add(Duration(days: 365)).month)}'
@@ -838,6 +1063,7 @@ class _HomeContentState extends State<HomeContent>
     final primaryColor = Theme.of(context).brightness == Brightness.dark 
         ? Theme.of(context).colorScheme.secondary 
         : Theme.of(context).colorScheme.primary;
+    final isDesktop = MediaQuery.of(context).size.width >= 1000;
 
     return Container(
       padding: EdgeInsets.all(24),
@@ -868,16 +1094,16 @@ class _HomeContentState extends State<HomeContent>
           ),
           SizedBox(height: 20),
           SizedBox(
-            height: 180,
+            height: isDesktop ? 220 : 180,
             child: DashboardCharts(analyses: isDoctor ? _allDoctorAnalyses : _patientAnalyses),
           ),
           SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildLegendDot(Colors.cyanAccent, isDoctor ? 'Normales' : 'Análisis'),
+              _buildLegendDot(Colors.yellow, isDoctor ? 'Normales' : 'Análisis'),
               SizedBox(width: 24),
-              _buildLegendDot(Colors.pinkAccent, isDoctor ? 'Con hallazgos' : 'Hallazgos'),
+              _buildLegendDot(Colors.green, isDoctor ? 'Con hallazgos' : 'Hallazgos'),
             ],
           ),
         ],
@@ -895,7 +1121,7 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  // ── Títulos de sección ──
+  // Títulos de sección
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
@@ -953,7 +1179,7 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  // ── Tarjeta de paciente (doctor) ──
+  // Tarjeta de paciente (doctor)
   Widget _buildPatientCard(String name, String status, String date) {
     final statusColor = status == 'Normal' ? Color(0xFF04B5A2)
         : status == 'Leve' ? Color(0xFFFEB33B)
@@ -998,7 +1224,7 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  // ── Acciones rápidas ──
+  // Acciones rápidas
   Widget _buildQuickAction(IconData icon, String text, VoidCallback onTap) {
     final primaryColor = Theme.of(context).brightness == Brightness.dark 
         ? Theme.of(context).colorScheme.secondary 

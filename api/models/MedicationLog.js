@@ -1,9 +1,7 @@
 const pool = require('../config/database');
 
 const MedicationLog = {
-    /**
-     * Registrar una toma de medicamento.
-     */
+    // Registra una toma de medicamento. next_dose_at es cuándo toca la siguiente.
     async create({ recommendationId, nextDoseAt }) {
         const result = await pool.query(
             `INSERT INTO medication_logs (recommendation_id, taken_at, next_dose_at)
@@ -14,9 +12,7 @@ const MedicationLog = {
         return result.rows[0];
     },
 
-    /**
-     * Historial de tomas de una recomendación/medicamento.
-     */
+    // Historial de tomas de una recomendación/medicamento (más recientes primero).
     async findByRecommendation(recommendationId, limit = 20) {
         const result = await pool.query(
             `SELECT * FROM medication_logs

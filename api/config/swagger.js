@@ -31,7 +31,7 @@ const options = {
                 },
             },
             schemas: {
-                // ── Auth ───────────────────────────────────────────────────────────
+                // Auth:
                 DoctorRegisterRequest: {
                     type: 'object',
                     required: ['firstName', 'paternalSurname', 'email', 'password', 'licenseNumber'],
@@ -47,7 +47,7 @@ const options = {
                         phone: { type: 'string', maxLength: 20, example: '+521234567890' },
                     },
                 },
-                // ── Users ──────────────────────────────────────────────────────────
+                // Users:
                 RegisterRequest: {
                     type: 'object',
                     required: ['email', 'firstName', 'paternalSurname', 'password'],
@@ -90,7 +90,7 @@ const options = {
                         user: { $ref: '#/components/schemas/User' },
                     },
                 },
-                // ── Patients ──────────────────────────────────────────────────────────────────
+                // Patients:
                 PatientRequest: {
                     type: 'object',
                     required: ['firstName', 'paternalSurname'],
@@ -119,7 +119,7 @@ const options = {
                         updated_at: { type: 'string', format: 'date-time' },
                     },
                 },
-                // ── Analysis ───────────────────────────────────────────────────────
+                // Analysis:
                 AnalysisRequest: {
                     type: 'object',
                     required: ['patientId', 'eye'],
@@ -161,7 +161,7 @@ const options = {
                         updated_at: { type: 'string', format: 'date-time' },
                     },
                 },
-                // ── AI Processing Log ──────────────────────────────────────────────
+                // AI Processing Log:
                 AIProcessingLog: {
                     type: 'object',
                     properties: {
@@ -172,8 +172,7 @@ const options = {
                         status: { type: 'string', enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'], nullable: true },
                     },
                 },
-                // ── Generic ────────────────────────────────────────────────────────
-                // ── Doctors ──────────────────────────────────────────────────────
+                // Doctors:
                 DoctorProfileRequest: {
                     type: 'object',
                     required: ['licenseNumber'],
@@ -197,8 +196,7 @@ const options = {
                         created_at: { type: 'string', format: 'date-time' },
                     },
                 },
-                // ── Generic ────────────────────────────────────────────────────────
-                // ── Recommendations ────────────────────────────────────────────────
+                // Recommendations:
                 RecommendationRequest: {
                     type: 'object',
                     required: ['patientId', 'type', 'title'],

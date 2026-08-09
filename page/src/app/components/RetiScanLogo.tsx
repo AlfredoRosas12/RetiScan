@@ -77,7 +77,7 @@ export function RetiScanLogo({
                 </defs>
             )}
 
-            {/* ===== SCANNER BRACKETS ===== */}
+            {/* SCANNER BRACKETS */}
             {/* Top-left bracket */}
             <g className={animateScan ? 'scan-bracket scan-tl' : ''}>
                 <path d="M 15 10 L 15 35" stroke={color} strokeWidth="10" strokeLinecap="square" />
@@ -102,7 +102,7 @@ export function RetiScanLogo({
                 <path d="M 185 180 L 155 180" stroke={color} strokeWidth="10" strokeLinecap="square" />
             </g>
 
-            {/* ===== EYE SHAPE (diamond-like outline) ===== */}
+            {/* EYE SHAPE (diamond-like outline) */}
             <path
                 d="M 100 40 C 140 40, 170 65, 185 95 C 170 125, 140 150, 100 150 C 60 150, 30 125, 15 95 C 30 65, 60 40, 100 40 Z"
                 stroke={color}
@@ -110,7 +110,7 @@ export function RetiScanLogo({
                 fill="none"
             />
 
-            {/* ===== OUTER IRIS RING ===== */}
+            {/* OUTER IRIS RING */}
             <circle
                 cx="100"
                 cy="95"
@@ -121,7 +121,7 @@ export function RetiScanLogo({
                 className={animatePulse ? 'iris-animate' : ''}
             />
 
-            {/* ===== INNER IRIS / PUPIL ===== */}
+            {/* INNER IRIS / PUPIL */}
             {/* Dark pupil base */}
             <circle
                 cx="100"
@@ -150,7 +150,7 @@ export function RetiScanLogo({
                 className={animatePulse ? 'highlight-animate' : ''}
             />
 
-            {/* ===== RETISCAN TEXT ===== */}
+            {/* RETISCAN TEXT */}
             <text
                 x="100"
                 y="210"

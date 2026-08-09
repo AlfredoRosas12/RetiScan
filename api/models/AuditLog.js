@@ -1,14 +1,8 @@
 const pool = require('../config/database');
 
 const AuditLog = {
-    /**
-     * Crea un nuevo registro de auditoría.
-     * @param {string} userId - ID del usuario que realizó la acción
-     * @param {string} action - Acción realizada (ej. 'CREATE', 'UPDATE', 'SOFT_DELETE')
-     * @param {string} entity - Entidad afectada (ej. 'PATIENT')
-     * @param {string} entityId - ID del registro afectado
-     * @param {object} details - Detalles adicionales (en JSON)
-     */
+    // Registra una acción en la tabla de auditoría. Si falla el INSERT,
+    // no detenemos el flujo principal: solo avisamos y regresamos null.
     async log(userId, action, entity, entityId, details = {}) {
         try {
             const result = await pool.query(
@@ -20,7 +14,6 @@ const AuditLog = {
             return result.rows[0];
         } catch (error) {
             console.error('Error al guardar el log de auditoría:', error);
-            // No lanzamos el error para no bloquear el flujo principal
             return null;
         }
     }

@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 
 class InputSanitizer {
-  // ── Formateadores (bloquean en tiempo real) ──────────────────
+  // Formateadores (bloquean en tiempo real)
 
   /// Solo letras (a-z A-Z), acentos (áéíóúñ) y espacios.
   /// Ideal para: Nombre, Apellido Paterno, Apellido Materno.
@@ -24,7 +24,7 @@ class InputSanitizer {
     RegExp(r"[';<>`]"),
   );
 
-  // ── Validadores (retornan mensaje de error o null) ──────────
+  // Validadores (retornan mensaje de error o null)
 
   /// Valida que sea un nombre válido: 2-50 caracteres, solo letras.
   static String? validateName(String? value, {String campo = 'Este campo'}) {

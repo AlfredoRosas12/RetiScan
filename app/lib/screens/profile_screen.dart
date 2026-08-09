@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:another_flushbar/flushbar.dart';
-import '../widgets/responsive_wrapper.dart';
 import '../services/auth_service.dart';
 import '../services/patient_service.dart';
 import '../models/patient.dart';
@@ -62,7 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.dispose();
   }
 
-  // ── Cambiar contraseña ───────────────────────────────────────────────────
+  // Cambiar contraseña
 
   Future<void> _showChangePasswordDialog() async {
     final newCtrl = TextEditingController();
@@ -280,31 +279,81 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
+  // Build
 
   @override
   Widget build(BuildContext context) {
     final user = _authService.currentUser;
-
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: ResponsiveWrapper(
-        maxWidth: 900,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(20),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isDesktop = constraints.maxWidth >= 1000;
+          if (isDesktop) return _buildDesktopContent(user);
+          return _buildMobileContent(user);
+        },
+      ),
+    );
+  }
+
+  // Layout Móvil
+
+  Widget _buildMobileContent(user) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(20),
+      child: Column(
+        children: [
+          ScaleTransition(
+            scale: _scaleAnimation,
+            child: _buildHeader(user),
+          ),
+          SizedBox(height: 32),
+          _buildDesktopInfoTable(user),
+          SizedBox(height: 16),
+          _buildDesktopSecuritySection(),
+          SizedBox(height: 16),
+          _buildDesktopRoleSection(user?.role ?? 'PACIENTE'),
+          SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  // Layout Escritorio (2 columnas)
+
+  Widget _buildDesktopContent(user) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 1100),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 32, vertical: 28),
           child: Column(
             children: [
               ScaleTransition(
                 scale: _scaleAnimation,
                 child: _buildHeader(user),
               ),
-              SizedBox(height: 32),
-              _buildInfoSection(user),
-              SizedBox(height: 16),
-              _buildPasswordSection(),
-              SizedBox(height: 16),
-              _buildRoleCard(user?.role ?? 'PACIENTE'),
-              SizedBox(height: 20),
+              SizedBox(height: 28),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 55,
+                    child: _buildDesktopInfoTable(user),
+                  ),
+                  SizedBox(width: 24),
+                  Expanded(
+                    flex: 45,
+                    child: Column(
+                      children: [
+                        _buildDesktopSecuritySection(),
+                        SizedBox(height: 16),
+                        _buildDesktopRoleSection(user?.role ?? 'PACIENTE'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -312,7 +361,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Header con avatar de iniciales ───────────────────────────────────────
+  // Header con avatar de iniciales
 
   Widget _buildHeader(user) {
     final name = _patientData?.fullName ?? user?.fullName ?? user?.name ?? user?.email ?? '';
@@ -407,12 +456,13 @@ class _ProfileScreenState extends State<ProfileScreen>
     return text.isNotEmpty ? text[0].toUpperCase() : '?';
   }
 
-  // ── Sección de información ───────────────────────────────────────────────
+  // Sección de información
 
   Widget _buildInfoSection(user) {
     return _sectionCard(
       title: 'Información de Cuenta',
       icon: Icons.person_outline,
+      accentColor: Colors.blue,
       children: [
         _infoRow(
           icon: Icons.email_outlined,
@@ -445,12 +495,13 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Sección de contraseña ────────────────────────────────────────────────
+  // Sección de contraseña
 
   Widget _buildPasswordSection() {
     return _sectionCard(
       title: 'Seguridad',
       icon: Icons.security_outlined,
+      accentColor: Colors.orange,
       children: [
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -509,7 +560,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Tarjeta de rol ───────────────────────────────────────────────────────
+  // Tarjeta de rol
 
   Widget _buildRoleCard(String role) {
     final isDoctor = role == 'MEDICO';
@@ -527,6 +578,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     return _sectionCard(
       title: 'Rol en el sistema',
       icon: Icons.verified_user_outlined,
+      accentColor: isDoctor ? Colors.blue : Colors.green,
       children: [
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -566,55 +618,71 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // Helpers
 
   Widget _sectionCard({
     required String title,
     required IconData icon,
     required List<Widget> children,
+    Color? accentColor,
   }) {
+    final accent = accentColor ?? Theme.of(context).colorScheme.primary;
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: Theme.of(context).dividerColor.withOpacity(0.5)),
+          color: Theme.of(context).dividerColor.withOpacity(0.5),
+        ),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 12,
-              offset: Offset(0, 4)),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(16, 14, 16, 10),
-            child: Row(
-              children: [
-                Icon(icon,
-                    size: 16,
-                    color: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.color
-                        ?.withOpacity(0.6)),
-                SizedBox(width: 6),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.color
-                        ?.withOpacity(0.6),
-                    letterSpacing: 0.5,
+          Container(
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(color: accent, width: 4),
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
+              ),
+            ),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 14, 16, 10),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: accent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(icon, size: 16, color: accent),
                   ),
-                ),
-              ],
+                  SizedBox(width: 10),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.6),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Divider(height: 1),
@@ -667,6 +735,297 @@ class _ProfileScreenState extends State<ProfileScreen>
                             .bodyLarge
                             ?.color)),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Desktop Table Methods
+
+  Widget _buildDesktopInfoTable(user) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildTableHeader('Información de Cuenta', Icons.person_outline, Colors.blue),
+          _buildInfoTableRow(
+            icon: Icons.email_outlined,
+            label: 'Correo Electrónico',
+            value: user?.email ?? '—',
+            accentColor: Colors.blue,
+          ),
+          _buildInfoTableRow(
+            icon: Icons.badge_outlined,
+            label: 'Nombre completo',
+            value: _patientData?.fullName ?? user?.fullName ?? user?.name ?? '—',
+            accentColor: Colors.blue,
+          ),
+          if (user?.role == 'PACIENTE') ...[
+            _buildInfoTableRow(
+              icon: Icons.phone_outlined,
+              label: 'Teléfono',
+              value: _isLoadingPatient ? 'Cargando...' : (_patientData?.phone ?? '—'),
+              accentColor: Colors.blue,
+            ),
+            _buildInfoTableRow(
+              icon: Icons.wc_outlined,
+              label: 'Género',
+              value: _isLoadingPatient ? 'Cargando...' : (_patientData?.gender ?? '—'),
+              accentColor: Colors.blue,
+              isLast: true,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableHeader(String title, IconData icon, Color accentColor) {
+    final headerStyle = TextStyle(
+      color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6) ?? Colors.grey,
+      fontWeight: FontWeight.w700,
+      fontSize: 11,
+      letterSpacing: 0.8,
+    );
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            accentColor.withOpacity(0.08),
+            accentColor.withOpacity(0.03),
+          ],
+        ),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+        ),
+        border: Border(bottom: BorderSide(color: accentColor.withOpacity(0.12))),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: accentColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: accentColor),
+          ),
+          SizedBox(width: 10),
+          Text(title.toUpperCase(), style: headerStyle),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoTableRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color accentColor,
+    bool isLast = false,
+  }) {
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    final textSecondary = Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7) ?? Colors.grey;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: InkWell(
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            border: isLast ? null : Border(
+              bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.06)),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [accentColor, accentColor.withOpacity(0.6)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(color: accentColor.withOpacity(0.3), blurRadius: 6, offset: Offset(0, 2)),
+                  ],
+                ),
+                child: Center(
+                  child: Icon(icon, color: Colors.white, size: 18),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: TextStyle(fontSize: 12, color: textSecondary)),
+                    SizedBox(height: 2),
+                    Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textPrimary)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopSecuritySection() {
+    final accentColor = Colors.orange;
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    final textSecondary = Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7) ?? Colors.grey;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildTableHeader('Seguridad', Icons.security_outlined, accentColor),
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: InkWell(
+              onTap: _showChangePasswordDialog,
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 200),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [accentColor, accentColor.withOpacity(0.6)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(color: accentColor.withOpacity(0.3), blurRadius: 6, offset: Offset(0, 2)),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(Icons.lock_outline, color: Colors.white, size: 16),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Contraseña', style: TextStyle(fontSize: 12, color: textSecondary)),
+                          SizedBox(height: 2),
+                          Text('••••••••', style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 2, color: textPrimary)),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF2563EB).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text('Cambiar', style: TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2563EB))),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopRoleSection(String role) {
+    final isDoctor = role == 'MEDICO';
+    final Color color = isDoctor ? Colors.blue : Colors.green;
+    final IconData icon = isDoctor ? Icons.medical_services_outlined : Icons.person_outline;
+    final String label = isDoctor ? 'Médico' : 'Paciente';
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    final textSecondary = Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7) ?? Colors.grey;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildTableHeader('Rol en el sistema', Icons.verified_user_outlined, color),
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: InkWell(
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 200),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [color, color.withOpacity(0.6)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(color: color.withOpacity(0.3), blurRadius: 6, offset: Offset(0, 2)),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(icon, color: Colors.white, size: 16),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Rol asignado', style: TextStyle(fontSize: 12, color: textSecondary)),
+                          SizedBox(height: 2),
+                          Text(label, style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold, color: color)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],

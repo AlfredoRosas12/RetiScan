@@ -4,7 +4,7 @@ const User = require('../models/User');
 
 const userController = {
 
-    /** GET /api/users/profile  (requiere autenticación) */
+    // GET /api/users/profile
     async getProfile(req, res, next) {
         try {
             const user = await userService.getProfile(req.user.id);
@@ -14,7 +14,7 @@ const userController = {
         }
     },
 
-    /** PUT /api/users/profile  (requiere autenticación) */
+    // PUT /api/users/profile
     async updateProfile(req, res, next) {
         try {
             const updated = await userService.update(req.user.id, req.body);
@@ -24,7 +24,7 @@ const userController = {
         }
     },
 
-    /** DELETE /api/users/:id  (requiere autenticación) */
+    // DELETE /api/users/:id
     async deleteUser(req, res, next) {
         try {
             await userService.delete(req.params.id);
@@ -34,7 +34,7 @@ const userController = {
         }
     },
 
-    /** PUT /api/users/change-password  (requiere autenticación) */
+    // PUT /api/users/change-password
     async changePassword(req, res, next) {
         try {
             const { newPassword, otp } = req.body;
@@ -42,9 +42,9 @@ const userController = {
                 return res.status(400).json({ error: 'newPassword debe tener al menos 6 caracteres' });
             }
 
-            // Exigir OTP si no es un cambio forzado y el usuario sí tiene un correo
+            // Si el cambio no es forzado (contraseña temporal) y el usuario tiene
+            // correo registrado, exigimos un OTP para confirmar que es él.
             if (!req.user.mustChangePassword) {
-                // Consultar si el usuario tiene email registrado
                 const fullUser = await User.findById(req.user.id);
                 if (fullUser && fullUser.email) {
                     if (!otp) {

@@ -3,12 +3,8 @@ const Patient = require('../models/Patient');
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
 
-/**
- * Genera un username único para el paciente en formato: nombre.apellido#XXXX
- * @param {string} fullName
- * @param {string} lastName
- * @returns {string}
- */
+// Username en formato nombre.apellido#XXXX.
+// Quitamos acentos y caracteres raros para que sirva como login.
 function buildPatientUsername(fullName, lastName) {
     const normalize = (str) =>
         (str || '')
@@ -24,14 +20,8 @@ function buildPatientUsername(fullName, lastName) {
 }
 
 const patientService = {
-    /**
-     * Crea un paciente y genera automáticamente una cuenta de usuario (PACIENTE).
-     * Devuelve el paciente, la cuenta de usuario y la contraseña temporal.
-     *
-     * @param {{ fullName, lastName, middleName, birthDate, phone }} data
-     * @param {string} doctorId - ID del médico autenticado
-     * @returns {{ patient, patientUser, tempPassword }}
-     */
+    // Crea el paciente + su cuenta de usuario (PACIENTE) con contraseña temporal.
+    // Regresa las tres cosas para que el controller las arme en la respuesta.
     async create(data, doctorId) {
         const { firstName, paternalSurname, maternalSurname } = data;
 
@@ -41,7 +31,7 @@ const patientService = {
             throw err;
         }
 
-        // 1. Generar username único (nombre.apellido#XXXX con reintentos)
+        // 1. Generamos un username único; si choca, intentamos de nuevo
         let username;
         let attempts = 0;
         do {
@@ -54,10 +44,10 @@ const patientService = {
             }
         } while (await User.findByUsername(username));
 
-        // 2. Generar contraseña temporal segura
+        // 2. Contraseña temporal segura (12 caracteres alfanuméricos)
         const tempPassword = crypto.randomBytes(9).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12);
 
-        // 3. Crear cuenta de usuario para el paciente (users ya no usa campo name)
+        // 3. Cuenta de usuario (sin email; el paciente lo agrega en su primer login)
         const patientUser = await User.create({
             username,
             email: null,
@@ -66,7 +56,7 @@ const patientService = {
             mustChangePassword: true,
         });
 
-        // 4. Crear expediente del paciente (sin birthDate ni phone — el paciente los llena al primer login)
+        // 4. Expediente del paciente (fecha de nacimiento y teléfono los llena él)
         const patient = await Patient.create({
             firstName,
             paternalSurname,
@@ -77,7 +67,7 @@ const patientService = {
             userId: patientUser.id,
         });
 
-        // Registrar auditoría silente
+        // Auditoría silenciosa del alta
         await AuditLog.log(doctorId, 'CREATE', 'PATIENT', patient.id, {
             firstName,
             paternalSurname,
@@ -88,23 +78,13 @@ const patientService = {
     },
 
 
-    /**
-     * Lista todos los pacientes del médico autenticado (aislamiento multi-tenant).
-     * @param {string} doctorId
-     * @param {number} page
-     * @param {number} limit
-     * @param {string} search
-     */
+    // Lista de pacientes del médico autenticado (aislamiento multi-tenant).
     async getAll(doctorId, page = 1, limit = 50, search = '') {
         const offset = (page - 1) * limit;
         return Patient.findAllByDoctor(doctorId, limit, offset, search);
     },
 
-    /**
-     * Obtiene un paciente por UUID, verificando propiedad del médico.
-     * @param {string} id
-     * @param {string} doctorId
-     */
+    // Paciente por UUID, validando que pertenezca al médico.
     async getById(id, doctorId) {
         const patient = await Patient.findByIdAndDoctor(id, doctorId);
         if (!patient) {
@@ -115,10 +95,7 @@ const patientService = {
         return patient;
     },
 
-    /**
-     * Obtiene el registro de paciente del usuario autenticado (vista PACIENTE).
-     * @param {string} userId
-     */
+    // Registro de paciente del usuario autenticado (vista PACIENTE).
     async getMyRecord(userId) {
         const patient = await Patient.findByUserId(userId);
         if (!patient) {
@@ -129,12 +106,8 @@ const patientService = {
         return patient;
     },
 
-    /**
-     * Actualiza el perfil del paciente por sí mismo (primer login).
-     * Solo puede modificar: birthDate, gender, email, phone.
-     * @param {string} userId
-     * @param {{ birthDate, gender, email, phone }} fields
-     */
+    // El paciente completa su perfil en el primer login.
+    // Solo se permiten: birthDate, gender, email, phone.
     async updateMyProfile(userId, fields) {
         const patient = await Patient.findByUserId(userId);
         if (!patient) {
@@ -143,7 +116,7 @@ const patientService = {
             throw err;
         }
 
-        // ── Validación Precoz: correo duplicado ──────────────────────
+        // Validamos temprano si el correo ya lo usa otra cuenta
         if (fields.email) {
             if (fields.email.length > 255) {
                 const err = new Error('El correo electrónico excede el límite de caracteres permitido.');
@@ -165,7 +138,7 @@ const patientService = {
             phone: fields.phone,
         });
 
-        // Aseguramos que el correo también se guarde en la cuenta principal de usuario del paciente
+        // El correo también debe quedar en la cuenta principal del usuario
         if (fields.email) {
             await User.updateById(userId, { email: fields.email });
         }
@@ -179,14 +152,9 @@ const patientService = {
         return updated;
     },
 
-    /**
-     * Actualiza los datos del paciente (con validación de propiedad).
-     * @param {string} id
-     * @param {string} doctorId
-     * @param {object} fields
-     */
+    // Actualiza datos del paciente (con validación de propiedad).
     async update(id, doctorId, fields) {
-        // Verificar existencia y propiedad
+        // Verificar que exista y que sea de este médico
         await patientService.getById(id, doctorId);
         const updated = await Patient.updateByIdAndDoctor(id, doctorId, fields);
         if (!updated) {
@@ -195,17 +163,12 @@ const patientService = {
             throw err;
         }
 
-        // Registrar auditoría
         await AuditLog.log(doctorId, 'UPDATE', 'PATIENT', id, fields);
 
         return updated;
     },
 
-    /**
-     * Elimina un paciente (solo si pertenece al médico). Cascada en análisis y logs en BD.
-     * @param {string} id
-     * @param {string} doctorId
-     */
+    // Elimina un paciente (solo si pertenece al médico). Cascada en análisis y logs en BD.
     async delete(id, doctorId) {
         const deleted = await Patient.deleteByIdAndDoctor(id, doctorId);
         if (!deleted) {
@@ -214,7 +177,6 @@ const patientService = {
             throw err;
         }
 
-        // Registrar auditoría
         await AuditLog.log(doctorId, 'SOFT_DELETE', 'PATIENT', id);
 
         return deleted;

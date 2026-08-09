@@ -3,10 +3,7 @@ const bcrypt = require('bcryptjs');
 const env = require('../config/env');
 
 const User = {
-    /**
-     * Crea un nuevo usuario con contraseña hasheada.
-     * @param {{ username, email, name, plainPassword, role, mustChangePassword, subscriptionEndDate }} data
-     */
+    // Crea un usuario nuevo, hasheando la contraseña antes de guardarla.
     async create({ username, email, plainPassword, role, mustChangePassword = false, subscriptionEndDate = null }) {
         const passwordHash = await bcrypt.hash(plainPassword, env.BCRYPT_SALT_ROUNDS);
         const result = await pool.query(
@@ -18,7 +15,7 @@ const User = {
         return result.rows[0];
     },
 
-    /** Busca un usuario por email (incluye password_hash para auth). */
+    // Por email; incluimos password_hash y los campos de intentos para el auth.
     async findByEmail(email) {
         const result = await pool.query(
             'SELECT *, failed_attempts, locked_until FROM users WHERE email = $1',
@@ -27,7 +24,7 @@ const User = {
         return result.rows[0] || null;
     },
 
-    /** Busca un usuario por username (incluye password_hash para auth). */
+    // Por username; misma lógica que findByEmail.
     async findByUsername(username) {
         const result = await pool.query(
             'SELECT *, failed_attempts, locked_until FROM users WHERE username = $1',
@@ -36,7 +33,7 @@ const User = {
         return result.rows[0] || null;
     },
 
-    /** Busca un usuario por UUID (excluye password_hash). */
+    // Por UUID; aquí NO regresamos el hash para no exponerlo.
     async findById(id) {
         const result = await pool.query(
             'SELECT id, username, email, role, must_change_password, is_verified, subscription_end_date, failed_attempts, locked_until, created_at, updated_at FROM users WHERE id = $1',
@@ -45,10 +42,8 @@ const User = {
         return result.rows[0] || null;
     },
 
-    /**
-     * Actualiza campos permitidos del usuario.
-     * Soporta: email, name, role, password, subscription_end_date, is_verified
-     */
+    // Actualiza solo los campos que se envíen (email, role, verificación,
+    // suscripción o contraseña). La contraseña siempre se hashea de nuevo.
     async updateById(id, fields) {
         const setClauses = [];
         const values = [];
@@ -78,11 +73,7 @@ const User = {
         return result.rows[0] || null;
     },
 
-    /**
-     * Cambia la contraseña del usuario y borra la bandera must_change_password.
-     * @param {string} id
-     * @param {string} newPlainPassword
-     */
+    // Cambia la contraseña y de paso limpia la bandera de "debes cambiarla".
     async changePassword(id, newPlainPassword) {
         const hash = await bcrypt.hash(newPlainPassword, env.BCRYPT_SALT_ROUNDS);
         const result = await pool.query(
@@ -95,7 +86,7 @@ const User = {
         return result.rows[0] || null;
     },
 
-    /** Elimina un usuario permanentemente. */
+    // Elimina un usuario permanentemente.
     async deleteById(id) {
         const result = await pool.query(
             'DELETE FROM users WHERE id = $1 RETURNING id',
@@ -104,12 +95,12 @@ const User = {
         return result.rows[0] || null;
     },
 
-    /** Compara una contraseña en texto plano contra el hash almacenado. */
+    // Compara contraseña en texto plano contra el hash guardado.
     async comparePassword(plainPassword, hash) {
         return bcrypt.compare(plainPassword, hash);
     },
 
-    /** Incrementa intentos fallidos. Si llega a 5, bloquea por 15 min. */
+    // Sube el contador de intentos fallidos. Al llegar a 5, bloquea 5 minutos.
     async incrementFailedAttempts(userId) {
         const result = await pool.query(
             `UPDATE users 
@@ -122,7 +113,7 @@ const User = {
         return result.rows[0];
     },
 
-    /** Resetea contador tras login exitoso. */
+    // Devuelve el contador a cero tras un login exitoso.
     async resetFailedAttempts(userId) {
         await pool.query(
             'UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = $1',

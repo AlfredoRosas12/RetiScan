@@ -103,7 +103,7 @@ router.post('/refresh', loginLimiter, authController.refresh);
  */
 router.post('/logout', authMiddleware, authController.logout);
 
-// ── Verificación de email (médico) — SIN JWT ──────────────────────────────
+// Verificación de email (médico) — SIN JWT
 /**
  * @swagger
  * /auth/verify-email:
@@ -125,7 +125,7 @@ router.post('/logout', authMiddleware, authController.logout);
  */
 router.get('/verify-email', verificationController.verifyEmail);
 
-// ── OTP para pacientes — Con JWT ─────────────────────────────────────────
+// OTP para pacientes — con JWT
 
 /**
  * @swagger

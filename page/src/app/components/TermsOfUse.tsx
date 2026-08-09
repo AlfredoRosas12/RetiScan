@@ -37,44 +37,56 @@ export function TermsOfUse({ onBack }: TermsOfUseProps) {
 
           <div className="border-t border-slate-700/50" />
 
-          {/* 2. Descripción del servicio */}
+          {/* 2. Qué es RetiScan */}
           <section>
-            <h2 className="text-xl font-semibold text-white mb-4">2. Descripción del Servicio</h2>
-            <p className="mb-4">RetiScan es una herramienta de apoyo diagnóstico basada en inteligencia artificial que ofrece:</p>
-            <ul className="space-y-2 ml-4 list-disc list-outside">
-              <li>Análisis de imágenes retinianas para la detección de signos de retinopatía diabética</li>
-              <li>Generación de reportes orientativos de hallazgos clínicos</li>
-              <li>Clasificación de severidad según criterios ETDRS</li>
-              <li>Dispositivo médico clase II conforme a la normativa aplicable</li>
-            </ul>
-          </section>
-
-          <div className="border-t border-slate-700/50" />
-
-          {/* 3. Elegibilidad */}
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-4">3. Elegibilidad</h2>
-            <p>
-              RetiScan está diseñado para ser utilizado exclusivamente por profesionales de la salud
-              con licencia médica activa. El registro requiere la verificación de credenciales
-              profesionales antes de otorgar acceso completo a la plataforma.
-            </p>
-          </section>
-
-          <div className="border-t border-slate-700/50" />
-
-          {/* 4. Registro */}
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-4">4. Registro de Cuenta</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">2. Qué es RetiScan</h2>
             <p className="mb-4">
-              Para utilizar RetiScan, debes crear una cuenta proporcionando información veraz y actualizada.
-              Los datos solicitados durante el registro incluyen nombre completo, correo electrónico,
-              número de licencia médica, especialidad, institución y teléfono de contacto.
+              RetiScan es una herramienta de apoyo diagnóstico basada en inteligencia artificial
+              que ofrece:
             </p>
-            <p>
-              Eres responsable de mantener la confidencialidad de tus credenciales de acceso y de
-              todas las actividades que ocurran bajo tu cuenta.
+            <ul className="space-y-2 ml-4 list-disc list-outside">
+              <li>Análisis de imágenes de retina para detectar posibles signos de retinopatía diabética</li>
+              <li>Clasificación del grado de severidad detectado</li>
+              <li>Identificación de posibles lesiones como microaneurismas, hemorragias o exudados</li>
+              <li>Generación de reportes orientativos de cada análisis</li>
+            </ul>
+            <p className="mt-3">
+              RetiScan es una aplicación web (PWA) que funciona desde el navegador, sin necesidad
+              de descargar una aplicación.
             </p>
+          </section>
+
+          <div className="border-t border-slate-700/50" />
+
+          {/* 3. Quién puede usarlo */}
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-4">3. Quién Puede Usar RetiScan</h2>
+            <p className="mb-3">
+              RetiScan está dirigido a:
+            </p>
+            <ul className="space-y-2 ml-4 list-disc list-outside">
+              <li><strong className="text-slate-200">Médicos:</strong> profesionales de la salud con licencia que pueden registrar pacientes, capturar imágenes y obtener análisis</li>
+              <li><strong className="text-slate-200">Pacientes:</strong> usuarios creados por un médico que pueden ver sus análisis y recomendaciones</li>
+            </ul>
+            <p className="mt-3">
+              El registro de médicos se realiza a través de nuestra página web con verificación
+              de credenciales profesionales.
+            </p>
+          </section>
+
+          <div className="border-t border-slate-700/50" />
+
+          {/* 4. Cómo funciona */}
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-4">4. Cómo Funciona</h2>
+            <p className="mb-4">El proceso es sencillo:</p>
+            <ul className="space-y-2 ml-4 list-disc list-outside">
+              <li>El médico captura o sube una imagen de la retina del paciente</li>
+              <li>La inteligencia artificial verifica que la imagen sea clara y esté bien enfocada</li>
+              <li>El sistema analiza la imagen buscando señales de retinopatía diabética</li>
+              <li>Se genera un resultado con el grado de severidad y las lesiones detectadas</li>
+              <li>El médico revisa el resultado y toma sus decisiones clínicas</li>
+            </ul>
           </section>
 
           <div className="border-t border-slate-700/50" />
@@ -84,10 +96,10 @@ export function TermsOfUse({ onBack }: TermsOfUseProps) {
             <h2 className="text-xl font-semibold text-white mb-4">5. Uso Aceptable</h2>
             <p className="mb-4">Al utilizar RetiScan, te comprometes a:</p>
             <ul className="space-y-2 ml-4 list-disc list-outside">
-              <li>Utilizar el servicio únicamente para fines profesionales legítimos</li>
-              <li>No utilizar los resultados como diagnóstico definitivo sin supervisión clínica</li>
+              <li>Usar el servicio únicamente para fines profesionales legítimos</li>
+              <li>No utilizar los resultados como único diagnóstico sin supervisión clínica</li>
               <li>No intentar acceder indebidamente a cuentas de otros usuarios</li>
-              <li>No utilizar el servicio para fines diferentes a su propósito diseñado</li>
+              <li>Capturar solo imágenes de pacientes bajo tu atención</li>
               <li>Cumplir con todas las leyes y regulaciones aplicables</li>
             </ul>
           </section>
@@ -98,10 +110,10 @@ export function TermsOfUse({ onBack }: TermsOfUseProps) {
           <section>
             <h2 className="text-xl font-semibold text-white mb-4">6. Propiedad Intelectual</h2>
             <p>
-              Todo el contenido, código fuente, modelos de IA, diseños y materiales de RetiScan
-              son propiedad de sus desarrolladores y están protegidos por las leyes de propiedad
-              intelectual aplicables. No está permitido copiar, modificar o distribuir ningún
-              elemento sin autorización expresa.
+              Todo el contenido, código fuente, modelos de inteligencia artificial, algoritmos de
+              análisis, diseños y materiales de RetiScan son propiedad de sus desarrolladores y
+              están protegidos por las leyes de propiedad intelectual aplicables. No está permitido
+              copiar, modificar o distribuir ningún elemento sin autorización expresa.
             </p>
           </section>
 
@@ -110,13 +122,13 @@ export function TermsOfUse({ onBack }: TermsOfUseProps) {
           {/* 7. Descargo de responsabilidad */}
           <section>
             <h2 className="text-xl font-semibold text-white mb-4">7. Descargo de Responsabilidad</h2>
-            <p className="mb-4">Es fundamental que entiendas que:</p>
+            <p className="mb-4">Es importante que entiendas que:</p>
             <ul className="space-y-2 ml-4 list-disc list-outside">
               <li>Los resultados generados por RetiScan son <strong className="text-slate-200">orientativos</strong>, no definitivos</li>
               <li>El servicio <strong className="text-slate-200">no sustituye</strong> la consulta con un oftalmólogo certificado</li>
               <li>RetiScan <strong className="text-slate-200">no está destinado</strong> para emergencias médicas</li>
-              <li>La precisión diagnóstica puede variar según la calidad de la imagen proporcionada</li>
-              <li>Los profesionales de salud son responsables de validar los resultados antes de tomar decisiones clínicas</li>
+              <li>La precisión puede variar según la calidad de la imagen proporcionada</li>
+              <li>El profesional de salud es responsable de validar los resultados antes de tomar decisiones clínicas</li>
             </ul>
           </section>
 
@@ -126,17 +138,17 @@ export function TermsOfUse({ onBack }: TermsOfUseProps) {
           <section>
             <h2 className="text-xl font-semibold text-white mb-4">8. Disponibilidad del Servicio</h2>
             <p>
-              Nos esforzamos por mantener RetiScan disponible de forma continua, pero no garantizamos
-              la disponibilidad ininterrumpida. Nos reservamos el derecho de realizar mantenimientos
-              programados o suspender el servicio temporalmente por razones técnicas.
+              Nos esforzamos por mantener RetiScan disponible de forma continua, pero no
+              garantizamos la disponibilidad ininterrumpida. Nos reservamos el derecho de realizar
+              mantenimientos programados o suspender el servicio temporalmente por razones técnicas.
             </p>
           </section>
 
           <div className="border-t border-slate-700/50" />
 
-          {/* 9. Modificaciones */}
+          {/* 9. Cambios */}
           <section>
-            <h2 className="text-xl font-semibold text-white mb-4">9. Modificaciones a los Términos</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">9. Cambios en los Términos</h2>
             <p>
               Nos reservamos el derecho de modificar estos Términos de Uso en cualquier momento.
               Las modificaciones serán efectivas una vez publicadas en esta página. El uso continuado
@@ -158,22 +170,9 @@ export function TermsOfUse({ onBack }: TermsOfUseProps) {
 
           <div className="border-t border-slate-700/50" />
 
-          {/* 11. Limitación */}
+          {/* 11. Ley aplicable */}
           <section>
-            <h2 className="text-xl font-semibold text-white mb-4">11. Limitación de Responsabilidad</h2>
-            <p>
-              En la máxima medida permitida por la ley, RetiScan no será responsable por daños
-              indirectos, incidentales o consecuentes derivados del uso o la imposibilidad de usar
-              el servicio, incluyendo pero no limitado a pérdidas de datos, diagnósticos incorrectos
-              o interrupciones del servicio.
-            </p>
-          </section>
-
-          <div className="border-t border-slate-700/50" />
-
-          {/* 12. Ley aplicable */}
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-4">12. Ley Aplicable</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">11. Ley Aplicable</h2>
             <p>
               Estos Términos de Uso se rigen por las leyes de los Estados Unidos Mexicanos.
               Cualquier controversia será resuelta por los tribunales competentes en la jurisdicción
@@ -183,9 +182,9 @@ export function TermsOfUse({ onBack }: TermsOfUseProps) {
 
           <div className="border-t border-slate-700/50" />
 
-          {/* 13. Contacto */}
+          {/* 12. Contacto */}
           <section>
-            <h2 className="text-xl font-semibold text-white mb-4">13. Contacto</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">12. Contacto</h2>
             <p>
               Si tienes preguntas sobre estos Términos de Uso, contáctanos a través de:{' '}
               <a href="mailto:retiscan2026@gmail.com" className="text-cyan-400 hover:text-cyan-300 transition-colors">

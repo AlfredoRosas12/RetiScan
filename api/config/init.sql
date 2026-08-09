@@ -1,15 +1,13 @@
 -- ============================================================
---  RetiScan SaaS – Database Initialisation Script
---  Run: psql -U postgres -d retiscan_sql -f config/init.sql
+--  RetiScan SaaS - Esquema de base de datos
+--  Ejecutar: psql -U postgres -d retiscan_sql -f config/init.sql
 -- ============================================================
 
 -- 1. Extensiones
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- ─────────────────────────────────────────────
 -- 2. USERS (credenciales de acceso)
--- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
   id                    UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
   username              VARCHAR(50)  NOT NULL UNIQUE,
@@ -25,9 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at            TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────
 -- 3. DOCTORS (perfil profesional del médico)
--- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS doctors (
   id               UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id          UUID         NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
@@ -43,9 +39,7 @@ CREATE TABLE IF NOT EXISTS doctors (
   updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────
 -- 4. PATIENTS (expediente clínico)
--- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS patients (
   id               UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
   doctor_id        UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -59,14 +53,13 @@ CREATE TABLE IF NOT EXISTS patients (
   phone            VARCHAR(20),
   last_visit       TIMESTAMPTZ,
   total_analyses   INTEGER      NOT NULL DEFAULT 0,
+  health_status    VARCHAR(20)  DEFAULT 'Normal' CHECK (health_status IN ('Normal', 'Leve', 'Moderado', 'Severo')),
   is_active        BOOLEAN      NOT NULL DEFAULT TRUE,
   created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────
 -- 5. ANALYSES
--- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS analyses (
   id            UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
   patient_id    UUID         NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
@@ -82,9 +75,7 @@ CREATE TABLE IF NOT EXISTS analyses (
   updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────
 -- 6. AI PROCESSING LOGS
--- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS ai_processing_logs (
   task_id      VARCHAR(100) PRIMARY KEY,
   analysis_id  UUID         NOT NULL REFERENCES analyses(id) ON DELETE CASCADE,
@@ -93,9 +84,7 @@ CREATE TABLE IF NOT EXISTS ai_processing_logs (
   status       VARCHAR(20)
 );
 
--- ─────────────────────────────────────────────
 -- 7. VERIFICATIONS (tokens de email y OTP)
--- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS verifications (
   id          UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id     UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -106,19 +95,14 @@ CREATE TABLE IF NOT EXISTS verifications (
   created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────
 -- 8. SECURITY (Lista negra de tokens JWT)
--- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS blacklisted_tokens (
   token        VARCHAR(512) PRIMARY KEY,
   expires_at   TIMESTAMPTZ  NOT NULL,
   created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
-
--- ─────────────────────────────────────────────
 -- 9. AUDIT LOGS (Registro de Actividades)
--- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS audit_logs (
   id           UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id      UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -129,9 +113,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────
--- Índices de Rendimiento
--- ─────────────────────────────────────────────
+-- Índices de rendimiento
 CREATE INDEX IF NOT EXISTS idx_users_username          ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email             ON users(email);
 CREATE INDEX IF NOT EXISTS idx_doctors_user_id         ON doctors(user_id);
@@ -147,9 +129,7 @@ CREATE INDEX IF NOT EXISTS idx_verifications_token     ON verifications(token);
 -- Índice GIN para consultas JSONB sobre ai_result
 CREATE INDEX IF NOT EXISTS idx_analyses_ai_result      ON analyses USING GIN (ai_result);
 
--- ─────────────────────────────────────────────
 -- 10. REFRESH TOKENS (Sesiones)
--- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id           UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id      UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -162,9 +142,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);
 
--- ─────────────────────────────────────────────
 -- 11. RECOMMENDATIONS (Recomendaciones y medicamentos)
--- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS recommendations (
   id               UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
   patient_id       UUID         NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
@@ -183,9 +161,7 @@ CREATE TABLE IF NOT EXISTS recommendations (
 CREATE INDEX IF NOT EXISTS idx_recommendations_patient ON recommendations(patient_id);
 CREATE INDEX IF NOT EXISTS idx_recommendations_active  ON recommendations(patient_id, is_active);
 
--- ─────────────────────────────────────────────
 -- 12. MEDICATION LOGS (Historial de tomas)
--- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS medication_logs (
   id                UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
   recommendation_id UUID         NOT NULL REFERENCES recommendations(id) ON DELETE CASCADE,

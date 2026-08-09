@@ -14,9 +14,9 @@ function errorMiddleware(err, req, res, next) {
 
     console.error(`[Error] ${req.method} ${req.path} — ${err.message}`);
 
-    // ── Interceptor de Errores de PostgreSQL ──────────────────────────
-    // Los errores de PG tienen un campo `code` numérico como string.
-    // Mapeamos los más comunes a mensajes humanos y profesionales.
+    // Interceptor de errores de PostgreSQL:
+    // los errores de PG traen un campo `code` numérico (string de 5 chars).
+    // Mapeamos los más comunes a mensajes entendibles para el usuario.
     if (err.code && typeof err.code === 'string' && err.code.length === 5) {
         const pgMessage = mapPostgresError(err);
         if (pgMessage) {
@@ -27,7 +27,7 @@ function errorMiddleware(err, req, res, next) {
         }
     }
 
-    // ── Errores de la Aplicación (con statusCode) ─────────────────────
+    // Errores de la aplicación (con statusCode)
     const statusCode = err.statusCode || 500;
 
     return res.status(statusCode).json({
@@ -43,7 +43,7 @@ function errorMiddleware(err, req, res, next) {
  */
 function mapPostgresError(err) {
     switch (err.code) {
-        // ── 23505: Unique Violation ───────────────────────────────────
+        // 23505: unique violation (email, username, cédula...)
         case '23505': {
             const constraint = (err.constraint || '').toLowerCase();
 
@@ -72,21 +72,21 @@ function mapPostgresError(err) {
             };
         }
 
-        // ── 22001: String Data Right Truncation ──────────────────────
+        // 22001: string too long
         case '22001':
             return {
                 status: 400,
                 message: 'Uno de los campos excede el límite de caracteres permitido.',
             };
 
-        // ── 23503: Foreign Key Violation ──────────────────────────────
+        // 23503: foreign key violation
         case '23503':
             return {
                 status: 400,
                 message: 'La referencia a un registro relacionado no es válida.',
             };
 
-        // ── 23502: Not Null Violation ─────────────────────────────────
+        // 23502: not null violation
         case '23502':
             return {
                 status: 400,

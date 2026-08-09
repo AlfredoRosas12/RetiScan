@@ -1,27 +1,25 @@
-# ─────────────────────────────────────────────────────────────
-#  RetiScan API — Dockerfile
-#  Multi-stage build: dependencies → production image
-# ─────────────────────────────────────────────────────────────
+# RetiScan API - Dockerfile
+# Construcción en dos etapas: dependencias en un contenedor temporal
+# y solo lo necesario en la imagen final de producción.
 
-# ── Stage 1: Install dependencies ────────────────────────────
+# Etapa 1: instalamos las dependencias
 FROM node:20-alpine AS deps
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm install --omit=dev
 
-# ── Stage 2: Production image ─────────────────────────────────
+# Etapa 2: imagen final de producción
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Non-root user for security
+# Corremos con un usuario sin privilegios por seguridad
 RUN addgroup -S retiscan && adduser -S retiscan -G retiscan
 
-# Copy only what's needed
+# Copiamos únicamente lo que se necesita
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Ownership
 RUN chown -R retiscan:retiscan /app
 USER retiscan
 

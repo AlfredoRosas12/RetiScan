@@ -3,9 +3,7 @@
 @import './theme.css';
 @import 'lenis/dist/lenis.css';
 
-/* ============================
-   ANIMATED GRADIENT BACKGROUND
-   ============================ */
+/* ANIMATED GRADIENT BACKGROUND */
 @keyframes gradient-shift {
     0% {
         background-position: 0% 50%;
@@ -27,9 +25,7 @@
     transform: translateZ(0);
 }
 
-/* ============================
-   SCROLL PROGRESS BAR
-   ============================ */
+/* SCROLL PROGRESS BAR */
 .scroll-progress {
     position: fixed;
     top: 0;
@@ -41,9 +37,7 @@
     transition: width 0.1s linear;
 }
 
-/* ============================
-   NOISE / GRAIN OVERLAY
-   ============================ */
+/* NOISE / GRAIN OVERLAY */
 .noise-overlay {
     position: relative;
     transform: translateZ(0);
@@ -61,9 +55,7 @@
     background-size: 128px 128px;
 }
 
-/* ============================
-   FLOATING ANIMATION
-   ============================ */
+/* FLOATING ANIMATION */
 @keyframes float {
 
     0%,
@@ -104,9 +96,7 @@
     backface-visibility: hidden;
 }
 
-/* ============================
-   DRAMATIC ENTRANCE KEYFRAMES
-   ============================ */
+/* DRAMATIC ENTRANCE KEYFRAMES */
 @keyframes slide-up-dramatic {
     from {
         opacity: 0;
@@ -205,9 +195,7 @@
     animation-delay: 1.5s;
 }
 
-/* ============================
-   SHIMMER EFFECT ON TEXT
-   ============================ */
+/* SHIMMER EFFECT ON TEXT */
 @keyframes shimmer {
     0% {
         background-position: -200% center;
@@ -223,9 +211,7 @@
     animation: shimmer 3s linear infinite;
 }
 
-/* ============================
-   LOADING SCREEN KEYFRAMES
-   ============================ */
+/* LOADING SCREEN KEYFRAMES */
 @keyframes breathe {
     0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
     50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
@@ -249,9 +235,7 @@
     75% { transform: translateY(-20px) translateX(3px); opacity: 0.7; }
 }
 
-/* ============================
-   FOCUS VISIBLE STYLES
-   ============================ */
+/* FOCUS VISIBLE STYLES */
 :focus-visible {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;

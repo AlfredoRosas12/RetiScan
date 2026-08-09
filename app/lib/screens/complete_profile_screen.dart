@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:another_flushbar/flushbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:math' as math;
 import '../widgets/glassmorphic_card.dart';
 import '../widgets/animated_button.dart';
 import '../services/auth_service.dart';
 import '../services/patient_service.dart';
 import '../config/input_sanitizer.dart';
-import 'login_loading_screen.dart';
+import 'retiscan_loading_screen.dart';
+import 'home_screen.dart';
+import '../painters/particle_painter.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
   @override
@@ -83,7 +84,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen>
     _loadDraft();
   }
 
-  // ── Caché Inteligente ──────────────────────────────────────────────
+  // Caché Inteligente
   static const _kGender    = 'profile_draft_gender';
   static const _kBirthDate = 'profile_draft_birthdate';
   static const _kEmail     = 'profile_draft_email';
@@ -295,7 +296,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen>
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => LoginLoadingScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) => RetiScanLoadingScreen(
+            statusText: 'INICIANDO SESIÓN',
+            onNavigate: () {
+              final user = _authService.currentUser;
+              if (user != null && user.isPatient && !user.isVerified) {
+                return CompleteProfileScreen();
+              }
+              return HomeScreen();
+            },
+          ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -424,7 +434,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen>
                 ],
               ),
               child: Image.asset(
-                'assets/ilustrator/logo_sin_fondo.png',
+                'assets/ilustrator/OJO_RETISCAN.png',
                 width: 70,
                 height: 70,
                 fit: BoxFit.contain,
@@ -770,25 +780,4 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen>
       ),
     );
   }
-}
-
-class ParticlePainter extends CustomPainter {
-  final double animationValue;
-  ParticlePainter(this.animationValue);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
-      ..style = PaintingStyle.fill;
-    for (int i = 0; i < 20; i++) {
-      final x = (size.width * (i * 0.1 + animationValue * 0.5)) % size.width;
-      final y = (size.height * (math.sin(i + animationValue * math.pi * 2) * 0.5 + 0.5));
-      final radius = 2.0 + math.sin(i + animationValue * math.pi) * 2;
-      canvas.drawCircle(Offset(x, y), radius, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(ParticlePainter oldDelegate) => true;
 }

@@ -10,7 +10,7 @@ build/
 
 # Secrets and Environment
 .env
-.env.*
+.env.production
 *.pem
 
 # Logs
