@@ -46,6 +46,15 @@ const env = {
     // URLs de las apps para armar links en correos
     APP_URL: process.env.APP_URL || 'http://localhost:3000',
     LANDING_URL: process.env.LANDING_URL || 'http://localhost:5174',
+    PWA_URL: process.env.PWA_URL || 'http://localhost:5174',
+    API_URL: process.env.API_URL || 'http://localhost:3000',
+    STORAGE_URL: process.env.STORAGE_URL || 'http://localhost:9000',
+
+    // Dominio para cookies / CORS
+    DOMAIN: process.env.DOMAIN || 'localhost',
+
+    // Logo para emails (Cloudinary)
+    LOGO_URL: process.env.LOGO_URL || '',
 };
 
 module.exports = env;

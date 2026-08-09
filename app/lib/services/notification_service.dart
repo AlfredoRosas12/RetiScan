@@ -1,9 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize() async {
+    // En web no hay inicialización de notificaciones locales
+    if (kIsWeb) {
+      return;
+    }
+
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     
@@ -22,6 +28,11 @@ class NotificationService {
   }
 
   static Future<void> showNotification({required int id, required String title, required String body}) async {
+    // En web no hay notificaciones locales
+    if (kIsWeb) {
+      return;
+    }
+
     const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'retiscan_channel_id',
       'Notificaciones de Retiscan',

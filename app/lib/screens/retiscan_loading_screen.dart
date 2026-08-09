@@ -2,19 +2,24 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
-import 'home_screen.dart';
-import 'complete_profile_screen.dart';
-import '../services/auth_service.dart';
 
-class LoginLoadingScreen extends StatefulWidget {
+class RetiScanLoadingScreen extends StatefulWidget {
+  final String statusText;
+  final Future<void> Function()? onLoad;
+  final Widget Function() onNavigate;
+
+  const RetiScanLoadingScreen({
+    required this.statusText,
+    this.onLoad,
+    required this.onNavigate,
+  });
+
   @override
-  _LoginLoadingScreenState createState() => _LoginLoadingScreenState();
+  _RetiScanLoadingScreenState createState() => _RetiScanLoadingScreenState();
 }
 
-class _LoginLoadingScreenState extends State<LoginLoadingScreen>
+class _RetiScanLoadingScreenState extends State<RetiScanLoadingScreen>
     with TickerProviderStateMixin {
-  final AuthService _authService = AuthService();
-
   late AnimationController _logoController;
   late AnimationController _glitchController;
   late AnimationController _scanRingsController;
@@ -104,24 +109,19 @@ class _LoginLoadingScreenState extends State<LoginLoadingScreen>
     setState(() => _showProgress = true);
     _startProgressAnimation();
 
-    final user = _authService.currentUser;
+    if (widget.onLoad != null) {
+      await widget.onLoad!();
+    }
 
     await Future.delayed(Duration(milliseconds: 2800));
 
     _fadeOutController.forward();
     await Future.delayed(Duration(milliseconds: 500));
 
-    Widget nextScreen;
-    if (user != null && user.isPatient && !user.isVerified) {
-      nextScreen = CompleteProfileScreen();
-    } else {
-      nextScreen = HomeScreen();
-    }
-
     if (mounted) {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => nextScreen,
+          pageBuilder: (context, animation, secondaryAnimation) => widget.onNavigate(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -399,7 +399,7 @@ class _LoginLoadingScreenState extends State<LoginLoadingScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'INICIANDO SESIÓN',
+                widget.statusText,
                 style: TextStyle(
                   fontSize: 9,
                   color: Colors.white.withOpacity(0.4),

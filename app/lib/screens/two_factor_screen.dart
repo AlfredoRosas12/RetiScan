@@ -4,7 +4,9 @@ import 'package:another_flushbar/flushbar.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'login_screen.dart';
-import 'login_loading_screen.dart';
+import 'retiscan_loading_screen.dart';
+import 'home_screen.dart';
+import 'complete_profile_screen.dart';
 import '../widgets/glassmorphic_card.dart';
 import '../services/auth_service.dart';
 import '../painters/particle_painter.dart';
@@ -196,7 +198,16 @@ class _TwoFactorScreenState extends State<TwoFactorScreen>
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                LoginLoadingScreen(),
+                RetiScanLoadingScreen(
+                  statusText: 'INICIANDO SESIÓN',
+                  onNavigate: () {
+                    final user = _authService.currentUser;
+                    if (user != null && user.isPatient && !user.isVerified) {
+                      return CompleteProfileScreen();
+                    }
+                    return HomeScreen();
+                  },
+                ),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);

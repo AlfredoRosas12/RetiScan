@@ -1,0 +1,72 @@
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-all font-family="Arial, Helvetica, sans-serif" />
+      <mj-text font-size="14px" color="#333333" line-height="1.6" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f0f2f5">
+
+    <!-- Header -->
+    <mj-section background-color="#17387A" padding="32px 0 28px 0">
+      <mj-column>
+        <mj-image src="{{logoUrl}}" width="48px" alt="RetiScan" padding="0 0 12px 0" />
+        <mj-text align="center" font-size="24px" font-weight="bold" color="#ffffff" padding="0 0 4px 0">
+          RetiScan
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#8BD6FD" padding="0" letter-spacing="1px">
+          DETECCIÓN DE RETINOPATÍA DIABÉTICA CON IA
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Card -->
+    <mj-section background-color="#ffffff" border-radius="12px" padding="40px 32px 32px 32px">
+      <mj-column>
+        <!-- Línea decorativa -->
+        <mj-divider border-color="#02B4F5" border-width="3px" border-style="solid" width="60px" padding="0 0 28px 0" />
+
+        <mj-text align="center" font-size="20px" font-weight="bold" color="#17387A" padding="0 0 12px 0">
+          Inicio de sesión seguro
+        </mj-text>
+        <mj-text align="center" font-size="14px" color="#666666" padding="0 0 28px 0" line-height="1.7">
+          Hola <strong style="color:#333333">{{name}}</strong>, hemos detectado un intento de inicio de sesión.<br/>
+          Ingresa este código para verificar tu identidad:
+        </mj-text>
+
+        <!-- Caja OTP -->
+        <mj-section background-color="#f8f9fa" border="1px solid #e0e3e8" border-radius="10px" padding="24px 16px">
+          <mj-column>
+            <mj-text align="center" font-size="46px" font-weight="bold" color="#17387A" letter-spacing="16px" padding="0">
+              {{otp}}
+            </mj-text>
+            <mj-text align="center" font-size="11px" color="#999999" padding="10px 0 0 0" letter-spacing="0.5px">
+              CÓDIGO VÁLIDO POR 15 MINUTOS
+            </mj-text>
+          </mj-column>
+        </mj-section>
+
+        <!-- Aviso -->
+        <mj-section background-color="#f8f9fa" border-left="4px solid #02B4F5" border-radius="6px" padding="0">
+          <mj-column>
+            <mj-text font-size="13px" color="#666666" padding="14px 18px">
+              Si tú no intentaste iniciar sesión, te recomendamos cambiar tu contraseña de inmediato.
+            </mj-text>
+          </mj-column>
+        </mj-section>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section padding="28px 0 0 0">
+      <mj-column>
+        <mj-divider border-color="#dde0e4" border-width="1px" padding="0 0 16px 0" />
+        <mj-text align="center" font-size="11px" color="#aaaaaa" padding="0" line-height="1.6">
+          RetiScan – Detección de Retinopatía Diabética con IA<br/>
+          Este es un correo generado automáticamente. No respondas a este mensaje.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+  </mj-body>
+</mjml>

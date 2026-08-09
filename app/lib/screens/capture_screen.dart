@@ -454,21 +454,7 @@ class _CaptureScreenState extends State<CaptureScreen>
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
-        leading: Navigator.canPop(context)
-            ? IconButton(
-                icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyLarge?.color),
-                onPressed: () => Navigator.pop(context),
-              )
-            : null,
-        title: isDesktop
-            ? SizedBox.shrink()
-            : Text(
-                'Captura de Retina',
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+        title: SizedBox.shrink(),
       ),
       body: AnimatedSwitcher(
         duration: Duration(milliseconds: 500),
@@ -482,162 +468,195 @@ class _CaptureScreenState extends State<CaptureScreen>
   }
 
   Widget _buildCaptureOptions() {
-    return ResponsiveWrapper(
-      maxWidth: 800,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            SizedBox(height: 40),
-            AnimatedBuilder(
-              animation: _pulseAnimation,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _pulseAnimation.value,
-                  child: Container(
-                    padding: EdgeInsets.all(40),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Theme.of(context).brightness == Brightness.dark
-                            ? Color(0xFF2D385E).withOpacity(0.1)
-                            : Colors.blueAccent.withOpacity(0.05),
-                          Theme.of(context).colorScheme.primary.withOpacity(0.1),
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(height: isMobile ? 28 : 24),
+        AnimatedBuilder(
+          animation: _pulseAnimation,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: _pulseAnimation.value,
+              child: Container(
+                padding: EdgeInsets.all(isMobile ? 28 : 40),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).brightness == Brightness.dark
+                        ? Color(0xFF2D385E).withOpacity(0.1)
+                        : Colors.blueAccent.withOpacity(0.05),
+                      Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                      blurRadius: 30,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.camera_alt,
+                  size: isMobile ? 60 : 80,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            );
+          },
+        ),
+        SizedBox(height: isMobile ? 32 : 40),
+        Text(
+          _authService.isDoctor
+              ? 'Selecciona el paciente y la opción para capturar\nla imagen de retina'
+              : 'Selecciona una opción para capturar\nla imagen de tu retina',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+            fontSize: isMobile ? 14 : 16,
+            height: 1.5,
+          ),
+        ),
+        SizedBox(height: isMobile ? 28 : 24),
+        // Selector de paciente (para médicos)
+        if (_authService.isDoctor && widget.patientId == null) ...[
+          Container(
+            constraints: BoxConstraints(maxWidth: 400),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+            ),
+            child: _isLoadingPatients
+                ? Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                        SizedBox(width: 10),
+                        Text('Cargando pacientes...', style: TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                  )
+                : DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedPatientId,
+                      hint: Row(
+                        children: [
+                          Icon(Icons.person_outline, size: 18, color: Theme.of(context).colorScheme.primary),
+                          SizedBox(width: 10),
+                          Text('Seleccionar Paciente', style: TextStyle(fontSize: 14)),
                         ],
                       ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                          blurRadius: 30,
-                          spreadRadius: 5,
+                      isExpanded: true,
+                      items: _patients.map((p) {
+                        return DropdownMenuItem<String>(
+                          value: p.id,
+                          child: Text(
+                            p.fullName,
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                              fontSize: 14,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedPatientId = val;
+                        });
+                      },
+                    ),
+                  ),
+          ),
+          SizedBox(height: isMobile ? 20 : 16),
+        ],
+        // Selector de ojo
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+          ),
+          child: isMobile
+              ? Column(
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.visibility, size: 18, color: Theme.of(context).colorScheme.primary),
+                        SizedBox(width: 10),
+                        Text(
+                          'Ojo a capturar:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                          ),
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.camera_alt,
-                      size: 80,
-                      color: Theme.of(context).colorScheme.primary,
+                    SizedBox(height: 8),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildEyeOption('LEFT', 'Izquierdo'),
+                        SizedBox(width: 8),
+                        _buildEyeOption('RIGHT', 'Derecho'),
+                      ],
                     ),
-                  ),
-                );
-              },
-            ),
-            SizedBox(height: 40),
-            Text(
-              _authService.isDoctor
-                  ? 'Selecciona el paciente y la opción para capturar\nla imagen de retina'
-                  : 'Selecciona una opción para capturar\nla imagen de tu retina',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-                fontSize: 16,
-                height: 1.5,
-              ),
-            ),
-            SizedBox(height: 24),
-            // Selector de paciente (para médicos)
-            if (_authService.isDoctor && widget.patientId == null) ...[
-              Container(
-                constraints: BoxConstraints(maxWidth: 400),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
-                ),
-                child: _isLoadingPatients
-                    ? Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
-                            SizedBox(width: 10),
-                            Text('Cargando pacientes...', style: TextStyle(fontSize: 14)),
-                          ],
-                        ),
-                      )
-                    : DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedPatientId,
-                          hint: Row(
-                            children: [
-                              Icon(Icons.person_outline, size: 18, color: Theme.of(context).colorScheme.primary),
-                              SizedBox(width: 10),
-                              Text('Seleccionar Paciente', style: TextStyle(fontSize: 14)),
-                            ],
-                          ),
-                          isExpanded: true,
-                          items: _patients.map((p) {
-                            return DropdownMenuItem<String>(
-                              value: p.id,
-                              child: Text(
-                                p.fullName,
-                                style: TextStyle(
-                                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            setState(() {
-                              _selectedPatientId = val;
-                            });
-                          },
-                        ),
+                  ],
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.visibility, size: 18, color: Theme.of(context).colorScheme.primary),
+                    SizedBox(width: 10),
+                    Text(
+                      'Ojo a capturar:',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
-              ),
-              SizedBox(height: 16),
-            ],
-            // Selector de ojo
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.visibility, size: 18, color: Theme.of(context).colorScheme.primary),
-                  SizedBox(width: 10),
-                  Text(
-                    'Ojo a capturar:',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).textTheme.bodyMedium?.color,
                     ),
-                  ),
-                  SizedBox(width: 12),
-                  _buildEyeOption('LEFT', 'Izquierdo'),
-                  SizedBox(width: 8),
-                  _buildEyeOption('RIGHT', 'Derecho'),
-                ],
-              ),
-            ),
-            SizedBox(height: 32),
-            AnimatedButton(
-              text: 'Tomar Foto',
-              icon: Icons.camera_alt,
-              onPressed: _showCameraGuide,
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              height: 60,
-            ),
-            SizedBox(height: 16),
-            AnimatedButton(
-              text: 'Seleccionar de Galería',
-              icon: Icons.photo_library,
-              onPressed: () => _pickImage(ImageSource.gallery),
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              height: 60,
-            ),
-          ],
+                    SizedBox(width: 12),
+                    _buildEyeOption('LEFT', 'Izquierdo'),
+                    SizedBox(width: 8),
+                    _buildEyeOption('RIGHT', 'Derecho'),
+                  ],
+                ),
         ),
+        SizedBox(height: isMobile ? 24 : 16),
+        AnimatedButton(
+          text: 'Seleccionar de Galería',
+          icon: Icons.photo_library,
+          onPressed: () => _pickImage(ImageSource.gallery),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          height: isMobile ? 50 : 60,
+        ),
+      ],
+    );
+
+    if (isMobile) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 24.0),
+        child: content,
+      );
+    }
+
+    return ResponsiveWrapper(
+      maxWidth: 800,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+        child: content,
       ),
     );
   }

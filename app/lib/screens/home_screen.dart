@@ -5,6 +5,8 @@ import 'history_screen.dart';
 import 'profile_screen.dart';
 import 'settings_screen.dart';
 import 'patient_management_screen.dart';
+import 'retiscan_loading_screen.dart';
+import 'login_screen.dart';
 import '../services/auth_service.dart';
 import '../services/patient_service.dart';
 import '../services/analysis_service.dart';
@@ -25,11 +27,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final AuthService _authService = AuthService();
 
   // Pantallas según rol y plataforma
+  // Callback para navegar entre pantallas desde HomeContent
+  void _navigateToTab(int index) {
+    setState(() => _currentIndex = index);
+  }
+
   List<Widget> _getScreens({required bool isDesktop}) {
     if (_authService.isDoctor) {
       if (isDesktop) {
         return [
-          HomeContent(),
+          HomeContent(onNavigate: _navigateToTab),
           CaptureScreen(),
           PatientManagementScreen(),
           ProfileScreen(),
@@ -37,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ];
       } else {
         return [
-          HomeContent(),
+          HomeContent(onNavigate: _navigateToTab),
           CaptureScreen(),
           PatientManagementScreen(),
           ProfileScreen(),
@@ -46,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } else {
       if (isDesktop) {
         return [
-          HomeContent(),
+          HomeContent(onNavigate: _navigateToTab),
           RecommendationsScreen(),
           HistoryScreen(),
           ProfileScreen(),
@@ -54,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ];
       } else {
         return [
-          HomeContent(),
+          HomeContent(onNavigate: _navigateToTab),
           RecommendationsScreen(),
           HistoryScreen(),
           ProfileScreen(),
@@ -231,8 +238,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 }, textSecondary),
                 // Cerrar Sesión
                 _buildSidebarFooterItem(Icons.logout, 'Cerrar Sesión', () {
-                  _authService.logout();
-                  Navigator.of(context).pushReplacementNamed('/');
+                  Navigator.of(context).pushReplacement(
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          RetiScanLoadingScreen(
+                            statusText: 'CERRANDO SESIÓN',
+                            onLoad: () => _authService.logout(),
+                            onNavigate: () => LoginScreen(),
+                          ),
+                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
+                      transitionDuration: Duration(milliseconds: 600),
+                    ),
+                  );
                 }, Theme.of(context).colorScheme.error),
                 SizedBox(height: 24),
               ],
@@ -343,76 +362,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         duration: Duration(milliseconds: 300),
         child: screens[_currentIndex],
       ),
-      // FAB central solo para Médico
-      floatingActionButton: _authService.isDoctor
-          ? FloatingActionButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => CaptureScreen()));
-              },
-              backgroundColor: primaryColor,
-              elevation: 8,
-              shape: CircleBorder(),
-              child: Icon(Icons.camera_alt, color: Theme.of(context).colorScheme.onPrimary, size: 28),
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      // Bottom Nav
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.08))),
-        ),
-        child: BottomAppBar(
-          color: cardColor,
-          elevation: 0,
-          shape: _authService.isDoctor ? CircularNotchedRectangle() : null,
-          notchMargin: 8,
-          child: SizedBox(
-            height: 60,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                ...navItems.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final item = entry.value;
-                  final isSelected = _currentIndex == i;
-                  // Insertar espacio en el medio para el FAB solo si es doctor
-                  final middleIndex = navItems.length ~/ 2;
-                  final widgets = <Widget>[];
-                  if (_authService.isDoctor && i == middleIndex) {
-                    widgets.add(SizedBox(width: 48)); // Espacio para el FAB
-                  }
-                  widgets.add(
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => setState(() => _currentIndex = i),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              isSelected ? item.activeIcon : item.icon,
-                              color: isSelected ? primaryColor : textSecondary,
-                              size: 24,
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              item.label,
-                              style: TextStyle(
-                                color: isSelected ? primaryColor : textSecondary,
-                                fontSize: 10,
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                  return widgets;
-                }).expand((w) => w),
-              ],
-            ),
-          ),
-        ),
+      // TODO: FAB central - Pendiente de implementación futura
+      // floatingActionButton: _authService.isDoctor
+      //     ? FloatingActionButton(
+      //         onPressed: () {
+      //           Navigator.push(context, MaterialPageRoute(builder: (_) => CaptureScreen()));
+      //         },
+      //         backgroundColor: primaryColor,
+      //         elevation: 8,
+      //         shape: CircleBorder(),
+      //         child: Icon(Icons.camera_alt, color: Theme.of(context).colorScheme.onPrimary, size: 28),
+      //       )
+      //     : null,
+      // floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      // Animated Bottom Nav - Estilo Meniscus
+      bottomNavigationBar: AnimatedBottomNav(
+        currentIndex: _currentIndex,
+        items: navItems,
+        onTap: (index) => setState(() => _currentIndex = index),
+        activeColor: primaryColor,
+        inactiveColor: textSecondary,
+        backgroundColor: cardColor,
       ),
     );
   }
@@ -426,8 +396,177 @@ class _NavItem {
   _NavItem(this.icon, this.activeIcon, this.label);
 }
 
+// Animated Bottom Navigation Bar - Estilo Meniscus
+class AnimatedBottomNav extends StatelessWidget {
+  final int currentIndex;
+  final List<_NavItem> items;
+  final Function(int) onTap;
+  final Color activeColor;
+  final Color inactiveColor;
+  final Color backgroundColor;
+
+  const AnimatedBottomNav({
+    Key? key,
+    required this.currentIndex,
+    required this.items,
+    required this.onTap,
+    required this.activeColor,
+    required this.inactiveColor,
+    required this.backgroundColor,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.fromLTRB(24, 0, 24, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+           // Barra principal con íconos + labels integrados
+           Container(
+             height: 60,
+             padding: EdgeInsets.symmetric(horizontal: 16),
+             decoration: BoxDecoration(
+               color: backgroundColor,
+               borderRadius: BorderRadius.circular(30),
+               boxShadow: [
+                 BoxShadow(
+                   color: Colors.black.withOpacity(0.2),
+                   blurRadius: 24,
+                   offset: Offset(0, 8),
+                 ),
+               ],
+             ),
+             child: Row(
+               mainAxisAlignment: MainAxisAlignment.spaceAround,
+               children: List.generate(items.length, (index) {
+                 final item = items[index];
+                 final isSelected = currentIndex == index;
+                 return GestureDetector(
+                   onTap: () => onTap(index),
+                   behavior: HitTestBehavior.opaque,
+                    child: SizedBox(
+                      width: 56,
+                      height: 60,
+                     child: Stack(
+                       clipBehavior: Clip.none,
+                       alignment: Alignment.center,
+                       children: [
+                          // Glow circular (solo visible cuando está seleccionado)
+                          AnimatedPositioned(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                            top: isSelected ? 6 : 14,
+                           child: AnimatedOpacity(
+                             duration: Duration(milliseconds: 250),
+                             opacity: isSelected ? 1.0 : 0.0,
+                             child: Container(
+                               width: 44,
+                               height: 44,
+                               decoration: BoxDecoration(
+                                 shape: BoxShape.circle,
+                                 color: Colors.transparent,
+                                 boxShadow: [
+                                   BoxShadow(
+                                     color: activeColor.withOpacity(0.4),
+                                     blurRadius: 10,
+                                     spreadRadius: 0,
+                                   ),
+                                   BoxShadow(
+                                     color: activeColor.withOpacity(0.2),
+                                     blurRadius: 20,
+                                     spreadRadius: 2,
+                                   ),
+                                 ],
+                               ),
+                             ),
+                           ),
+                         ),
+                          // Ícono (se mueve hacia arriba cuando está seleccionado)
+                          AnimatedPositioned(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                            top: isSelected ? 6 : 14,
+                           child: AnimatedOpacity(
+                             duration: Duration(milliseconds: 200),
+                             opacity: isSelected ? 1.0 : 0.0,
+                             child: AnimatedContainer(
+                               duration: Duration(milliseconds: 200),
+                               padding: EdgeInsets.all(6),
+                               decoration: isSelected
+                                   ? BoxDecoration(
+                                       color: activeColor,
+                                       shape: BoxShape.circle,
+                                     )
+                                   : null,
+                               child: Icon(
+                                 item.activeIcon,
+                                 color: Colors.white,
+                                 size: 22,
+                               ),
+                             ),
+                           ),
+                         ),
+                          // Label (visible cuando NO está seleccionado)
+                          AnimatedPositioned(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                            top: isSelected ? 12 : 14,
+                           child: AnimatedOpacity(
+                             duration: Duration(milliseconds: 200),
+                             opacity: isSelected ? 0.0 : 1.0,
+                             child: Text(
+                               item.label,
+                               style: TextStyle(
+                                 color: inactiveColor,
+                                 fontSize: 11,
+                                 fontWeight: FontWeight.w600,
+                               ),
+                             ),
+                           ),
+                         ),
+                       ],
+                     ),
+                   ),
+                 );
+               }),
+             ),
+           ),
+         ],
+      ),
+    );
+  }
+}
+
+// Widget individual de cada tab (ya no se usa, integrado en AnimatedBottomNav)
+class _NavItemWidget extends StatelessWidget {
+  final _NavItem item;
+  final bool isSelected;
+  final Color activeColor;
+  final Color inactiveColor;
+  final VoidCallback onTap;
+
+  const _NavItemWidget({
+    Key? key,
+    required this.item,
+    required this.isSelected,
+    required this.activeColor,
+    required this.inactiveColor,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.shrink();
+  }
+}
+
 // HOME CONTENT (Dashboard principal)
 class HomeContent extends StatefulWidget {
+  final Function(int)? onNavigate;
+
+  const HomeContent({this.onNavigate});
+
   @override
   _HomeContentState createState() => _HomeContentState();
 }
@@ -734,28 +873,18 @@ class _HomeContentState extends State<HomeContent>
     final actions = <Widget>[];
 
     if (isDoctor) {
-      actions.add(_animated(5, _buildQuickAction(Icons.person_add_outlined, 'Registrar nuevo paciente', () {
-        final cardColor = Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface;
-        final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-        Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
-          appBar: AppBar(title: Text('Gestión de Pacientes'), backgroundColor: cardColor, foregroundColor: textPrimary),
-          body: PatientManagementScreen(),
-        )));
+      actions.add(_animated(5, _buildQuickAction(Icons.camera_alt_outlined, 'Realizar captura de retina', () {
+        widget.onNavigate?.call(1); // Navigate to CaptureScreen (index 1)
       })));
-      actions.add(_animated(5, _buildQuickAction(Icons.assignment_outlined, 'Revisar diagnósticos', () {
-        final cardColor = Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface;
-        final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-        Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
-          appBar: AppBar(title: Text('Gestión de Pacientes'), backgroundColor: cardColor, foregroundColor: textPrimary),
-          body: PatientManagementScreen(),
-        )));
+      actions.add(_animated(5, _buildQuickAction(Icons.people_outlined, 'Gestionar pacientes', () {
+        widget.onNavigate?.call(2); // Navigate to PatientManagementScreen (index 2)
       })));
     } else {
-      actions.add(_animated(5, _buildQuickAction(Icons.camera_alt_outlined, 'Realizar nueva captura', () {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => CaptureScreen()));
+      actions.add(_animated(5, _buildQuickAction(Icons.history_outlined, 'Ver análisis', () {
+        widget.onNavigate?.call(2); // Navigate to HistoryScreen (index 2)
       })));
-      actions.add(_animated(5, _buildQuickAction(Icons.calendar_today_outlined, 'Próxima revisión recomendada', () {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Según tus análisis, se recomienda una revisión en 12 meses')));
+      actions.add(_animated(5, _buildQuickAction(Icons.recommend_outlined, 'Ver recomendaciones', () {
+        widget.onNavigate?.call(1); // Navigate to RecommendationsScreen (index 1)
       })));
     }
 

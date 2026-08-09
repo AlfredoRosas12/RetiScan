@@ -10,12 +10,20 @@ import '../services/auth_service.dart';
 import 'dart:html' as html;
 
 class ApiConfig {
-  /// Puerto donde corre el backend Node/Express.
-  static const int _apiPort = 3000;
-
+  /// Construye la URL base de la API a partir del hostname actual.
+  /// En producción (HTTPS en subdominios): https://api.retiscan.com/api
+  /// En desarrollo (puerto local): http://localhost:3000/api
   static String get baseUrl {
     final host = html.window.location.hostname ?? 'localhost';
-    return 'http://$host:$_apiPort/api';
+    final protocol = html.window.location.protocol; // 'https:' o 'http:'
+
+    // En producción, la API está en api.{dominio} sin puerto explícito
+    // En desarrollo, la API está en localhost:3000
+    if (protocol == 'https:' || host == 'app.retiscan.com') {
+      return 'https://api.$host/api';
+    }
+    // Fallback para desarrollo local
+    return 'http://$host:3000/api';
   }
 
   static String imageUrl(String? uri) {

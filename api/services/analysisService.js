@@ -45,7 +45,8 @@ analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
         const aiResponse = await axios.post('http://algorithms:8000/predict', formData, {
             headers: {
                 ...formData.getHeaders()
-            }
+            },
+            timeout: 90000 // 90s para inferencia de modelo PyTorch
         });
 
         const aiResult = aiResponse.data;

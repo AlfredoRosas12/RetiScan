@@ -13,14 +13,37 @@ const errorMiddleware = require('./middlewares/errorMiddleware');
 const app = express();
 const PORT = env.PORT;
 
-// Middleware global
-app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        return callback(null, origin);
-    },
-    credentials: true // obligatorio para poder enviar/recibir cookies HttpOnly
-}));
+// ── CORS: whitelist de dominios permitidos ──────────────────
+const ALLOWED_ORIGINS = [
+    env.LANDING_URL,          // https://retiscan.com
+    env.PWA_URL || '',        // https://app.retiscan.com
+    env.APP_URL || '',        // https://retiscan.com (fallback)
+].filter(Boolean);
+
+// En desarrollo, permitir todo; en producción, solo whitelist
+const corsOptions = env.NODE_ENV === 'production'
+    ? {
+        origin: function (origin, callback) {
+            // Permitir requests sin origin (server-to-server, curl, etc.)
+            if (!origin) return callback(null, true);
+            if (ALLOWED_ORIGINS.includes(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error('CORS not allowed'), false);
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+    }
+    : {
+        origin: function (origin, callback) {
+            if (!origin) return callback(null, true);
+            return callback(null, true);
+        },
+        credentials: true,
+    };
+
+app.use(cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

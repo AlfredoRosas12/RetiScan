@@ -11,9 +11,16 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const endpoint = process.env.S3_ENDPOINT || 'http://minio:9000';
 const publicEndpoint = process.env.S3_PUBLIC_ENDPOINT || process.env.APP_URL || 'http://localhost:9000';
 const region = process.env.S3_REGION || 'us-east-1';
+const bucketName = process.env.S3_BUCKET || 'retina-images';
+
+// En producción, las credenciales S3 son obligatorias
+if (process.env.NODE_ENV === 'production') {
+    if (!process.env.S3_ACCESS_KEY || !process.env.S3_SECRET_KEY) {
+        throw new Error('S3_ACCESS_KEY and S3_SECRET_KEY are required in production');
+    }
+}
 const accessKeyId = process.env.S3_ACCESS_KEY || 'retiscan';
 const secretAccessKey = process.env.S3_SECRET_KEY || 'retiscan123';
-const bucketName = process.env.S3_BUCKET || 'retina-images';
 
 // Cliente interno: apunta a MinIO dentro de la red de Docker.
 const s3Client = new S3Client({

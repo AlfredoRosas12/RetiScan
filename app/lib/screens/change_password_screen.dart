@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:another_flushbar/flushbar.dart';
-import 'login_loading_screen.dart';
+import 'retiscan_loading_screen.dart';
 import '../widgets/glassmorphic_card.dart';
 import '../widgets/animated_button.dart';
 import '../services/auth_service.dart';
 import 'complete_profile_screen.dart';
+import 'home_screen.dart';
 import '../painters/particle_painter.dart';
 
 /// Pantalla que se muestra cuando mustChangePassword == true.
@@ -98,7 +99,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
         context,
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
-              isPatient ? CompleteProfileScreen() : LoginLoadingScreen(),
+              isPatient ? CompleteProfileScreen() : RetiScanLoadingScreen(
+                statusText: 'INICIANDO SESIÓN',
+                onNavigate: () {
+                  final user = _authService.currentUser;
+                  if (user != null && user.isPatient && !user.isVerified) {
+                    return CompleteProfileScreen();
+                  }
+                  return HomeScreen();
+                },
+              ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },

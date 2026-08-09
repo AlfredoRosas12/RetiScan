@@ -26,8 +26,6 @@ WORKDIR /app
 
 # Copiar configuración de dependencias
 COPY pubspec.yaml ./
-# Se opcionalmente elimina pubspec.lock para evitar conflictos de versiones si falla
-# RUN rm -f pubspec.lock 
 
 RUN flutter pub get
 
@@ -37,6 +35,9 @@ RUN flutter build web --release
 
 # Etapa de producción: servimos la build con nginx
 FROM nginx:stable-alpine AS runner
+
+# Copiar configuración nginx personalizada
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copiar archivos estáticos generados por Flutter
 COPY --from=build /app/build/web /usr/share/nginx/html

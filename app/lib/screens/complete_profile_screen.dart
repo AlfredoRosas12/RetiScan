@@ -7,7 +7,8 @@ import '../widgets/animated_button.dart';
 import '../services/auth_service.dart';
 import '../services/patient_service.dart';
 import '../config/input_sanitizer.dart';
-import 'login_loading_screen.dart';
+import 'retiscan_loading_screen.dart';
+import 'home_screen.dart';
 import '../painters/particle_painter.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
@@ -295,7 +296,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen>
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => LoginLoadingScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) => RetiScanLoadingScreen(
+            statusText: 'INICIANDO SESIÓN',
+            onNavigate: () {
+              final user = _authService.currentUser;
+              if (user != null && user.isPatient && !user.isVerified) {
+                return CompleteProfileScreen();
+              }
+              return HomeScreen();
+            },
+          ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },

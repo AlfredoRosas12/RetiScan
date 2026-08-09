@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:another_flushbar/flushbar.dart';
-import 'login_loading_screen.dart';
+import 'retiscan_loading_screen.dart';
+import 'complete_profile_screen.dart';
+import 'home_screen.dart';
 import 'change_password_screen.dart';
 import 'forgot_password_screen.dart';
 import '../widgets/glassmorphic_card.dart';
@@ -142,7 +144,16 @@ class _LoginScreenState extends State<LoginScreen>
         context,
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
-              LoginLoadingScreen(),
+              RetiScanLoadingScreen(
+                statusText: 'INICIANDO SESIÓN',
+                onNavigate: () {
+                  final user = _authService.currentUser;
+                  if (user != null && user.isPatient && !user.isVerified) {
+                    return CompleteProfileScreen();
+                  }
+                  return HomeScreen();
+                },
+              ),
           transitionsBuilder:
               (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
