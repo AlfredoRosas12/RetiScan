@@ -49,7 +49,7 @@ const emailService = {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    from: 'RetiScan <onboarding@resend.dev>', // Obligatorio en el plan gratuito de Resend sin dominio verificado
+                    from: 'RetiScan <no-reply@retiscan.online>', // Dominio verificado en Resend
                     to: [to],
                     subject,
                     html
