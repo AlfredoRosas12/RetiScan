@@ -17,13 +17,19 @@ class ApiConfig {
     final host = html.window.location.hostname ?? 'localhost';
     final protocol = html.window.location.protocol; // 'https:' o 'http:'
 
-    // En producción, la API está en api.{dominio} sin puerto explícito
-    // En desarrollo, la API está en localhost:3000
-    if (protocol == 'https:' || host == 'app.retiscan.com') {
-      return 'https://api.$host/api';
+    // Si estamos en local / desarrollo
+    if (host == 'localhost' || host == '127.0.0.1' || host.startsWith('192.168.')) {
+      return 'http://$host:3000/api';
     }
-    // Fallback para desarrollo local
-    return 'http://$host:3000/api';
+
+    // Si estamos desplegando en Railway
+    if (host.contains('railway.app')) {
+      return 'https://retiscan-production.up.railway.app/api';
+    }
+
+    // Dominio personalizado de producción (ej: app.retiscan.com -> api.retiscan.com)
+    final apiHost = host.replaceAll('app.', 'api.');
+    return 'https://$apiHost/api';
   }
 
   static String imageUrl(String? uri) {
