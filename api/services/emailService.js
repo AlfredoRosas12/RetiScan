@@ -7,13 +7,17 @@ const fs = require('fs');
 const path = require('path');
 const env = require('../config/env');
 
-// Un solo transporte reutilizable; la conexión con Gmail se abre una vez.
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // true para puerto 465, false para otros puertos
     auth: {
         user: env.SMTP_USER,
         pass: env.SMTP_PASS,
     },
+    tls: {
+        rejectUnauthorized: false // Evita bloqueos por certificados en proxies de la nube
+    }
 });
 
 // Directorio de templates MJML
