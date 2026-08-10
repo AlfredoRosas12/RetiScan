@@ -261,10 +261,21 @@ const authController = {
             // 3. Enviar correo de verificación
             const verification = await Verification.createEmailLink(user.id);
             const fullName = `${firstName} ${paternalSurname}${maternalSurname ? ' ' + maternalSurname : ''}`;
-            await emailService.sendVerificationLink(user.email, verification.token, fullName);
+            
+            let isVerifiedAuto = false;
+            try {
+                await emailService.sendVerificationLink(user.email, verification.token, fullName);
+            } catch (mailError) {
+                console.error("❌ Falló el envío del correo de verificación (SMTP bloqueado en Railway):", mailError.message);
+                // Si el correo falla por bloqueos de red en Railway, auto-verificamos la cuenta para que puedan usar la demo
+                await User.updateById(user.id, { is_verified: true });
+                isVerifiedAuto = true;
+            }
 
             return res.status(201).json({
-                message: 'Registro exitoso. Por favor revisa tu correo para verificar tu cuenta y activar tu suscripción de prueba.',
+                message: isVerifiedAuto
+                    ? 'Registro exitoso (Cuenta verificada automáticamente debido a restricciones de red en el servidor).'
+                    : 'Registro exitoso. Por favor revisa tu correo para verificar tu cuenta y activar tu suscripción de prueba.',
                 user: {
                     id: user.id,
                     username: user.username,
@@ -273,7 +284,7 @@ const authController = {
                     paternalSurname: doctorProfile.paternal_surname,
                     maternalSurname: doctorProfile.maternal_surname,
                     role: user.role,
-                    is_verified: user.is_verified,
+                    is_verified: isVerifiedAuto ? true : user.is_verified,
                 },
                 doctor: doctorProfile,
             });
