@@ -30,7 +30,7 @@ const s3Client = new S3Client({
     endpoint,
     region,
     credentials: { accessKeyId, secretAccessKey },
-    forcePathStyle: true
+    ...(isR2 ? {} : { forcePathStyle: true })
 });
 
 // Cliente público: lo usamos para firmar URLs que ve el navegador.
@@ -38,7 +38,7 @@ const s3PublicClient = new S3Client({
     endpoint: publicEndpoint,
     region,
     credentials: { accessKeyId, secretAccessKey },
-    forcePathStyle: true
+    ...(isR2 ? {} : { forcePathStyle: true })
 });
 
 let bucketInitialized = false;
