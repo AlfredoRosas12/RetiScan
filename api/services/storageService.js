@@ -99,11 +99,17 @@ const storageService = {
         await ensureBucketExists();
         const key = filename.startsWith('retina-') ? filename : `retina-${filename}`;
 
+        // Determinar el ContentType real de la imagen (evitar application/octet-stream que fuerza descarga/bloqueo)
+        let finalMime = mimeType;
+        if (!finalMime || finalMime === 'application/octet-stream' || !finalMime.startsWith('image/')) {
+            finalMime = key.endsWith('.png') ? 'image/png' : 'image/jpeg';
+        }
+
         const command = new PutObjectCommand({
             Bucket: bucketName,
             Key: key,
             Body: buffer,
-            ContentType: mimeType
+            ContentType: finalMime
         });
 
         await s3Client.send(command);
@@ -123,17 +129,11 @@ const storageService = {
         return response.Body;
     },
 
-    // URL para mostrar la imagen en el navegador.
-    // R2 público (r2.dev) → URL directa sin firma.
-    // MinIO / R2 privado → URL firmada (1 hora por defecto).
+    // URL firmada temporalmente para mostrar la imagen en el navegador.
+    // Funciona con R2 y MinIO — la firma permite acceso sin que el bucket sea público.
     async getPresignedUrl(key, expiresInSeconds = 3600) {
         if (!key) return null;
         if (key.startsWith('http')) return key;
-
-        // Si el endpoint público es un R2 dev URL, la imagen ya es pública
-        if (publicEndpoint.includes('r2.dev')) {
-            return `${publicEndpoint}/${key}`;
-        }
 
         await ensureBucketExists();
 
@@ -142,7 +142,8 @@ const storageService = {
             Key: key
         });
 
-        return getSignedUrl(s3PublicClient, command, { expiresIn: expiresInSeconds });
+        // Usamos el cliente principal (no el público) para generar URLs firmadas
+        return getSignedUrl(s3Client, command, { expiresIn: expiresInSeconds });
     },
 
     async deleteImage(key) {
