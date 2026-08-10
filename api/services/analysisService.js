@@ -22,7 +22,7 @@ analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
 
         await Analysis.updateStatus(analysisId, 'PROCESSING', null);
 
-        // Traemos la URI de la imagen guardada en MinIO
+        // Traemos la URI de la imagen guardada en R2/MinIO
         const db = require('../config/database');
         const result = await db.query('SELECT image_uri, eye FROM analyses WHERE id = $1', [analysisId]);
         const analysisData = result.rows[0];
@@ -31,26 +31,44 @@ analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
             throw new Error("No se encontró la imagen del análisis.");
         }
 
-        // Descargamos la imagen y la mandamos al microservicio de IA
+        // Descargamos la imagen como Buffer (compatible con R2 y MinIO)
         const storageService = require('./storageService');
         const imageStream = await storageService.getImageStream(analysisData.image_uri);
+        
+        // Convertimos el stream a Buffer para compatibilidad con FormData
+        const chunks = [];
+        for await (const chunk of imageStream) {
+            chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+        }
+        const imageBuffer = Buffer.concat(chunks);
+        console.log(`[Cola] Imagen descargada de storage: ${imageBuffer.length} bytes`);
+
+        if (imageBuffer.length === 0) {
+            throw new Error("La imagen descargada del storage está vacía.");
+        }
 
         const formData = new FormData();
-        formData.append('image', imageStream, { filename: 'retina.jpg' });
+        formData.append('image', imageBuffer, { 
+            filename: analysisData.image_uri.endsWith('.png') ? 'retina.png' : 'retina.jpg',
+            contentType: analysisData.image_uri.endsWith('.png') ? 'image/png' : 'image/jpeg'
+        });
         if (analysisData.eye) {
             formData.append('eye', analysisData.eye);
         }
 
         const env = require('../config/env');
-        console.log(`[Cola] Enviando imagen a servicio de IA...`);
+        console.log(`[Cola] Enviando imagen (${imageBuffer.length} bytes) a servicio de IA: ${env.ALGORITHM_URL}/predict`);
         const aiResponse = await axios.post(`${env.ALGORITHM_URL}/predict`, formData, {
             headers: {
                 ...formData.getHeaders()
             },
-            timeout: 90000 // 90s para inferencia de modelo PyTorch
+            timeout: 120000, // 120s para inferencia (R2 download + modelo PyTorch)
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity
         });
 
         const aiResult = aiResponse.data;
+        console.log(`[Cola] IA respondió exitosamente: grade=${aiResult.grade}, confidence=${aiResult.confidence}`);
 
         await Analysis.updateStatus(analysisId, 'COMPLETED', aiResult);
 
@@ -67,6 +85,13 @@ analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
 
     } catch (err) {
         console.error(`[Cola] Error procesando análisis ${analysisId}:`, err.message);
+        if (err.response) {
+            console.error(`[Cola] Status de la IA: ${err.response.status}`);
+            console.error(`[Cola] Respuesta de la IA:`, JSON.stringify(err.response.data));
+        }
+        if (err.code) {
+            console.error(`[Cola] Error code: ${err.code}`);
+        }
 
         // Si la IA respondió con un detalle legible, lo guardamos como error
         const errorMsg = err.response && err.response.data && err.response.data.detail
