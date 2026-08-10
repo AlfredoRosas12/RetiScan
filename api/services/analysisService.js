@@ -41,8 +41,9 @@ analysisEmitter.on('analysis:queued', async ({ analysisId, patientId }) => {
             formData.append('eye', analysisData.eye);
         }
 
+        const env = require('../config/env');
         console.log(`[Cola] Enviando imagen a servicio de IA...`);
-        const aiResponse = await axios.post('http://algorithms:8000/predict', formData, {
+        const aiResponse = await axios.post(`${env.ALGORITHM_URL}/predict`, formData, {
             headers: {
                 ...formData.getHeaders()
             },

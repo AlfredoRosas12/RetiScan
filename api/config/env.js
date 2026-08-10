@@ -55,6 +55,9 @@ const env = {
 
     // Logo para emails (Cloudinary)
     LOGO_URL: process.env.LOGO_URL || '',
+
+    // Microservicio de IA
+    ALGORITHM_URL: process.env.ALGORITHM_URL || 'http://algorithms:8000',
 };
 
 module.exports = env;
