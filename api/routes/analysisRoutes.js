@@ -11,10 +11,9 @@ const storage = multer.memoryStorage();
 
 const upload = multer({ 
     storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    limits: { fileSize: 15 * 1024 * 1024 }, // 15MB limit
     fileFilter: (req, file, cb) => {
-        const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png'];
-        if (allowedMimes.includes(file.mimetype)) {
+        if (!file.mimetype || file.mimetype.startsWith('image/') || file.mimetype === 'application/octet-stream') {
             cb(null, true);
         } else {
             cb(new Error('Tipo de archivo no permitido. Solo se aceptan imágenes JPG y PNG.'));
