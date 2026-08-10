@@ -123,10 +123,17 @@ const storageService = {
         return response.Body;
     },
 
-    // URL firmada (1 hora por defecto) para mostrar la imagen en el navegador.
+    // URL para mostrar la imagen en el navegador.
+    // R2 público (r2.dev) → URL directa sin firma.
+    // MinIO / R2 privado → URL firmada (1 hora por defecto).
     async getPresignedUrl(key, expiresInSeconds = 3600) {
         if (!key) return null;
         if (key.startsWith('http')) return key;
+
+        // Si el endpoint público es un R2 dev URL, la imagen ya es pública
+        if (publicEndpoint.includes('r2.dev')) {
+            return `${publicEndpoint}/${key}`;
+        }
 
         await ensureBucketExists();
 
