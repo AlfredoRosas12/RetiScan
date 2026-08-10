@@ -8,13 +8,13 @@ const {
 } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
-const endpoint = process.env.S3_ENDPOINT || 'http://minio:9000';
-const publicEndpoint = process.env.S3_PUBLIC_ENDPOINT || process.env.APP_URL || 'http://localhost:9000';
+const endpoint = (process.env.S3_ENDPOINT || 'http://minio:9000').trim().replace(/\/$/, '');
+const publicEndpoint = (process.env.S3_PUBLIC_ENDPOINT || process.env.APP_URL || 'http://localhost:9000').trim().replace(/\/$/, '');
 
 // Cloudflare R2 requiere region 'auto' para firmar peticiones S3 (SigV4) correctamente
 const isR2 = endpoint.includes('r2.cloudflarestorage.com') || (process.env.S3_PUBLIC_ENDPOINT || '').includes('r2.dev');
 const region = isR2 ? 'auto' : (process.env.S3_REGION || 'us-east-1');
-const bucketName = process.env.S3_BUCKET || 'retina-images';
+const bucketName = (process.env.S3_BUCKET || 'retina-images').trim();
 
 // En producción, las credenciales S3 son obligatorias
 if (process.env.NODE_ENV === 'production') {
@@ -22,8 +22,8 @@ if (process.env.NODE_ENV === 'production') {
         throw new Error('S3_ACCESS_KEY and S3_SECRET_KEY are required in production');
     }
 }
-const accessKeyId = process.env.S3_ACCESS_KEY || 'retiscan';
-const secretAccessKey = process.env.S3_SECRET_KEY || 'retiscan123';
+const accessKeyId = (process.env.S3_ACCESS_KEY || 'retiscan').replace(/['"]/g, '').trim();
+const secretAccessKey = (process.env.S3_SECRET_KEY || 'retiscan123').replace(/['"]/g, '').trim();
 
 // Cliente interno: apunta a Cloudflare R2 / MinIO dentro de la red.
 const s3Client = new S3Client({
