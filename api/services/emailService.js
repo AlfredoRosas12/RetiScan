@@ -40,6 +40,30 @@ function compileTemplate(templateName, variables = {}) {
 const emailService = {
     // Envío genérico: cualquier correo pasa por aquí.
     async send({ to, subject, html }) {
+        if (process.env.RESEND_API_KEY) {
+            // En producción en Railway, usamos la API HTTPS de Resend para saltar el bloqueo de puertos
+            const response = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    from: 'RetiScan <onboarding@resend.dev>', // Obligatorio en el plan gratuito de Resend sin dominio verificado
+                    to: [to],
+                    subject,
+                    html
+                })
+            });
+
+            const resData = await response.json();
+            if (!response.ok) {
+                throw new Error(`Resend API Error: ${JSON.stringify(resData)}`);
+            }
+            return resData;
+        }
+
+        // Fallback local: usar SMTP/Nodemailer normal
         return transporter.sendMail({
             from: env.SMTP_FROM,
             to,
