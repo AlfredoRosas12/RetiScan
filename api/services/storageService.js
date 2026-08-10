@@ -50,12 +50,14 @@ async function ensureBucketExists() {
         if (err.name === 'NotFound' || err.$metadata?.httpStatusCode === 404) {
             try {
                 await s3Client.send(new CreateBucketCommand({ Bucket: bucketName }));
-                bucketInitialized = true;
                 console.log(`[Storage] Bucket '${bucketName}' creado.`);
             } catch (createErr) {
                 console.error(`[Storage] Error creando bucket:`, createErr.message);
             }
+        } else {
+            console.warn(`[Storage] No se pudo verificar bucket '${bucketName}' (${err.message}). Continuando con operaciones S3.`);
         }
+        bucketInitialized = true;
     }
 }
 
