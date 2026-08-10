@@ -25,6 +25,21 @@ if (process.env.NODE_ENV === 'production') {
 const accessKeyId = (process.env.S3_ACCESS_KEY || 'retiscan').replace(/['"]/g, '').trim();
 const secretAccessKey = (process.env.S3_SECRET_KEY || 'retiscan123').replace(/['"]/g, '').trim();
 
+// ═══ DIAGNÓSTICO TEMPORAL ═══ (quitar después de resolver el problema)
+console.log('[Storage] ══════════════════════════════════════');
+console.log('[Storage] S3 Config Diagnosis:');
+console.log('[Storage]   endpoint:', endpoint);
+console.log('[Storage]   publicEndpoint:', publicEndpoint);
+console.log('[Storage]   region:', region);
+console.log('[Storage]   isR2:', isR2);
+console.log('[Storage]   bucket:', bucketName);
+console.log('[Storage]   accessKeyId:', accessKeyId.substring(0, 6) + '...' + accessKeyId.substring(accessKeyId.length - 4));
+console.log('[Storage]   accessKeyId length:', accessKeyId.length);
+console.log('[Storage]   secretAccessKey length:', secretAccessKey.length);
+console.log('[Storage]   secretAccessKey first6:', secretAccessKey.substring(0, 6));
+console.log('[Storage]   secretAccessKey last6:', secretAccessKey.substring(secretAccessKey.length - 6));
+console.log('[Storage] ══════════════════════════════════════');
+
 // Cliente interno: apunta a Cloudflare R2 / MinIO dentro de la red.
 const s3Client = new S3Client({
     endpoint,
