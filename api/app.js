@@ -26,7 +26,7 @@ const corsOptions = env.NODE_ENV === 'production'
         origin: function (origin, callback) {
             // Permitir requests sin origin (server-to-server, curl, etc.)
             if (!origin) return callback(null, true);
-            if (ALLOWED_ORIGINS.includes(origin)) {
+            if (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.railway.app') || origin.includes('up.railway.app')) {
                 return callback(null, true);
             }
             return callback(new Error('CORS not allowed'), false);
