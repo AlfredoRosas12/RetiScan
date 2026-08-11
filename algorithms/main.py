@@ -167,8 +167,8 @@ def evaluate_image_quality(pil_img: Image.Image) -> dict:
     # Exposición: medimos el brillo medio del canal verde
     brightness_score = float(round(np.mean(green), 2))
 
-    is_sharp = sharpness_score >= 30.0
-    is_well_lit = 15.0 <= brightness_score <= 245.0
+    is_sharp = sharpness_score >= 5.0
+    is_well_lit = 10.0 <= brightness_score <= 245.0
 
     is_usable = is_sharp and is_well_lit
     rejection_reason = None
