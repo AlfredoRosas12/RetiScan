@@ -148,13 +148,21 @@ def main():
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--val-size", type=float, default=0.15)
     ap.add_argument("--test-size", type=float, default=0.15)
+    ap.add_argument("--split-json", help="JSON con los nombres de archivo de train/val/test del entrenamiento")
     args = ap.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
     out = Path(args.out_dir)
 
     paths, grades = load_dataset(args.data_dir)
-    test_p, test_g, n_train, n_val = split_test(paths, grades, args.seed, args.val_size, args.test_size)
+    if args.split_json:
+        # División exacta usada en el entrenamiento: {"train": [...], "val": [...], "test": [...]}
+        split = json.loads(Path(args.split_json).read_text())
+        is_test = np.isin([Path(p).name for p in paths], split["test"])
+        test_p, test_g = paths[is_test], grades[is_test]
+        n_train, n_val = len(split["train"]), len(split["val"])
+    else:
+        test_p, test_g, n_train, n_val = split_test(paths, grades, args.seed, args.val_size, args.test_size)
     print(f"Dataset: {len(paths)} imágenes | train {n_train} · val {n_val} · test {len(test_p)}")
 
     fig1_samples(test_p, test_g, args.seed, out / "fig1.png")
@@ -174,7 +182,7 @@ def main():
     metrics = {
         "model": Path(args.model).name,
         "split": {"seed": args.seed, "train": n_train, "val": n_val, "test": len(test_p),
-                  "method": "stratified train_test_split (scikit-learn)"},
+                  "method": args.split_json or "stratified train_test_split (scikit-learn)"},
         "accuracy": accuracy_score(test_g, y_pred),
         "quadratic_kappa": cohen_kappa_score(test_g, y_pred, weights="quadratic"),
         "roc_auc_macro_ovr": macro_auc,
